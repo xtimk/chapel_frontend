@@ -1,0 +1,93 @@
+entrypoints Program ;
+
+Progr.  Program ::= Module ;
+
+Mod.    Module ::= [Ext] ;
+
+-- [].       [Ext] ::= ;
+(:[]).    [Ext] ::= Ext;
+(:).      [Ext] ::= Ext [Ext];
+
+ExtDecl.   Ext    ::= Declaration ;
+ExtFun.    Ext    ::= Function ;
+
+NoAssgmDec.     Declaration ::= Type Id ";" ;
+AssgmDec.       Declaration ::= Type Id AssgnmOp Exp ";" ;
+
+
+FunDec.       Function ::= Signature Body ;
+
+Sign.            Signature ::= Type Id FunctionParams ;
+
+FunParams.      FunctionParams ::= "(" [Param] ")" ;
+
+[].       [Param] ::= ;
+(:[]).    [Param] ::= Param;
+(:).      [Param] ::= Param "," [Param];
+
+ParNoMode.   Param  ::= Type Id ;
+ParWMode.    Param  ::= Mode Type Id ;
+
+
+FunBlock.       Body ::= "{" [BodyStatement] "}" ;
+
+[].       [BodyStatement] ::= ;
+-- (:[]).    [BodyStatement] ::= BodyStatement;
+(:).      [BodyStatement] ::= BodyStatement [BodyStatement];
+
+Stm.       BodyStatement  ::= Statement ;
+Fun.       BodyStatement  ::= Function ";" ;
+Decl.      BodyStatement  ::= Declaration ;
+Block.     BodyStatement  ::= Body ;
+
+DoWhile.   Statement      ::= "do" "while" Body Guard ;
+
+SGuard.    Guard          ::= "(" Exp ")" ;     
+
+Tint.      Type ::= "int" ;
+Tid.       Id   ::= Ident ;
+
+AssgnEq.   AssgnmOp ::= "=" ;
+AssgnPlEq.   AssgnmOp ::= "+=" ;
+
+RefMode.   Mode ::= "ref" ;
+
+
+Elor.        Exp  ::= Exp "||" Exp5;
+Eland.       Exp5  ::= Exp5 "&&" Exp6;
+Ebitor.      Exp6  ::= Exp6 "|" Exp7;
+Ebitexor.    Exp7  ::= Exp7 "^" Exp8;
+Ebitand.     Exp8  ::= Exp8 "&" Exp9;
+Eeq.         Exp9  ::= Exp9 "==" Exp10;
+Eneq.        Exp9  ::= Exp9 "!=" Exp10;
+Elthen.      Exp10 ::= Exp10 "<" Exp11;
+Egrthen.     Exp10 ::= Exp10 ">" Exp11;
+Ele.         Exp10 ::= Exp10 "<=" Exp11;
+Ege.         Exp10 ::= Exp10 ">=" Exp11;
+Eleft.       Exp11 ::= Exp11 "<<" Exp12;
+Eright.      Exp11 ::= Exp11 ">>" Exp12;
+Eplus.       Exp12 ::= Exp12 "+" Exp13;
+Eminus.      Exp12 ::= Exp12 "-" Exp13;
+Etimes.      Exp13 ::= Exp13 "*" Exp14;
+Ediv.        Exp13 ::= Exp13 "/" Exp14;
+Emod.        Exp13 ::= Exp13 "%" Exp14;
+
+_. Exp  ::= Exp5 ;
+_. Exp5  ::= Exp6 ;
+_. Exp6  ::= Exp7 ;
+_. Exp7  ::= Exp8 ;
+_. Exp8  ::= Exp9 ;
+_. Exp9  ::= Exp10 ;
+_. Exp10 ::= Exp11 ;
+_. Exp11 ::= Exp12 ;
+_. Exp12 ::= Exp13 ;
+_. Exp13 ::= Exp14 ;
+_. Exp14 ::= "(" Exp ")" ;
+
+Evar.        Exp14 ::= Ident;
+Econst.      Exp14 ::= Constant;
+Estring.     Exp14 ::= String;
+
+Efloat.        Constant ::= Double;
+Echar.         Constant ::= Char;
+Eint.          Constant ::= Integer;

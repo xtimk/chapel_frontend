@@ -1,0 +1,11 @@
+int x ;
+
+int pippo (ref int x) {
+    {
+        do while
+        {
+            int x = x;
+            int pippo = 5 + 6 + (7 * 6);
+        } (merda == cacca)
+    }
+}
