@@ -9,9 +9,36 @@ type Result = Err String
 failure :: Show a => a -> Result
 failure x = Bad $ "Undefined case: " ++ show x
 
-transIdent :: Ident -> Result
-transIdent x = case x of
-  Ident string -> failure x
+transPOpenGraph :: POpenGraph -> Result
+transPOpenGraph x = case x of
+  POpenGraph string -> failure x
+transPCloseGraph :: PCloseGraph -> Result
+transPCloseGraph x = case x of
+  PCloseGraph string -> failure x
+transPSemicolon :: PSemicolon -> Result
+transPSemicolon x = case x of
+  PSemicolon string -> failure x
+transPIdent :: PIdent -> Result
+transPIdent x = case x of
+  PIdent string -> failure x
+transPString :: PString -> Result
+transPString x = case x of
+  PString string -> failure x
+transPChar :: PChar -> Result
+transPChar x = case x of
+  PChar string -> failure x
+transPDouble :: PDouble -> Result
+transPDouble x = case x of
+  PDouble string -> failure x
+transPInteger :: PInteger -> Result
+transPInteger x = case x of
+  PInteger string -> failure x
+transPAssignmEq :: PAssignmEq -> Result
+transPAssignmEq x = case x of
+  PAssignmEq string -> failure x
+transPAssignmPlus :: PAssignmPlus -> Result
+transPAssignmPlus x = case x of
+  PAssignmPlus string -> failure x
 transProgram :: Program -> Result
 transProgram x = case x of
   Progr module_ -> failure x
@@ -24,51 +51,50 @@ transExt x = case x of
   ExtFun function -> failure x
 transDeclaration :: Declaration -> Result
 transDeclaration x = case x of
-  NoAssgmDec type_ id -> failure x
-  AssgmDec type_ id assgnmop exp -> failure x
+  NoAssgmDec type_ pident psemicolon -> failure x
+  AssgmDec type_ pident assgnmop exp psemicolon -> failure x
 transFunction :: Function -> Result
 transFunction x = case x of
   FunDec signature body -> failure x
 transSignature :: Signature -> Result
 transSignature x = case x of
-  Sign type_ id functionparams -> failure x
+  Sign type_ pident functionparams -> failure x
 transFunctionParams :: FunctionParams -> Result
 transFunctionParams x = case x of
   FunParams params -> failure x
 transParam :: Param -> Result
 transParam x = case x of
-  ParNoMode type_ id -> failure x
-  ParWMode mode type_ id -> failure x
+  ParNoMode type_ pident -> failure x
+  ParWMode mode type_ pident -> failure x
 transBody :: Body -> Result
 transBody x = case x of
-  FunBlock bodystatements -> failure x
+  FunBlock popengraph bodystatements pclosegraph -> failure x
 transBodyStatement :: BodyStatement -> Result
 transBodyStatement x = case x of
   Stm statement -> failure x
-  Fun function -> failure x
+  Fun function psemicolon -> failure x
   Decl declaration -> failure x
   Block body -> failure x
 transStatement :: Statement -> Result
 transStatement x = case x of
-  DoWhile guard -> failure x
+  DoWhile body guard -> failure x
+  StExp exp psemicolon -> failure x
 transGuard :: Guard -> Result
 transGuard x = case x of
   SGuard exp -> failure x
 transType :: Type -> Result
 transType x = case x of
   Tint -> failure x
-transId :: Id -> Result
-transId x = case x of
-  Tid ident -> failure x
 transAssgnmOp :: AssgnmOp -> Result
 transAssgnmOp x = case x of
-  AssgnEq -> failure x
-  AssgnPlEq -> failure x
+  AssgnEq passignmeq -> failure x
+  AssgnPlEq passignmplus -> failure x
 transMode :: Mode -> Result
 transMode x = case x of
   RefMode -> failure x
 transExp :: Exp -> Result
 transExp x = case x of
+  EAss exp1 assgnmop exp2 -> failure x
   Elor exp1 exp2 -> failure x
   Eland exp1 exp2 -> failure x
   Ebitor exp1 exp2 -> failure x
@@ -87,12 +113,12 @@ transExp x = case x of
   Etimes exp1 exp2 -> failure x
   Ediv exp1 exp2 -> failure x
   Emod exp1 exp2 -> failure x
-  Evar ident -> failure x
+  Evar pident -> failure x
   Econst constant -> failure x
-  Estring string -> failure x
+  Estring pstring -> failure x
 transConstant :: Constant -> Result
 transConstant x = case x of
-  Efloat double -> failure x
-  Echar char -> failure x
-  Eint integer -> failure x
+  Efloat pdouble -> failure x
+  Echar pchar -> failure x
+  Eint pinteger -> failure x
 

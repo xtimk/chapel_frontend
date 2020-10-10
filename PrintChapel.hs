@@ -88,8 +88,41 @@ instance Print Integer where
 instance Print Double where
   prt _ x = doc (shows x)
 
-instance Print AbsChapel.Ident where
-  prt _ (AbsChapel.Ident i) = doc (showString i)
+instance Print AbsChapel.POpenGraph where
+  prt _ (AbsChapel.POpenGraph (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PCloseGraph where
+  prt _ (AbsChapel.PCloseGraph (_,i)) = doc (showString i)
+
+instance Print AbsChapel.POpenParenthesis where
+  prt _ (AbsChapel.POpenParenthesis (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PCloseParenthesis where
+  prt _ (AbsChapel.PCloseParenthesis (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PSemicolon where
+  prt _ (AbsChapel.PSemicolon (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PIdent where
+  prt _ (AbsChapel.PIdent (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PString where
+  prt _ (AbsChapel.PString (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PChar where
+  prt _ (AbsChapel.PChar (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PDouble where
+  prt _ (AbsChapel.PDouble (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PInteger where
+  prt _ (AbsChapel.PInteger (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PAssignmEq where
+  prt _ (AbsChapel.PAssignmEq (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PAssignmPlus where
+  prt _ (AbsChapel.PAssignmPlus (_,i)) = doc (showString i)
 
 instance Print AbsChapel.Program where
   prt i e = case e of
@@ -111,8 +144,8 @@ instance Print AbsChapel.Ext where
 
 instance Print AbsChapel.Declaration where
   prt i e = case e of
-    AbsChapel.NoAssgmDec type_ id -> prPrec i 0 (concatD [prt 0 type_, prt 0 id, doc (showString ";")])
-    AbsChapel.AssgmDec type_ id assgnmop exp -> prPrec i 0 (concatD [prt 0 type_, prt 0 id, prt 0 assgnmop, prt 0 exp, doc (showString ";")])
+    AbsChapel.NoAssgmDec type_ pident psemicolon -> prPrec i 0 (concatD [prt 0 type_, prt 0 pident, prt 0 psemicolon])
+    AbsChapel.AssgmDec type_ pident assgnmop exp psemicolon -> prPrec i 0 (concatD [prt 0 type_, prt 0 pident, prt 0 assgnmop, prt 0 exp, prt 0 psemicolon])
 
 instance Print AbsChapel.Function where
   prt i e = case e of
@@ -120,26 +153,26 @@ instance Print AbsChapel.Function where
 
 instance Print AbsChapel.Signature where
   prt i e = case e of
-    AbsChapel.Sign type_ id functionparams -> prPrec i 0 (concatD [prt 0 type_, prt 0 id, prt 0 functionparams])
+    AbsChapel.Sign type_ pident functionparams -> prPrec i 0 (concatD [prt 0 type_, prt 0 pident, prt 0 functionparams])
 
 instance Print AbsChapel.FunctionParams where
   prt i e = case e of
-    AbsChapel.FunParams params -> prPrec i 0 (concatD [doc (showString "("), prt 0 params, doc (showString ")")])
+    AbsChapel.FunParams popenparenthesis params pcloseparenthesis -> prPrec i 0 (concatD [prt 0 popenparenthesis, prt 0 params, prt 0 pcloseparenthesis])
 
 instance Print [AbsChapel.Param] where
   prt = prtList
 
 instance Print AbsChapel.Param where
   prt i e = case e of
-    AbsChapel.ParNoMode type_ id -> prPrec i 0 (concatD [prt 0 type_, prt 0 id])
-    AbsChapel.ParWMode mode type_ id -> prPrec i 0 (concatD [prt 0 mode, prt 0 type_, prt 0 id])
+    AbsChapel.ParNoMode type_ pident -> prPrec i 0 (concatD [prt 0 type_, prt 0 pident])
+    AbsChapel.ParWMode mode type_ pident -> prPrec i 0 (concatD [prt 0 mode, prt 0 type_, prt 0 pident])
   prtList _ [] = concatD []
   prtList _ [x] = concatD [prt 0 x]
   prtList _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
 
 instance Print AbsChapel.Body where
   prt i e = case e of
-    AbsChapel.FunBlock bodystatements -> prPrec i 0 (concatD [doc (showString "{"), prt 0 bodystatements, doc (showString "}")])
+    AbsChapel.FunBlock popengraph bodystatements pclosegraph -> prPrec i 0 (concatD [prt 0 popengraph, prt 0 bodystatements, prt 0 pclosegraph])
 
 instance Print [AbsChapel.BodyStatement] where
   prt = prtList
@@ -147,7 +180,7 @@ instance Print [AbsChapel.BodyStatement] where
 instance Print AbsChapel.BodyStatement where
   prt i e = case e of
     AbsChapel.Stm statement -> prPrec i 0 (concatD [prt 0 statement])
-    AbsChapel.Fun function -> prPrec i 0 (concatD [prt 0 function, doc (showString ";")])
+    AbsChapel.Fun function psemicolon -> prPrec i 0 (concatD [prt 0 function, prt 0 psemicolon])
     AbsChapel.Decl declaration -> prPrec i 0 (concatD [prt 0 declaration])
     AbsChapel.Block body -> prPrec i 0 (concatD [prt 0 body])
   prtList _ [] = concatD []
@@ -156,23 +189,20 @@ instance Print AbsChapel.BodyStatement where
 instance Print AbsChapel.Statement where
   prt i e = case e of
     AbsChapel.DoWhile body guard -> prPrec i 0 (concatD [doc (showString "do"), doc (showString "while"), prt 0 body, prt 0 guard])
+    AbsChapel.StExp exp psemicolon -> prPrec i 0 (concatD [prt 0 exp, prt 0 psemicolon])
 
 instance Print AbsChapel.Guard where
   prt i e = case e of
-    AbsChapel.SGuard exp -> prPrec i 0 (concatD [doc (showString "("), prt 0 exp, doc (showString ")")])
+    AbsChapel.SGuard popenparenthesis exp pcloseparenthesis -> prPrec i 0 (concatD [prt 0 popenparenthesis, prt 0 exp, prt 0 pcloseparenthesis])
 
 instance Print AbsChapel.Type where
   prt i e = case e of
     AbsChapel.Tint -> prPrec i 0 (concatD [doc (showString "int")])
 
-instance Print AbsChapel.Id where
-  prt i e = case e of
-    AbsChapel.Tid id -> prPrec i 0 (concatD [prt 0 id])
-
 instance Print AbsChapel.AssgnmOp where
   prt i e = case e of
-    AbsChapel.AssgnEq -> prPrec i 0 (concatD [doc (showString "=")])
-    AbsChapel.AssgnPlEq -> prPrec i 0 (concatD [doc (showString "+=")])
+    AbsChapel.AssgnEq passignmeq -> prPrec i 0 (concatD [prt 0 passignmeq])
+    AbsChapel.AssgnPlEq passignmplus -> prPrec i 0 (concatD [prt 0 passignmplus])
 
 instance Print AbsChapel.Mode where
   prt i e = case e of
@@ -180,7 +210,8 @@ instance Print AbsChapel.Mode where
 
 instance Print AbsChapel.Exp where
   prt i e = case e of
-    AbsChapel.Elor exp1 exp2 -> prPrec i 0 (concatD [prt 0 exp1, doc (showString "||"), prt 5 exp2])
+    AbsChapel.EAss exp1 assgnmop exp2 -> prPrec i 0 (concatD [prt 0 exp1, prt 0 assgnmop, prt 4 exp2])
+    AbsChapel.Elor exp1 exp2 -> prPrec i 4 (concatD [prt 4 exp1, doc (showString "||"), prt 5 exp2])
     AbsChapel.Eland exp1 exp2 -> prPrec i 5 (concatD [prt 5 exp1, doc (showString "&&"), prt 6 exp2])
     AbsChapel.Ebitor exp1 exp2 -> prPrec i 6 (concatD [prt 6 exp1, doc (showString "|"), prt 7 exp2])
     AbsChapel.Ebitexor exp1 exp2 -> prPrec i 7 (concatD [prt 7 exp1, doc (showString "^"), prt 8 exp2])
@@ -198,13 +229,14 @@ instance Print AbsChapel.Exp where
     AbsChapel.Etimes exp1 exp2 -> prPrec i 13 (concatD [prt 13 exp1, doc (showString "*"), prt 14 exp2])
     AbsChapel.Ediv exp1 exp2 -> prPrec i 13 (concatD [prt 13 exp1, doc (showString "/"), prt 14 exp2])
     AbsChapel.Emod exp1 exp2 -> prPrec i 13 (concatD [prt 13 exp1, doc (showString "%"), prt 14 exp2])
-    AbsChapel.Evar id -> prPrec i 14 (concatD [prt 0 id])
+    AbsChapel.InnerExp popenparenthesis exp pcloseparenthesis -> prPrec i 14 (concatD [prt 0 popenparenthesis, prt 0 exp, prt 0 pcloseparenthesis])
+    AbsChapel.Evar pident -> prPrec i 14 (concatD [prt 0 pident])
     AbsChapel.Econst constant -> prPrec i 14 (concatD [prt 0 constant])
-    AbsChapel.Estring str -> prPrec i 14 (concatD [prt 0 str])
+    AbsChapel.Estring pstring -> prPrec i 14 (concatD [prt 0 pstring])
 
 instance Print AbsChapel.Constant where
   prt i e = case e of
-    AbsChapel.Efloat d -> prPrec i 0 (concatD [prt 0 d])
-    AbsChapel.Echar c -> prPrec i 0 (concatD [prt 0 c])
-    AbsChapel.Eint n -> prPrec i 0 (concatD [prt 0 n])
+    AbsChapel.Efloat pdouble -> prPrec i 0 (concatD [prt 0 pdouble])
+    AbsChapel.Echar pchar -> prPrec i 0 (concatD [prt 0 pchar])
+    AbsChapel.Eint pinteger -> prPrec i 0 (concatD [prt 0 pinteger])
 

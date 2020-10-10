@@ -1,10 +1,11 @@
-int x ;
-
+int x;
+int y = 4;
 int pippo (ref int x) {
     {
         do while
         {
             int x = x;
+            y = z;
             int pippo = 5 + 6 + (7 * 6);
         } (merda == cacca)
     }

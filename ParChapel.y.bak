@@ -21,50 +21,65 @@ import ErrM
   ')' { PT _ (TS _ 6) }
   '*' { PT _ (TS _ 7) }
   '+' { PT _ (TS _ 8) }
-  '+=' { PT _ (TS _ 9) }
-  ',' { PT _ (TS _ 10) }
-  '-' { PT _ (TS _ 11) }
-  '/' { PT _ (TS _ 12) }
-  ';' { PT _ (TS _ 13) }
-  '<' { PT _ (TS _ 14) }
-  '<<' { PT _ (TS _ 15) }
-  '<=' { PT _ (TS _ 16) }
-  '=' { PT _ (TS _ 17) }
-  '==' { PT _ (TS _ 18) }
-  '>' { PT _ (TS _ 19) }
-  '>=' { PT _ (TS _ 20) }
-  '>>' { PT _ (TS _ 21) }
-  '^' { PT _ (TS _ 22) }
-  'do' { PT _ (TS _ 23) }
-  'int' { PT _ (TS _ 24) }
-  'ref' { PT _ (TS _ 25) }
-  'while' { PT _ (TS _ 26) }
-  '{' { PT _ (TS _ 27) }
-  '|' { PT _ (TS _ 28) }
-  '||' { PT _ (TS _ 29) }
-  '}' { PT _ (TS _ 30) }
-  L_ident  { PT _ (TV $$) }
-  L_quoted { PT _ (TL $$) }
-  L_doubl  { PT _ (TD $$) }
-  L_charac { PT _ (TC $$) }
-  L_integ  { PT _ (TI $$) }
+  ',' { PT _ (TS _ 9) }
+  '-' { PT _ (TS _ 10) }
+  '/' { PT _ (TS _ 11) }
+  '<' { PT _ (TS _ 12) }
+  '<<' { PT _ (TS _ 13) }
+  '<=' { PT _ (TS _ 14) }
+  '==' { PT _ (TS _ 15) }
+  '>' { PT _ (TS _ 16) }
+  '>=' { PT _ (TS _ 17) }
+  '>>' { PT _ (TS _ 18) }
+  '^' { PT _ (TS _ 19) }
+  'do' { PT _ (TS _ 20) }
+  'int' { PT _ (TS _ 21) }
+  'ref' { PT _ (TS _ 22) }
+  'while' { PT _ (TS _ 23) }
+  '|' { PT _ (TS _ 24) }
+  '||' { PT _ (TS _ 25) }
+  L_POpenGraph { PT _ (T_POpenGraph _) }
+  L_PCloseGraph { PT _ (T_PCloseGraph _) }
+  L_PSemicolon { PT _ (T_PSemicolon _) }
+  L_PIdent { PT _ (T_PIdent _) }
+  L_PString { PT _ (T_PString _) }
+  L_PChar { PT _ (T_PChar _) }
+  L_PDouble { PT _ (T_PDouble _) }
+  L_PInteger { PT _ (T_PInteger _) }
+  L_PAssignmEq { PT _ (T_PAssignmEq _) }
+  L_PAssignmPlus { PT _ (T_PAssignmPlus _) }
 
 %%
 
-Ident   :: { Ident }
-Ident    : L_ident  { Ident $1 }
+POpenGraph :: { POpenGraph}
+POpenGraph  : L_POpenGraph { POpenGraph (mkPosToken $1)}
 
-String  :: { String }
-String   : L_quoted {  $1 }
+PCloseGraph :: { PCloseGraph}
+PCloseGraph  : L_PCloseGraph { PCloseGraph (mkPosToken $1)}
 
-Double  :: { Double }
-Double   : L_doubl  { (read ( $1)) :: Double }
+PSemicolon :: { PSemicolon}
+PSemicolon  : L_PSemicolon { PSemicolon (mkPosToken $1)}
 
-Char    :: { Char }
-Char     : L_charac { (read ( $1)) :: Char }
+PIdent :: { PIdent}
+PIdent  : L_PIdent { PIdent (mkPosToken $1)}
 
-Integer :: { Integer }
-Integer  : L_integ  { (read ( $1)) :: Integer }
+PString :: { PString}
+PString  : L_PString { PString (mkPosToken $1)}
+
+PChar :: { PChar}
+PChar  : L_PChar { PChar (mkPosToken $1)}
+
+PDouble :: { PDouble}
+PDouble  : L_PDouble { PDouble (mkPosToken $1)}
+
+PInteger :: { PInteger}
+PInteger  : L_PInteger { PInteger (mkPosToken $1)}
+
+PAssignmEq :: { PAssignmEq}
+PAssignmEq  : L_PAssignmEq { PAssignmEq (mkPosToken $1)}
+
+PAssignmPlus :: { PAssignmPlus}
+PAssignmPlus  : L_PAssignmPlus { PAssignmPlus (mkPosToken $1)}
 
 Program :: { Program }
 Program : Module { AbsChapel.Progr $1 }
@@ -76,12 +91,12 @@ Ext :: { Ext }
 Ext : Declaration { AbsChapel.ExtDecl $1 }
     | Function { AbsChapel.ExtFun $1 }
 Declaration :: { Declaration }
-Declaration : Type Id ';' { AbsChapel.NoAssgmDec $1 $2 }
-            | Type Id AssgnmOp Exp ';' { AbsChapel.AssgmDec $1 $2 $3 $4 }
+Declaration : Type PIdent PSemicolon { AbsChapel.NoAssgmDec $1 $2 $3 }
+            | Type PIdent AssgnmOp Exp PSemicolon { AbsChapel.AssgmDec $1 $2 $3 $4 $5 }
 Function :: { Function }
 Function : Signature Body { AbsChapel.FunDec $1 $2 }
 Signature :: { Signature }
-Signature : Type Id FunctionParams { AbsChapel.Sign $1 $2 $3 }
+Signature : Type PIdent FunctionParams { AbsChapel.Sign $1 $2 $3 }
 FunctionParams :: { FunctionParams }
 FunctionParams : '(' ListParam ')' { AbsChapel.FunParams $2 }
 ListParam :: { [Param] }
@@ -89,33 +104,34 @@ ListParam : {- empty -} { [] }
           | Param { (:[]) $1 }
           | Param ',' ListParam { (:) $1 $3 }
 Param :: { Param }
-Param : Type Id { AbsChapel.ParNoMode $1 $2 }
-      | Mode Type Id { AbsChapel.ParWMode $1 $2 $3 }
+Param : Type PIdent { AbsChapel.ParNoMode $1 $2 }
+      | Mode Type PIdent { AbsChapel.ParWMode $1 $2 $3 }
 Body :: { Body }
-Body : '{' ListBodyStatement '}' { AbsChapel.FunBlock $2 }
+Body : POpenGraph ListBodyStatement PCloseGraph { AbsChapel.FunBlock $1 (reverse $2) $3 }
 ListBodyStatement :: { [BodyStatement] }
 ListBodyStatement : {- empty -} { [] }
-                  | BodyStatement { (:[]) $1 }
-                  | BodyStatement ListBodyStatement { (:) $1 $2 }
+                  | ListBodyStatement BodyStatement { flip (:) $1 $2 }
 BodyStatement :: { BodyStatement }
 BodyStatement : Statement { AbsChapel.Stm $1 }
-              | Function ';' { AbsChapel.Fun $1 }
+              | Function PSemicolon { AbsChapel.Fun $1 $2 }
               | Declaration { AbsChapel.Decl $1 }
               | Body { AbsChapel.Block $1 }
 Statement :: { Statement }
-Statement : 'do' 'while' Guard { AbsChapel.DoWhile $3 }
+Statement : 'do' 'while' Body Guard { AbsChapel.DoWhile $3 $4 }
+          | Exp PSemicolon { AbsChapel.StExp $1 $2 }
 Guard :: { Guard }
 Guard : '(' Exp ')' { AbsChapel.SGuard $2 }
 Type :: { Type }
 Type : 'int' { AbsChapel.Tint }
-Id :: { Id }
-Id : Ident { AbsChapel.Tid $1 }
 AssgnmOp :: { AssgnmOp }
-AssgnmOp : '=' { AbsChapel.AssgnEq } | '+=' { AbsChapel.AssgnPlEq }
+AssgnmOp : PAssignmEq { AbsChapel.AssgnEq $1 }
+         | PAssignmPlus { AbsChapel.AssgnPlEq $1 }
 Mode :: { Mode }
 Mode : 'ref' { AbsChapel.RefMode }
 Exp :: { Exp }
-Exp : Exp '||' Exp5 { AbsChapel.Elor $1 $3 } | Exp5 { $1 }
+Exp : Exp AssgnmOp Exp4 { AbsChapel.EAss $1 $2 $3 } | Exp4 { $1 }
+Exp4 :: { Exp }
+Exp4 : Exp4 '||' Exp5 { AbsChapel.Elor $1 $3 } | Exp5 { $1 }
 Exp5 :: { Exp }
 Exp5 : Exp5 '&&' Exp6 { AbsChapel.Eland $1 $3 } | Exp6 { $1 }
 Exp6 :: { Exp }
@@ -149,13 +165,13 @@ Exp13 : Exp13 '*' Exp14 { AbsChapel.Etimes $1 $3 }
       | Exp14 { $1 }
 Exp14 :: { Exp }
 Exp14 : '(' Exp ')' { $2 }
-      | Ident { AbsChapel.Evar $1 }
+      | PIdent { AbsChapel.Evar $1 }
       | Constant { AbsChapel.Econst $1 }
-      | String { AbsChapel.Estring $1 }
+      | PString { AbsChapel.Estring $1 }
 Constant :: { Constant }
-Constant : Double { AbsChapel.Efloat $1 }
-         | Char { AbsChapel.Echar $1 }
-         | Integer { AbsChapel.Eint $1 }
+Constant : PDouble { AbsChapel.Efloat $1 }
+         | PChar { AbsChapel.Echar $1 }
+         | PInteger { AbsChapel.Eint $1 }
 {
 
 returnM :: a -> Err a

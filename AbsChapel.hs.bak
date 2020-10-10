@@ -3,7 +3,34 @@
 
 module AbsChapel where
 
-newtype Ident = Ident String
+newtype POpenGraph = POpenGraph ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PCloseGraph = PCloseGraph ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PSemicolon = PSemicolon ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PIdent = PIdent ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PString = PString ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PChar = PChar ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PDouble = PDouble ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PInteger = PInteger ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PAssignmEq = PAssignmEq ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PAssignmPlus = PAssignmPlus ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
 data Program = Progr Module
@@ -16,29 +43,33 @@ data Ext = ExtDecl Declaration | ExtFun Function
   deriving (Eq, Ord, Show, Read)
 
 data Declaration
-    = NoAssgmDec Type Id | AssgmDec Type Id AssgnmOp Exp
+    = NoAssgmDec Type PIdent PSemicolon
+    | AssgmDec Type PIdent AssgnmOp Exp PSemicolon
   deriving (Eq, Ord, Show, Read)
 
 data Function = FunDec Signature Body
   deriving (Eq, Ord, Show, Read)
 
-data Signature = Sign Type Id FunctionParams
+data Signature = Sign Type PIdent FunctionParams
   deriving (Eq, Ord, Show, Read)
 
 data FunctionParams = FunParams [Param]
   deriving (Eq, Ord, Show, Read)
 
-data Param = ParNoMode Type Id | ParWMode Mode Type Id
+data Param = ParNoMode Type PIdent | ParWMode Mode Type PIdent
   deriving (Eq, Ord, Show, Read)
 
-data Body = FunBlock [BodyStatement]
+data Body = FunBlock POpenGraph [BodyStatement] PCloseGraph
   deriving (Eq, Ord, Show, Read)
 
 data BodyStatement
-    = Stm Statement | Fun Function | Decl Declaration | Block Body
+    = Stm Statement
+    | Fun Function PSemicolon
+    | Decl Declaration
+    | Block Body
   deriving (Eq, Ord, Show, Read)
 
-data Statement = DoWhile Guard
+data Statement = DoWhile Body Guard | StExp Exp PSemicolon
   deriving (Eq, Ord, Show, Read)
 
 data Guard = SGuard Exp
@@ -47,17 +78,15 @@ data Guard = SGuard Exp
 data Type = Tint
   deriving (Eq, Ord, Show, Read)
 
-data Id = Tid Ident
-  deriving (Eq, Ord, Show, Read)
-
-data AssgnmOp = AssgnEq | AssgnPlEq
+data AssgnmOp = AssgnEq PAssignmEq | AssgnPlEq PAssignmPlus
   deriving (Eq, Ord, Show, Read)
 
 data Mode = RefMode
   deriving (Eq, Ord, Show, Read)
 
 data Exp
-    = Elor Exp Exp
+    = EAss Exp AssgnmOp Exp
+    | Elor Exp Exp
     | Eland Exp Exp
     | Ebitor Exp Exp
     | Ebitexor Exp Exp
@@ -75,11 +104,11 @@ data Exp
     | Etimes Exp Exp
     | Ediv Exp Exp
     | Emod Exp Exp
-    | Evar Ident
+    | Evar PIdent
     | Econst Constant
-    | Estring String
+    | Estring PString
   deriving (Eq, Ord, Show, Read)
 
-data Constant = Efloat Double | Echar Char | Eint Integer
+data Constant = Efloat PDouble | Echar PChar | Eint PInteger
   deriving (Eq, Ord, Show, Read)
 

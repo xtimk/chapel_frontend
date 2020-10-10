@@ -1,5 +1,24 @@
 entrypoints Program ;
 
+position token POpenGraph ('{');
+position token PCloseGraph ('}');
+
+position token POpenParenthesis ('(');
+position token PCloseParenthesis (')');
+
+--position token POpenBracket ('[');
+--position token PCloseBracket (']');
+
+position token PSemicolon (';');
+-- position token PComma (',');
+
+position token PIdent (letter (letter|digit|'_'|'\'')*) ;
+position token PString ('"' ((char - ["\"\\"]) | ('\\' ["\"\\nt"]))* '"') ;
+position token PChar ('\'' ((char - ["'\\"]) | ('\\' ["'\\nt"])) '\'') ;
+position token PDouble (digit+ '.' digit+ ('e' '-'? digit+)?) ;
+position token PInteger (digit+) ;
+
+
 Progr.  Program ::= Module ;
 
 Mod.    Module ::= [Ext] ;
@@ -11,49 +30,52 @@ Mod.    Module ::= [Ext] ;
 ExtDecl.   Ext    ::= Declaration ;
 ExtFun.    Ext    ::= Function ;
 
-NoAssgmDec.     Declaration ::= Type Id ";" ;
-AssgmDec.       Declaration ::= Type Id AssgnmOp Exp ";" ;
+NoAssgmDec.     Declaration ::= Type PIdent PSemicolon;
+AssgmDec.       Declaration ::= Type PIdent AssgnmOp Exp PSemicolon;
 
 
 FunDec.       Function ::= Signature Body ;
 
-Sign.            Signature ::= Type Id FunctionParams ;
+Sign.            Signature ::= Type PIdent FunctionParams ;
 
-FunParams.      FunctionParams ::= "(" [Param] ")" ;
+FunParams.      FunctionParams ::= POpenParenthesis [Param] PCloseParenthesis ;
 
 [].       [Param] ::= ;
 (:[]).    [Param] ::= Param;
 (:).      [Param] ::= Param "," [Param];
 
-ParNoMode.   Param  ::= Type Id ;
-ParWMode.    Param  ::= Mode Type Id ;
+ParNoMode.   Param  ::= Type PIdent ;
+ParWMode.    Param  ::= Mode Type PIdent ;
 
 
-FunBlock.       Body ::= "{" [BodyStatement] "}" ;
+FunBlock.       Body ::= POpenGraph [BodyStatement] PCloseGraph ;
 
 [].       [BodyStatement] ::= ;
--- (:[]).    [BodyStatement] ::= BodyStatement;
 (:).      [BodyStatement] ::= BodyStatement [BodyStatement];
 
 Stm.       BodyStatement  ::= Statement ;
-Fun.       BodyStatement  ::= Function ";" ;
+Fun.       BodyStatement  ::= Function PSemicolon ;
 Decl.      BodyStatement  ::= Declaration ;
 Block.     BodyStatement  ::= Body ;
 
 DoWhile.   Statement      ::= "do" "while" Body Guard ;
+StExp.     Statement      ::= Exp PSemicolon;
 
-SGuard.    Guard          ::= "(" Exp ")" ;     
+SGuard.    Guard          ::= POpenParenthesis Exp PCloseParenthesis ;     
 
 Tint.      Type ::= "int" ;
-Tid.       Id   ::= Ident ;
+-- Tid.       Id   ::= PIdent ;
 
-AssgnEq.   AssgnmOp ::= "=" ;
-AssgnPlEq.   AssgnmOp ::= "+=" ;
+AssgnEq.   AssgnmOp ::= PAssignmEq ;
+AssgnPlEq.   AssgnmOp ::= PAssignmPlus ;
+position token PAssignmEq ('=') ;
+position token PAssignmPlus ('+''=') ;
 
 RefMode.   Mode ::= "ref" ;
 
 
-Elor.        Exp  ::= Exp "||" Exp5;
+EAss.        Exp ::= Exp AssgnmOp Exp4;
+Elor.        Exp4  ::= Exp4 "||" Exp5;
 Eland.       Exp5  ::= Exp5 "&&" Exp6;
 Ebitor.      Exp6  ::= Exp6 "|" Exp7;
 Ebitexor.    Exp7  ::= Exp7 "^" Exp8;
@@ -72,7 +94,8 @@ Etimes.      Exp13 ::= Exp13 "*" Exp14;
 Ediv.        Exp13 ::= Exp13 "/" Exp14;
 Emod.        Exp13 ::= Exp13 "%" Exp14;
 
-_. Exp  ::= Exp5 ;
+_. Exp  ::= Exp4 ;
+_. Exp4  ::= Exp5 ;
 _. Exp5  ::= Exp6 ;
 _. Exp6  ::= Exp7 ;
 _. Exp7  ::= Exp8 ;
@@ -82,12 +105,13 @@ _. Exp10 ::= Exp11 ;
 _. Exp11 ::= Exp12 ;
 _. Exp12 ::= Exp13 ;
 _. Exp13 ::= Exp14 ;
-_. Exp14 ::= "(" Exp ")" ;
+InnerExp. Exp14 ::= POpenParenthesis Exp PCloseParenthesis ;
 
-Evar.        Exp14 ::= Ident;
+
+Evar.        Exp14 ::= PIdent;
 Econst.      Exp14 ::= Constant;
-Estring.     Exp14 ::= String;
+Estring.     Exp14 ::= PString;
 
-Efloat.        Constant ::= Double;
-Echar.         Constant ::= Char;
-Eint.          Constant ::= Integer;
+Efloat.        Constant ::= PDouble;
+Echar.         Constant ::= PChar;
+Eint.          Constant ::= PInteger;
