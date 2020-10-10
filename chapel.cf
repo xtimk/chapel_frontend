@@ -10,7 +10,38 @@ position token PCloseParenthesis (')');
 --position token PCloseBracket (']');
 
 position token PSemicolon (';');
+position token PColon (':');
 -- position token PComma (',');
+
+position token Pdo {"do"};
+position token PWhile {"while"};
+
+position token PInt ({"int"});
+position token PReal ({"real"});
+
+position token PAssignmEq ('=') ;
+position token PAssignmPlus ({"+="}) ;
+
+position token PRef ({"ref"});
+
+position token PVar ({"var"});
+position token PConst ({"const"});
+
+position token PElthen ('<');
+position token PEgrthen ('>');
+position token PEplus ('+');
+position token PEminus ('-');
+position token PEtimes ('*');
+position token PEdiv ('/');
+position token PEmod ('%');
+position token PDef ('&');
+position token PElor ({"||"});
+position token PEland ({"&&"});
+position token PEeq ({"=="});
+position token PEneq ({"!="});
+position token PEle ({"<="});
+position token PEge ({">="});
+
 
 position token PIdent (letter (letter|digit|'_'|'\'')*) ;
 position token PString ('"' ((char - ["\"\\"]) | ('\\' ["\"\\nt"]))* '"') ;
@@ -30,8 +61,25 @@ Mod.    Module ::= [Ext] ;
 ExtDecl.   Ext    ::= Declaration ;
 ExtFun.    Ext    ::= Function ;
 
-NoAssgmDec.     Declaration ::= Type PIdent PSemicolon;
-AssgmDec.       Declaration ::= Type PIdent AssgnmOp Exp PSemicolon;
+Decl.     Declaration ::= DecMode [DeclList] PSemicolon;
+--AssgmDec.       Declaration ::= DecMode [PIdent] PAssignmEq Exp PSemicolon;
+--AssgmTypeDec.       Declaration ::= DecMode [PIdent] PColon Type PAssignmEq Exp PSemicolon;
+
+                
+(:[]).    [DeclList] ::= DeclList;
+(:).      [DeclList] ::= DeclList "," [DeclList];
+
+NoAssgmDec.     DeclList ::= [PIdent] PColon Type ;
+AssgmDec.       DeclList ::= [PIdent] PAssignmEq Exp ;
+AssgmTypeDec.   DeclList ::= [PIdent] PColon Type PAssignmEq Exp ;
+
+
+(:[]).    [PIdent] ::= PIdent;
+(:).      [PIdent] ::= PIdent "," [PIdent];
+
+PVarMode.   DecMode ::= PVar ;
+PConstMode.   DecMode ::= PConst ;
+
 
 
 FunDec.       Function ::= Signature Body ;
@@ -55,44 +103,41 @@ FunBlock.       Body ::= POpenGraph [BodyStatement] PCloseGraph ;
 
 Stm.       BodyStatement  ::= Statement ;
 Fun.       BodyStatement  ::= Function PSemicolon ;
-Decl.      BodyStatement  ::= Declaration ;
+DeclStm.      BodyStatement  ::= Declaration ;
 Block.     BodyStatement  ::= Body ;
 
-DoWhile.   Statement      ::= "do" "while" Body Guard ;
+DoWhile.   Statement      ::= Pdo PWhile Body Guard ;
+
+
+
 StExp.     Statement      ::= Exp PSemicolon;
 
 SGuard.    Guard          ::= POpenParenthesis Exp PCloseParenthesis ;     
 
-Tint.      Type ::= "int" ;
--- Tid.       Id   ::= PIdent ;
+Tint.      Type ::= PInt ;
+Treal.     Type ::= PReal ;
 
 AssgnEq.   AssgnmOp ::= PAssignmEq ;
 AssgnPlEq.   AssgnmOp ::= PAssignmPlus ;
-position token PAssignmEq ('=') ;
-position token PAssignmPlus ('+''=') ;
 
-RefMode.   Mode ::= "ref" ;
+RefMode.   Mode ::= PRef ;
 
 
 EAss.        Exp ::= Exp AssgnmOp Exp4;
-Elor.        Exp4  ::= Exp4 "||" Exp5;
-Eland.       Exp5  ::= Exp5 "&&" Exp6;
-Ebitor.      Exp6  ::= Exp6 "|" Exp7;
-Ebitexor.    Exp7  ::= Exp7 "^" Exp8;
-Ebitand.     Exp8  ::= Exp8 "&" Exp9;
-Eeq.         Exp9  ::= Exp9 "==" Exp10;
-Eneq.        Exp9  ::= Exp9 "!=" Exp10;
-Elthen.      Exp10 ::= Exp10 "<" Exp11;
-Egrthen.     Exp10 ::= Exp10 ">" Exp11;
-Ele.         Exp10 ::= Exp10 "<=" Exp11;
-Ege.         Exp10 ::= Exp10 ">=" Exp11;
-Eleft.       Exp11 ::= Exp11 "<<" Exp12;
-Eright.      Exp11 ::= Exp11 ">>" Exp12;
-Eplus.       Exp12 ::= Exp12 "+" Exp13;
-Eminus.      Exp12 ::= Exp12 "-" Exp13;
-Etimes.      Exp13 ::= Exp13 "*" Exp14;
-Ediv.        Exp13 ::= Exp13 "/" Exp14;
-Emod.        Exp13 ::= Exp13 "%" Exp14;
+Elor.        Exp4  ::= Exp4 PElor Exp5;
+Eland.       Exp5  ::= Exp5 PEland Exp8;
+Ebitand.     Exp8  ::= Exp8 PDef Exp9;
+Eeq.         Exp9  ::= Exp9 PEeq Exp10;
+Eneq.        Exp9  ::= Exp9 PEneq Exp10;
+Elthen.      Exp10 ::= Exp10 PElthen Exp11;
+Egrthen.     Exp10 ::= Exp10 PEgrthen Exp11;
+Ele.         Exp10 ::= Exp10 PEle Exp11;
+Ege.         Exp10 ::= Exp10 PEge Exp12;
+Eplus.       Exp12 ::= Exp12 PEplus Exp13;
+Eminus.      Exp12 ::= Exp12 PEminus Exp13;
+Etimes.      Exp13 ::= Exp13 PEtimes Exp14;
+Ediv.        Exp13 ::= Exp13 PEdiv Exp14;
+Emod.        Exp13 ::= Exp13 PEmod Exp14;
 
 _. Exp  ::= Exp4 ;
 _. Exp4  ::= Exp5 ;

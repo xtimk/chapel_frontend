@@ -21,7 +21,7 @@ $i = [$l $d _ ']     -- identifier character
 $u = [. \n]          -- universal: any character
 
 @rsyms =    -- symbols and non-identifier-like reserved words
-   \, | \| \| | \& \& | \| | \^ | \& | \= \= | \! \= | \< | \> | \< \= | \> \= | \< \< | \> \> | \+ | \- | \* | \/ | \%
+   \,
 
 :-
 
@@ -38,6 +38,54 @@ $white+ ;
     { tok (\p s -> PT p (eitherResIdent (T_PCloseParenthesis . share) s)) }
 \;
     { tok (\p s -> PT p (eitherResIdent (T_PSemicolon . share) s)) }
+\:
+    { tok (\p s -> PT p (eitherResIdent (T_PColon . share) s)) }
+d o
+    { tok (\p s -> PT p (eitherResIdent (T_Pdo . share) s)) }
+w h i l e
+    { tok (\p s -> PT p (eitherResIdent (T_PWhile . share) s)) }
+i n t
+    { tok (\p s -> PT p (eitherResIdent (T_PInt . share) s)) }
+r e a l
+    { tok (\p s -> PT p (eitherResIdent (T_PReal . share) s)) }
+\=
+    { tok (\p s -> PT p (eitherResIdent (T_PAssignmEq . share) s)) }
+\+ \=
+    { tok (\p s -> PT p (eitherResIdent (T_PAssignmPlus . share) s)) }
+r e f
+    { tok (\p s -> PT p (eitherResIdent (T_PRef . share) s)) }
+v a r
+    { tok (\p s -> PT p (eitherResIdent (T_PVar . share) s)) }
+c o n s t
+    { tok (\p s -> PT p (eitherResIdent (T_PConst . share) s)) }
+\<
+    { tok (\p s -> PT p (eitherResIdent (T_PElthen . share) s)) }
+\>
+    { tok (\p s -> PT p (eitherResIdent (T_PEgrthen . share) s)) }
+\+
+    { tok (\p s -> PT p (eitherResIdent (T_PEplus . share) s)) }
+\-
+    { tok (\p s -> PT p (eitherResIdent (T_PEminus . share) s)) }
+\*
+    { tok (\p s -> PT p (eitherResIdent (T_PEtimes . share) s)) }
+\/
+    { tok (\p s -> PT p (eitherResIdent (T_PEdiv . share) s)) }
+\%
+    { tok (\p s -> PT p (eitherResIdent (T_PEmod . share) s)) }
+\&
+    { tok (\p s -> PT p (eitherResIdent (T_PDef . share) s)) }
+\| \|
+    { tok (\p s -> PT p (eitherResIdent (T_PElor . share) s)) }
+\& \&
+    { tok (\p s -> PT p (eitherResIdent (T_PEland . share) s)) }
+\= \=
+    { tok (\p s -> PT p (eitherResIdent (T_PEeq . share) s)) }
+\! \=
+    { tok (\p s -> PT p (eitherResIdent (T_PEneq . share) s)) }
+\< \=
+    { tok (\p s -> PT p (eitherResIdent (T_PEle . share) s)) }
+\> \=
+    { tok (\p s -> PT p (eitherResIdent (T_PEge . share) s)) }
 $l ($l | $d | \_ | \')*
     { tok (\p s -> PT p (eitherResIdent (T_PIdent . share) s)) }
 \" ($u # [\" \\]| \\ [\" \\ n t]) * \"
@@ -48,10 +96,6 @@ $d + \. $d + (e \- ? $d +)?
     { tok (\p s -> PT p (eitherResIdent (T_PDouble . share) s)) }
 $d +
     { tok (\p s -> PT p (eitherResIdent (T_PInteger . share) s)) }
-\=
-    { tok (\p s -> PT p (eitherResIdent (T_PAssignmEq . share) s)) }
-\+ \=
-    { tok (\p s -> PT p (eitherResIdent (T_PAssignmPlus . share) s)) }
 
 $l $i*
     { tok (\p s -> PT p (eitherResIdent (TV . share) s)) }
@@ -80,13 +124,35 @@ data Tok =
  | T_POpenParenthesis !String
  | T_PCloseParenthesis !String
  | T_PSemicolon !String
+ | T_PColon !String
+ | T_Pdo !String
+ | T_PWhile !String
+ | T_PInt !String
+ | T_PReal !String
+ | T_PAssignmEq !String
+ | T_PAssignmPlus !String
+ | T_PRef !String
+ | T_PVar !String
+ | T_PConst !String
+ | T_PElthen !String
+ | T_PEgrthen !String
+ | T_PEplus !String
+ | T_PEminus !String
+ | T_PEtimes !String
+ | T_PEdiv !String
+ | T_PEmod !String
+ | T_PDef !String
+ | T_PElor !String
+ | T_PEland !String
+ | T_PEeq !String
+ | T_PEneq !String
+ | T_PEle !String
+ | T_PEge !String
  | T_PIdent !String
  | T_PString !String
  | T_PChar !String
  | T_PDouble !String
  | T_PInteger !String
- | T_PAssignmEq !String
- | T_PAssignmPlus !String
 
  deriving (Eq,Show,Ord)
 
@@ -129,13 +195,35 @@ prToken t = case t of
   PT _ (T_POpenParenthesis s) -> s
   PT _ (T_PCloseParenthesis s) -> s
   PT _ (T_PSemicolon s) -> s
+  PT _ (T_PColon s) -> s
+  PT _ (T_Pdo s) -> s
+  PT _ (T_PWhile s) -> s
+  PT _ (T_PInt s) -> s
+  PT _ (T_PReal s) -> s
+  PT _ (T_PAssignmEq s) -> s
+  PT _ (T_PAssignmPlus s) -> s
+  PT _ (T_PRef s) -> s
+  PT _ (T_PVar s) -> s
+  PT _ (T_PConst s) -> s
+  PT _ (T_PElthen s) -> s
+  PT _ (T_PEgrthen s) -> s
+  PT _ (T_PEplus s) -> s
+  PT _ (T_PEminus s) -> s
+  PT _ (T_PEtimes s) -> s
+  PT _ (T_PEdiv s) -> s
+  PT _ (T_PEmod s) -> s
+  PT _ (T_PDef s) -> s
+  PT _ (T_PElor s) -> s
+  PT _ (T_PEland s) -> s
+  PT _ (T_PEeq s) -> s
+  PT _ (T_PEneq s) -> s
+  PT _ (T_PEle s) -> s
+  PT _ (T_PEge s) -> s
   PT _ (T_PIdent s) -> s
   PT _ (T_PString s) -> s
   PT _ (T_PChar s) -> s
   PT _ (T_PDouble s) -> s
   PT _ (T_PInteger s) -> s
-  PT _ (T_PAssignmEq s) -> s
-  PT _ (T_PAssignmPlus s) -> s
 
 
 data BTree = N | B String Tok BTree BTree deriving (Show)
@@ -149,7 +237,7 @@ eitherResIdent tv s = treeFind resWords
                               | s == a = t
 
 resWords :: BTree
-resWords = b "<=" 12 (b "+" 6 (b "&" 3 (b "%" 2 (b "!=" 1 N N) N) (b "*" 5 (b "&&" 4 N N) N)) (b "/" 9 (b "-" 8 (b "," 7 N N) N) (b "<<" 11 (b "<" 10 N N) N))) (b "do" 18 (b ">=" 15 (b ">" 14 (b "==" 13 N N) N) (b "^" 17 (b ">>" 16 N N) N)) (b "while" 21 (b "ref" 20 (b "int" 19 N N) N) (b "||" 23 (b "|" 22 N N) N)))
+resWords = b "," 1 N N
    where b s n = let bs = id s
                   in B bs (TS bs n)
 

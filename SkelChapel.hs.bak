@@ -15,9 +15,84 @@ transPOpenGraph x = case x of
 transPCloseGraph :: PCloseGraph -> Result
 transPCloseGraph x = case x of
   PCloseGraph string -> failure x
+transPOpenParenthesis :: POpenParenthesis -> Result
+transPOpenParenthesis x = case x of
+  POpenParenthesis string -> failure x
+transPCloseParenthesis :: PCloseParenthesis -> Result
+transPCloseParenthesis x = case x of
+  PCloseParenthesis string -> failure x
 transPSemicolon :: PSemicolon -> Result
 transPSemicolon x = case x of
   PSemicolon string -> failure x
+transPColon :: PColon -> Result
+transPColon x = case x of
+  PColon string -> failure x
+transPdo :: Pdo -> Result
+transPdo x = case x of
+  Pdo string -> failure x
+transPWhile :: PWhile -> Result
+transPWhile x = case x of
+  PWhile string -> failure x
+transPInt :: PInt -> Result
+transPInt x = case x of
+  PInt string -> failure x
+transPAssignmEq :: PAssignmEq -> Result
+transPAssignmEq x = case x of
+  PAssignmEq string -> failure x
+transPAssignmPlus :: PAssignmPlus -> Result
+transPAssignmPlus x = case x of
+  PAssignmPlus string -> failure x
+transPRef :: PRef -> Result
+transPRef x = case x of
+  PRef string -> failure x
+transPVar :: PVar -> Result
+transPVar x = case x of
+  PVar string -> failure x
+transPConst :: PConst -> Result
+transPConst x = case x of
+  PConst string -> failure x
+transPElthen :: PElthen -> Result
+transPElthen x = case x of
+  PElthen string -> failure x
+transPEgrthen :: PEgrthen -> Result
+transPEgrthen x = case x of
+  PEgrthen string -> failure x
+transPEplus :: PEplus -> Result
+transPEplus x = case x of
+  PEplus string -> failure x
+transPEminus :: PEminus -> Result
+transPEminus x = case x of
+  PEminus string -> failure x
+transPEtimes :: PEtimes -> Result
+transPEtimes x = case x of
+  PEtimes string -> failure x
+transPEdiv :: PEdiv -> Result
+transPEdiv x = case x of
+  PEdiv string -> failure x
+transPEmod :: PEmod -> Result
+transPEmod x = case x of
+  PEmod string -> failure x
+transPDef :: PDef -> Result
+transPDef x = case x of
+  PDef string -> failure x
+transPElor :: PElor -> Result
+transPElor x = case x of
+  PElor string -> failure x
+transPEland :: PEland -> Result
+transPEland x = case x of
+  PEland string -> failure x
+transPEeq :: PEeq -> Result
+transPEeq x = case x of
+  PEeq string -> failure x
+transPEneq :: PEneq -> Result
+transPEneq x = case x of
+  PEneq string -> failure x
+transPEle :: PEle -> Result
+transPEle x = case x of
+  PEle string -> failure x
+transPEge :: PEge -> Result
+transPEge x = case x of
+  PEge string -> failure x
 transPIdent :: PIdent -> Result
 transPIdent x = case x of
   PIdent string -> failure x
@@ -33,12 +108,6 @@ transPDouble x = case x of
 transPInteger :: PInteger -> Result
 transPInteger x = case x of
   PInteger string -> failure x
-transPAssignmEq :: PAssignmEq -> Result
-transPAssignmEq x = case x of
-  PAssignmEq string -> failure x
-transPAssignmPlus :: PAssignmPlus -> Result
-transPAssignmPlus x = case x of
-  PAssignmPlus string -> failure x
 transProgram :: Program -> Result
 transProgram x = case x of
   Progr module_ -> failure x
@@ -51,8 +120,16 @@ transExt x = case x of
   ExtFun function -> failure x
 transDeclaration :: Declaration -> Result
 transDeclaration x = case x of
-  NoAssgmDec type_ pident psemicolon -> failure x
-  AssgmDec type_ pident assgnmop exp psemicolon -> failure x
+  Decl decmode decllists psemicolon -> failure x
+transDeclList :: DeclList -> Result
+transDeclList x = case x of
+  NoAssgmDec pidents pcolon type_ -> failure x
+  AssgmDec pidents passignmeq exp -> failure x
+  AssgmTypeDec pidents pcolon type_ passignmeq exp -> failure x
+transDecMode :: DecMode -> Result
+transDecMode x = case x of
+  PVarMode pvar -> failure x
+  PConstMode pconst -> failure x
 transFunction :: Function -> Result
 transFunction x = case x of
   FunDec signature body -> failure x
@@ -61,7 +138,7 @@ transSignature x = case x of
   Sign type_ pident functionparams -> failure x
 transFunctionParams :: FunctionParams -> Result
 transFunctionParams x = case x of
-  FunParams params -> failure x
+  FunParams popenparenthesis params pcloseparenthesis -> failure x
 transParam :: Param -> Result
 transParam x = case x of
   ParNoMode type_ pident -> failure x
@@ -73,46 +150,43 @@ transBodyStatement :: BodyStatement -> Result
 transBodyStatement x = case x of
   Stm statement -> failure x
   Fun function psemicolon -> failure x
-  Decl declaration -> failure x
+  DeclStm declaration -> failure x
   Block body -> failure x
 transStatement :: Statement -> Result
 transStatement x = case x of
-  DoWhile body guard -> failure x
+  DoWhile pdo pwhile body guard -> failure x
   StExp exp psemicolon -> failure x
 transGuard :: Guard -> Result
 transGuard x = case x of
-  SGuard exp -> failure x
+  SGuard popenparenthesis exp pcloseparenthesis -> failure x
 transType :: Type -> Result
 transType x = case x of
-  Tint -> failure x
+  Tint pint -> failure x
 transAssgnmOp :: AssgnmOp -> Result
 transAssgnmOp x = case x of
   AssgnEq passignmeq -> failure x
   AssgnPlEq passignmplus -> failure x
 transMode :: Mode -> Result
 transMode x = case x of
-  RefMode -> failure x
+  RefMode pref -> failure x
 transExp :: Exp -> Result
 transExp x = case x of
   EAss exp1 assgnmop exp2 -> failure x
-  Elor exp1 exp2 -> failure x
-  Eland exp1 exp2 -> failure x
-  Ebitor exp1 exp2 -> failure x
-  Ebitexor exp1 exp2 -> failure x
-  Ebitand exp1 exp2 -> failure x
-  Eeq exp1 exp2 -> failure x
-  Eneq exp1 exp2 -> failure x
-  Elthen exp1 exp2 -> failure x
-  Egrthen exp1 exp2 -> failure x
-  Ele exp1 exp2 -> failure x
-  Ege exp1 exp2 -> failure x
-  Eleft exp1 exp2 -> failure x
-  Eright exp1 exp2 -> failure x
-  Eplus exp1 exp2 -> failure x
-  Eminus exp1 exp2 -> failure x
-  Etimes exp1 exp2 -> failure x
-  Ediv exp1 exp2 -> failure x
-  Emod exp1 exp2 -> failure x
+  Elor exp1 pelor exp2 -> failure x
+  Eland exp1 peland exp2 -> failure x
+  Ebitand exp1 pdef exp2 -> failure x
+  Eeq exp1 peeq exp2 -> failure x
+  Eneq exp1 peneq exp2 -> failure x
+  Elthen exp1 pelthen exp2 -> failure x
+  Egrthen exp1 pegrthen exp2 -> failure x
+  Ele exp1 pele exp2 -> failure x
+  Ege exp1 pege exp2 -> failure x
+  Eplus exp1 peplus exp2 -> failure x
+  Eminus exp1 peminus exp2 -> failure x
+  Etimes exp1 petimes exp2 -> failure x
+  Ediv exp1 pediv exp2 -> failure x
+  Emod exp1 pemod exp2 -> failure x
+  InnerExp popenparenthesis exp pcloseparenthesis -> failure x
   Evar pident -> failure x
   Econst constant -> failure x
   Estring pstring -> failure x

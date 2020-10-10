@@ -18,6 +18,78 @@ newtype PCloseParenthesis = PCloseParenthesis ((Int,Int),String)
 newtype PSemicolon = PSemicolon ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
+newtype PColon = PColon ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype Pdo = Pdo ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PWhile = PWhile ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PInt = PInt ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PReal = PReal ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PAssignmEq = PAssignmEq ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PAssignmPlus = PAssignmPlus ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PRef = PRef ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PVar = PVar ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PConst = PConst ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PElthen = PElthen ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PEgrthen = PEgrthen ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PEplus = PEplus ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PEminus = PEminus ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PEtimes = PEtimes ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PEdiv = PEdiv ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PEmod = PEmod ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PDef = PDef ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PElor = PElor ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PEland = PEland ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PEeq = PEeq ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PEneq = PEneq ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PEle = PEle ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PEge = PEge ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
 newtype PIdent = PIdent ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
@@ -33,12 +105,6 @@ newtype PDouble = PDouble ((Int,Int),String)
 newtype PInteger = PInteger ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
-newtype PAssignmEq = PAssignmEq ((Int,Int),String)
-  deriving (Eq, Ord, Show, Read)
-
-newtype PAssignmPlus = PAssignmPlus ((Int,Int),String)
-  deriving (Eq, Ord, Show, Read)
-
 data Program = Progr Module
   deriving (Eq, Ord, Show, Read)
 
@@ -48,9 +114,16 @@ data Module = Mod [Ext]
 data Ext = ExtDecl Declaration | ExtFun Function
   deriving (Eq, Ord, Show, Read)
 
-data Declaration
-    = NoAssgmDec Type PIdent PSemicolon
-    | AssgmDec Type PIdent AssgnmOp Exp PSemicolon
+data Declaration = Decl DecMode [DeclList] PSemicolon
+  deriving (Eq, Ord, Show, Read)
+
+data DeclList
+    = NoAssgmDec [PIdent] PColon Type
+    | AssgmDec [PIdent] PAssignmEq Exp
+    | AssgmTypeDec [PIdent] PColon Type PAssignmEq Exp
+  deriving (Eq, Ord, Show, Read)
+
+data DecMode = PVarMode PVar | PConstMode PConst
   deriving (Eq, Ord, Show, Read)
 
 data Function = FunDec Signature Body
@@ -72,45 +145,42 @@ data Body = FunBlock POpenGraph [BodyStatement] PCloseGraph
 data BodyStatement
     = Stm Statement
     | Fun Function PSemicolon
-    | Decl Declaration
+    | DeclStm Declaration
     | Block Body
   deriving (Eq, Ord, Show, Read)
 
-data Statement = DoWhile Body Guard | StExp Exp PSemicolon
+data Statement
+    = DoWhile Pdo PWhile Body Guard | StExp Exp PSemicolon
   deriving (Eq, Ord, Show, Read)
 
 data Guard = SGuard POpenParenthesis Exp PCloseParenthesis
   deriving (Eq, Ord, Show, Read)
 
-data Type = Tint
+data Type = Tint PInt | Treal PReal
   deriving (Eq, Ord, Show, Read)
 
 data AssgnmOp = AssgnEq PAssignmEq | AssgnPlEq PAssignmPlus
   deriving (Eq, Ord, Show, Read)
 
-data Mode = RefMode
+data Mode = RefMode PRef
   deriving (Eq, Ord, Show, Read)
 
 data Exp
     = EAss Exp AssgnmOp Exp
-    | Elor Exp Exp
-    | Eland Exp Exp
-    | Ebitor Exp Exp
-    | Ebitexor Exp Exp
-    | Ebitand Exp Exp
-    | Eeq Exp Exp
-    | Eneq Exp Exp
-    | Elthen Exp Exp
-    | Egrthen Exp Exp
-    | Ele Exp Exp
-    | Ege Exp Exp
-    | Eleft Exp Exp
-    | Eright Exp Exp
-    | Eplus Exp Exp
-    | Eminus Exp Exp
-    | Etimes Exp Exp
-    | Ediv Exp Exp
-    | Emod Exp Exp
+    | Elor Exp PElor Exp
+    | Eland Exp PEland Exp
+    | Ebitand Exp PDef Exp
+    | Eeq Exp PEeq Exp
+    | Eneq Exp PEneq Exp
+    | Elthen Exp PElthen Exp
+    | Egrthen Exp PEgrthen Exp
+    | Ele Exp PEle Exp
+    | Ege Exp PEge Exp
+    | Eplus Exp PEplus Exp
+    | Eminus Exp PEminus Exp
+    | Etimes Exp PEtimes Exp
+    | Ediv Exp PEdiv Exp
+    | Emod Exp PEmod Exp
     | InnerExp POpenParenthesis Exp PCloseParenthesis
     | Evar PIdent
     | Econst Constant

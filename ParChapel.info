@@ -12,119 +12,146 @@ Grammar
 	POpenParenthesis -> L_POpenParenthesis             (3)
 	PCloseParenthesis -> L_PCloseParenthesis           (4)
 	PSemicolon -> L_PSemicolon                         (5)
-	PIdent -> L_PIdent                                 (6)
-	PString -> L_PString                               (7)
-	PChar -> L_PChar                                   (8)
-	PDouble -> L_PDouble                               (9)
-	PInteger -> L_PInteger                             (10)
+	PColon -> L_PColon                                 (6)
+	Pdo -> L_Pdo                                       (7)
+	PWhile -> L_PWhile                                 (8)
+	PInt -> L_PInt                                     (9)
+	PReal -> L_PReal                                   (10)
 	PAssignmEq -> L_PAssignmEq                         (11)
 	PAssignmPlus -> L_PAssignmPlus                     (12)
-	Program -> Module                                  (13)
-	Module -> ListExt                                  (14)
-	ListExt -> Ext                                     (15)
-	ListExt -> Ext ListExt                             (16)
-	Ext -> Declaration                                 (17)
-	Ext -> Function                                    (18)
-	Declaration -> Type PIdent PSemicolon              (19)
-	Declaration -> Type PIdent AssgnmOp Exp PSemicolon   (20)
-	Function -> Signature Body                         (21)
-	Signature -> Type PIdent FunctionParams            (22)
-	FunctionParams -> POpenParenthesis ListParam PCloseParenthesis   (23)
-	ListParam ->                                       (24)
-	ListParam -> Param                                 (25)
-	ListParam -> Param ',' ListParam                   (26)
-	Param -> Type PIdent                               (27)
-	Param -> Mode Type PIdent                          (28)
-	Body -> POpenGraph ListBodyStatement PCloseGraph   (29)
-	ListBodyStatement ->                               (30)
-	ListBodyStatement -> ListBodyStatement BodyStatement   (31)
-	BodyStatement -> Statement                         (32)
-	BodyStatement -> Function PSemicolon               (33)
-	BodyStatement -> Declaration                       (34)
-	BodyStatement -> Body                              (35)
-	Statement -> 'do' 'while' Body Guard               (36)
-	Statement -> Exp PSemicolon                        (37)
-	Guard -> POpenParenthesis Exp PCloseParenthesis    (38)
-	Type -> 'int'                                      (39)
-	AssgnmOp -> PAssignmEq                             (40)
-	AssgnmOp -> PAssignmPlus                           (41)
-	Mode -> 'ref'                                      (42)
-	Exp -> Exp AssgnmOp Exp4                           (43)
-	Exp -> Exp4                                        (44)
-	Exp4 -> Exp4 '||' Exp5                             (45)
-	Exp4 -> Exp5                                       (46)
-	Exp5 -> Exp5 '&&' Exp6                             (47)
-	Exp5 -> Exp6                                       (48)
-	Exp6 -> Exp6 '|' Exp7                              (49)
-	Exp6 -> Exp7                                       (50)
-	Exp7 -> Exp7 '^' Exp8                              (51)
-	Exp7 -> Exp8                                       (52)
-	Exp8 -> Exp8 '&' Exp9                              (53)
-	Exp8 -> Exp9                                       (54)
-	Exp9 -> Exp9 '==' Exp10                            (55)
-	Exp9 -> Exp9 '!=' Exp10                            (56)
-	Exp9 -> Exp10                                      (57)
-	Exp10 -> Exp10 '<' Exp11                           (58)
-	Exp10 -> Exp10 '>' Exp11                           (59)
-	Exp10 -> Exp10 '<=' Exp11                          (60)
-	Exp10 -> Exp10 '>=' Exp11                          (61)
-	Exp10 -> Exp11                                     (62)
-	Exp11 -> Exp11 '<<' Exp12                          (63)
-	Exp11 -> Exp11 '>>' Exp12                          (64)
-	Exp11 -> Exp12                                     (65)
-	Exp12 -> Exp12 '+' Exp13                           (66)
-	Exp12 -> Exp12 '-' Exp13                           (67)
-	Exp12 -> Exp13                                     (68)
-	Exp13 -> Exp13 '*' Exp14                           (69)
-	Exp13 -> Exp13 '/' Exp14                           (70)
-	Exp13 -> Exp13 '%' Exp14                           (71)
-	Exp13 -> Exp14                                     (72)
-	Exp14 -> POpenParenthesis Exp PCloseParenthesis    (73)
-	Exp14 -> PIdent                                    (74)
-	Exp14 -> Constant                                  (75)
-	Exp14 -> PString                                   (76)
-	Constant -> PDouble                                (77)
-	Constant -> PChar                                  (78)
-	Constant -> PInteger                               (79)
+	PRef -> L_PRef                                     (13)
+	PVar -> L_PVar                                     (14)
+	PConst -> L_PConst                                 (15)
+	PElthen -> L_PElthen                               (16)
+	PEgrthen -> L_PEgrthen                             (17)
+	PEplus -> L_PEplus                                 (18)
+	PEminus -> L_PEminus                               (19)
+	PEtimes -> L_PEtimes                               (20)
+	PEdiv -> L_PEdiv                                   (21)
+	PEmod -> L_PEmod                                   (22)
+	PDef -> L_PDef                                     (23)
+	PElor -> L_PElor                                   (24)
+	PEland -> L_PEland                                 (25)
+	PEeq -> L_PEeq                                     (26)
+	PEneq -> L_PEneq                                   (27)
+	PEle -> L_PEle                                     (28)
+	PEge -> L_PEge                                     (29)
+	PIdent -> L_PIdent                                 (30)
+	PString -> L_PString                               (31)
+	PChar -> L_PChar                                   (32)
+	PDouble -> L_PDouble                               (33)
+	PInteger -> L_PInteger                             (34)
+	Program -> Module                                  (35)
+	Module -> ListExt                                  (36)
+	ListExt -> Ext                                     (37)
+	ListExt -> Ext ListExt                             (38)
+	Ext -> Declaration                                 (39)
+	Ext -> Function                                    (40)
+	Declaration -> DecMode ListDeclList PSemicolon     (41)
+	ListDeclList -> DeclList                           (42)
+	ListDeclList -> DeclList ',' ListDeclList          (43)
+	DeclList -> ListPIdent PColon Type                 (44)
+	DeclList -> ListPIdent PAssignmEq Exp              (45)
+	DeclList -> ListPIdent PColon Type PAssignmEq Exp   (46)
+	ListPIdent -> PIdent                               (47)
+	ListPIdent -> PIdent ',' ListPIdent                (48)
+	DecMode -> PVar                                    (49)
+	DecMode -> PConst                                  (50)
+	Function -> Signature Body                         (51)
+	Signature -> Type PIdent FunctionParams            (52)
+	FunctionParams -> POpenParenthesis ListParam PCloseParenthesis   (53)
+	ListParam ->                                       (54)
+	ListParam -> Param                                 (55)
+	ListParam -> Param ',' ListParam                   (56)
+	Param -> Type PIdent                               (57)
+	Param -> Mode Type PIdent                          (58)
+	Body -> POpenGraph ListBodyStatement PCloseGraph   (59)
+	ListBodyStatement ->                               (60)
+	ListBodyStatement -> ListBodyStatement BodyStatement   (61)
+	BodyStatement -> Statement                         (62)
+	BodyStatement -> Function PSemicolon               (63)
+	BodyStatement -> Declaration                       (64)
+	BodyStatement -> Body                              (65)
+	Statement -> Pdo PWhile Body Guard                 (66)
+	Statement -> Exp PSemicolon                        (67)
+	Guard -> POpenParenthesis Exp PCloseParenthesis    (68)
+	Type -> PInt                                       (69)
+	Type -> PReal                                      (70)
+	AssgnmOp -> PAssignmEq                             (71)
+	AssgnmOp -> PAssignmPlus                           (72)
+	Mode -> PRef                                       (73)
+	Exp -> Exp AssgnmOp Exp4                           (74)
+	Exp -> Exp4                                        (75)
+	Exp4 -> Exp4 PElor Exp5                            (76)
+	Exp4 -> Exp5                                       (77)
+	Exp5 -> Exp5 PEland Exp8                           (78)
+	Exp5 -> Exp6                                       (79)
+	Exp8 -> Exp8 PDef Exp9                             (80)
+	Exp8 -> Exp9                                       (81)
+	Exp9 -> Exp9 PEeq Exp10                            (82)
+	Exp9 -> Exp9 PEneq Exp10                           (83)
+	Exp9 -> Exp10                                      (84)
+	Exp10 -> Exp10 PElthen Exp11                       (85)
+	Exp10 -> Exp10 PEgrthen Exp11                      (86)
+	Exp10 -> Exp10 PEle Exp11                          (87)
+	Exp10 -> Exp10 PEge Exp12                          (88)
+	Exp10 -> Exp11                                     (89)
+	Exp12 -> Exp12 PEplus Exp13                        (90)
+	Exp12 -> Exp12 PEminus Exp13                       (91)
+	Exp12 -> Exp13                                     (92)
+	Exp13 -> Exp13 PEtimes Exp14                       (93)
+	Exp13 -> Exp13 PEdiv Exp14                         (94)
+	Exp13 -> Exp13 PEmod Exp14                         (95)
+	Exp13 -> Exp14                                     (96)
+	Exp6 -> Exp7                                       (97)
+	Exp7 -> Exp8                                       (98)
+	Exp11 -> Exp12                                     (99)
+	Exp14 -> POpenParenthesis Exp PCloseParenthesis    (100)
+	Exp14 -> PIdent                                    (101)
+	Exp14 -> Constant                                  (102)
+	Exp14 -> PString                                   (103)
+	Constant -> PDouble                                (104)
+	Constant -> PChar                                  (105)
+	Constant -> PInteger                               (106)
 
 -----------------------------------------------------------------------------
 Terminals
 -----------------------------------------------------------------------------
-	'!='           { PT _ (TS _ 1) }
-	'%'            { PT _ (TS _ 2) }
-	'&'            { PT _ (TS _ 3) }
-	'&&'           { PT _ (TS _ 4) }
-	'*'            { PT _ (TS _ 5) }
-	'+'            { PT _ (TS _ 6) }
-	','            { PT _ (TS _ 7) }
-	'-'            { PT _ (TS _ 8) }
-	'/'            { PT _ (TS _ 9) }
-	'<'            { PT _ (TS _ 10) }
-	'<<'           { PT _ (TS _ 11) }
-	'<='           { PT _ (TS _ 12) }
-	'=='           { PT _ (TS _ 13) }
-	'>'            { PT _ (TS _ 14) }
-	'>='           { PT _ (TS _ 15) }
-	'>>'           { PT _ (TS _ 16) }
-	'^'            { PT _ (TS _ 17) }
-	'do'           { PT _ (TS _ 18) }
-	'int'          { PT _ (TS _ 19) }
-	'ref'          { PT _ (TS _ 20) }
-	'while'        { PT _ (TS _ 21) }
-	'|'            { PT _ (TS _ 22) }
-	'||'           { PT _ (TS _ 23) }
+	','            { PT _ (TS _ 1) }
 	L_POpenGraph   { PT _ (T_POpenGraph _) }
 	L_PCloseGraph  { PT _ (T_PCloseGraph _) }
 	L_POpenParenthesis{ PT _ (T_POpenParenthesis _) }
 	L_PCloseParenthesis{ PT _ (T_PCloseParenthesis _) }
 	L_PSemicolon   { PT _ (T_PSemicolon _) }
+	L_PColon       { PT _ (T_PColon _) }
+	L_Pdo          { PT _ (T_Pdo _) }
+	L_PWhile       { PT _ (T_PWhile _) }
+	L_PInt         { PT _ (T_PInt _) }
+	L_PReal        { PT _ (T_PReal _) }
+	L_PAssignmEq   { PT _ (T_PAssignmEq _) }
+	L_PAssignmPlus { PT _ (T_PAssignmPlus _) }
+	L_PRef         { PT _ (T_PRef _) }
+	L_PVar         { PT _ (T_PVar _) }
+	L_PConst       { PT _ (T_PConst _) }
+	L_PElthen      { PT _ (T_PElthen _) }
+	L_PEgrthen     { PT _ (T_PEgrthen _) }
+	L_PEplus       { PT _ (T_PEplus _) }
+	L_PEminus      { PT _ (T_PEminus _) }
+	L_PEtimes      { PT _ (T_PEtimes _) }
+	L_PEdiv        { PT _ (T_PEdiv _) }
+	L_PEmod        { PT _ (T_PEmod _) }
+	L_PDef         { PT _ (T_PDef _) }
+	L_PElor        { PT _ (T_PElor _) }
+	L_PEland       { PT _ (T_PEland _) }
+	L_PEeq         { PT _ (T_PEeq _) }
+	L_PEneq        { PT _ (T_PEneq _) }
+	L_PEle         { PT _ (T_PEle _) }
+	L_PEge         { PT _ (T_PEge _) }
 	L_PIdent       { PT _ (T_PIdent _) }
 	L_PString      { PT _ (T_PString _) }
 	L_PChar        { PT _ (T_PChar _) }
 	L_PDouble      { PT _ (T_PDouble _) }
 	L_PInteger     { PT _ (T_PInteger _) }
-	L_PAssignmEq   { PT _ (T_PAssignmEq _) }
-	L_PAssignmPlus { PT _ (T_PAssignmPlus _) }
 
 -----------------------------------------------------------------------------
 Non-terminals
@@ -135,44 +162,70 @@ Non-terminals
 	POpenParenthesis rule  3
 	PCloseParenthesis rule  4
 	PSemicolon      rule  5
-	PIdent          rule  6
-	PString         rule  7
-	PChar           rule  8
-	PDouble         rule  9
-	PInteger        rule  10
+	PColon          rule  6
+	Pdo             rule  7
+	PWhile          rule  8
+	PInt            rule  9
+	PReal           rule  10
 	PAssignmEq      rule  11
 	PAssignmPlus    rule  12
-	Program         rule  13
-	Module          rule  14
-	ListExt         rules 15, 16
-	Ext             rules 17, 18
-	Declaration     rules 19, 20
-	Function        rule  21
-	Signature       rule  22
-	FunctionParams  rule  23
-	ListParam       rules 24, 25, 26
-	Param           rules 27, 28
-	Body            rule  29
-	ListBodyStatement rules 30, 31
-	BodyStatement   rules 32, 33, 34, 35
-	Statement       rules 36, 37
-	Guard           rule  38
-	Type            rule  39
-	AssgnmOp        rules 40, 41
-	Mode            rule  42
-	Exp             rules 43, 44
-	Exp4            rules 45, 46
-	Exp5            rules 47, 48
-	Exp6            rules 49, 50
-	Exp7            rules 51, 52
-	Exp8            rules 53, 54
-	Exp9            rules 55, 56, 57
-	Exp10           rules 58, 59, 60, 61, 62
-	Exp11           rules 63, 64, 65
-	Exp12           rules 66, 67, 68
-	Exp13           rules 69, 70, 71, 72
-	Exp14           rules 73, 74, 75, 76
-	Constant        rules 77, 78, 79
+	PRef            rule  13
+	PVar            rule  14
+	PConst          rule  15
+	PElthen         rule  16
+	PEgrthen        rule  17
+	PEplus          rule  18
+	PEminus         rule  19
+	PEtimes         rule  20
+	PEdiv           rule  21
+	PEmod           rule  22
+	PDef            rule  23
+	PElor           rule  24
+	PEland          rule  25
+	PEeq            rule  26
+	PEneq           rule  27
+	PEle            rule  28
+	PEge            rule  29
+	PIdent          rule  30
+	PString         rule  31
+	PChar           rule  32
+	PDouble         rule  33
+	PInteger        rule  34
+	Program         rule  35
+	Module          rule  36
+	ListExt         rules 37, 38
+	Ext             rules 39, 40
+	Declaration     rule  41
+	ListDeclList    rules 42, 43
+	DeclList        rules 44, 45, 46
+	ListPIdent      rules 47, 48
+	DecMode         rules 49, 50
+	Function        rule  51
+	Signature       rule  52
+	FunctionParams  rule  53
+	ListParam       rules 54, 55, 56
+	Param           rules 57, 58
+	Body            rule  59
+	ListBodyStatement rules 60, 61
+	BodyStatement   rules 62, 63, 64, 65
+	Statement       rules 66, 67
+	Guard           rule  68
+	Type            rules 69, 70
+	AssgnmOp        rules 71, 72
+	Mode            rule  73
+	Exp             rules 74, 75
+	Exp4            rules 76, 77
+	Exp5            rules 78, 79
+	Exp8            rules 80, 81
+	Exp9            rules 82, 83, 84
+	Exp10           rules 85, 86, 87, 88, 89
+	Exp12           rules 90, 91, 92
+	Exp13           rules 93, 94, 95, 96
+	Exp6            rule  97
+	Exp7            rule  98
+	Exp11           rule  99
+	Exp14           rules 100, 101, 102, 103
+	Constant        rules 104, 105, 106
 
 -----------------------------------------------------------------------------
 States
@@ -181,16 +234,24 @@ State 0
 
 	%start_pProgram -> . Program                        (rule 0)
 
-	'int'          shift, and enter state 11
+	L_PInt         shift, and enter state 16
+	L_PReal        shift, and enter state 17
+	L_PVar         shift, and enter state 18
+	L_PConst       shift, and enter state 19
 
-	Program        goto state 3
-	Module         goto state 4
-	ListExt        goto state 5
-	Ext            goto state 6
-	Declaration    goto state 7
-	Function       goto state 8
-	Signature      goto state 9
-	Type           goto state 10
+	PInt           goto state 3
+	PReal          goto state 4
+	PVar           goto state 5
+	PConst         goto state 6
+	Program        goto state 7
+	Module         goto state 8
+	ListExt        goto state 9
+	Ext            goto state 10
+	Declaration    goto state 11
+	DecMode        goto state 12
+	Function       goto state 13
+	Signature      goto state 14
+	Type           goto state 15
 
 State 1
 
@@ -203,11 +264,14 @@ State 2
 
 	POpenGraph -> L_POpenGraph .                        (rule 1)
 
-	'do'           reduce using rule 1
-	'int'          reduce using rule 1
 	L_POpenGraph   reduce using rule 1
 	L_PCloseGraph  reduce using rule 1
 	L_POpenParenthesisreduce using rule 1
+	L_Pdo          reduce using rule 1
+	L_PInt         reduce using rule 1
+	L_PReal        reduce using rule 1
+	L_PVar         reduce using rule 1
+	L_PConst       reduce using rule 1
 	L_PIdent       reduce using rule 1
 	L_PString      reduce using rule 1
 	L_PChar        reduce using rule 1
@@ -217,333 +281,332 @@ State 2
 
 State 3
 
+	Type -> PInt .                                      (rule 69)
+
+	','            reduce using rule 69
+	L_PSemicolon   reduce using rule 69
+	L_PAssignmEq   reduce using rule 69
+	L_PIdent       reduce using rule 69
+
+
+State 4
+
+	Type -> PReal .                                     (rule 70)
+
+	','            reduce using rule 70
+	L_PSemicolon   reduce using rule 70
+	L_PAssignmEq   reduce using rule 70
+	L_PIdent       reduce using rule 70
+
+
+State 5
+
+	DecMode -> PVar .                                   (rule 49)
+
+	L_PIdent       reduce using rule 49
+
+
+State 6
+
+	DecMode -> PConst .                                 (rule 50)
+
+	L_PIdent       reduce using rule 50
+
+
+State 7
+
 	%start_pProgram -> Program .                        (rule 0)
 
 	%eof           accept
 
 
-State 4
-
-	Program -> Module .                                 (rule 13)
-
-	%eof           reduce using rule 13
-
-
-State 5
-
-	Module -> ListExt .                                 (rule 14)
-
-	%eof           reduce using rule 14
-
-
-State 6
-
-	ListExt -> Ext .                                    (rule 15)
-	ListExt -> Ext . ListExt                            (rule 16)
-
-	'int'          shift, and enter state 11
-	%eof           reduce using rule 15
-
-	ListExt        goto state 16
-	Ext            goto state 6
-	Declaration    goto state 7
-	Function       goto state 8
-	Signature      goto state 9
-	Type           goto state 10
-
-State 7
-
-	Ext -> Declaration .                                (rule 17)
-
-	'int'          reduce using rule 17
-	%eof           reduce using rule 17
-
-
 State 8
 
-	Ext -> Function .                                   (rule 18)
+	Program -> Module .                                 (rule 35)
 
-	'int'          reduce using rule 18
-	%eof           reduce using rule 18
+	%eof           reduce using rule 35
 
 
 State 9
 
-	Function -> Signature . Body                        (rule 21)
+	Module -> ListExt .                                 (rule 36)
 
-	L_POpenGraph   shift, and enter state 2
+	%eof           reduce using rule 36
 
-	POpenGraph     goto state 14
-	Body           goto state 15
 
 State 10
 
-	Declaration -> Type . PIdent PSemicolon             (rule 19)
-	Declaration -> Type . PIdent AssgnmOp Exp PSemicolon    (rule 20)
-	Signature -> Type . PIdent FunctionParams           (rule 22)
+	ListExt -> Ext .                                    (rule 37)
+	ListExt -> Ext . ListExt                            (rule 38)
 
-	L_PIdent       shift, and enter state 13
+	L_PInt         shift, and enter state 16
+	L_PReal        shift, and enter state 17
+	L_PVar         shift, and enter state 18
+	L_PConst       shift, and enter state 19
+	%eof           reduce using rule 37
 
-	PIdent         goto state 12
+	PInt           goto state 3
+	PReal          goto state 4
+	PVar           goto state 5
+	PConst         goto state 6
+	ListExt        goto state 28
+	Ext            goto state 10
+	Declaration    goto state 11
+	DecMode        goto state 12
+	Function       goto state 13
+	Signature      goto state 14
+	Type           goto state 15
 
 State 11
 
-	Type -> 'int' .                                     (rule 39)
+	Ext -> Declaration .                                (rule 39)
 
-	L_PIdent       reduce using rule 39
+	L_PInt         reduce using rule 39
+	L_PReal        reduce using rule 39
+	L_PVar         reduce using rule 39
+	L_PConst       reduce using rule 39
+	%eof           reduce using rule 39
 
 
 State 12
 
-	Declaration -> Type PIdent . PSemicolon             (rule 19)
-	Declaration -> Type PIdent . AssgnmOp Exp PSemicolon    (rule 20)
-	Signature -> Type PIdent . FunctionParams           (rule 22)
+	Declaration -> DecMode . ListDeclList PSemicolon    (rule 41)
 
-	L_POpenParenthesisshift, and enter state 24
-	L_PSemicolon   shift, and enter state 25
-	L_PAssignmEq   shift, and enter state 26
-	L_PAssignmPlus shift, and enter state 27
+	L_PIdent       shift, and enter state 21
 
-	POpenParenthesisgoto state 18
-	PSemicolon     goto state 19
-	PAssignmEq     goto state 20
-	PAssignmPlus   goto state 21
-	FunctionParams goto state 22
-	AssgnmOp       goto state 23
+	PIdent         goto state 24
+	ListDeclList   goto state 25
+	DeclList       goto state 26
+	ListPIdent     goto state 27
 
 State 13
 
-	PIdent -> L_PIdent .                                (rule 6)
+	Ext -> Function .                                   (rule 40)
 
-	'!='           reduce using rule 6
-	'%'            reduce using rule 6
-	'&'            reduce using rule 6
-	'&&'           reduce using rule 6
-	'*'            reduce using rule 6
-	'+'            reduce using rule 6
-	','            reduce using rule 6
-	'-'            reduce using rule 6
-	'/'            reduce using rule 6
-	'<'            reduce using rule 6
-	'<<'           reduce using rule 6
-	'<='           reduce using rule 6
-	'=='           reduce using rule 6
-	'>'            reduce using rule 6
-	'>='           reduce using rule 6
-	'>>'           reduce using rule 6
-	'^'            reduce using rule 6
-	'|'            reduce using rule 6
-	'||'           reduce using rule 6
-	L_POpenParenthesisreduce using rule 6
-	L_PCloseParenthesisreduce using rule 6
-	L_PSemicolon   reduce using rule 6
-	L_PAssignmEq   reduce using rule 6
-	L_PAssignmPlus reduce using rule 6
+	L_PInt         reduce using rule 40
+	L_PReal        reduce using rule 40
+	L_PVar         reduce using rule 40
+	L_PConst       reduce using rule 40
+	%eof           reduce using rule 40
 
 
 State 14
 
-	Body -> POpenGraph . ListBodyStatement PCloseGraph    (rule 29)
+	Function -> Signature . Body                        (rule 51)
 
-	'do'           reduce using rule 30
-	'int'          reduce using rule 30
-	L_POpenGraph   reduce using rule 30
-	L_PCloseGraph  reduce using rule 30
-	L_POpenParenthesisreduce using rule 30
-	L_PIdent       reduce using rule 30
-	L_PString      reduce using rule 30
-	L_PChar        reduce using rule 30
-	L_PDouble      reduce using rule 30
-	L_PInteger     reduce using rule 30
+	L_POpenGraph   shift, and enter state 2
 
-	ListBodyStatementgoto state 17
+	POpenGraph     goto state 22
+	Body           goto state 23
 
 State 15
 
-	Function -> Signature Body .                        (rule 21)
+	Signature -> Type . PIdent FunctionParams           (rule 52)
 
-	'int'          reduce using rule 21
-	L_PSemicolon   reduce using rule 21
-	%eof           reduce using rule 21
+	L_PIdent       shift, and enter state 21
 
+	PIdent         goto state 20
 
 State 16
 
-	ListExt -> Ext ListExt .                            (rule 16)
+	PInt -> L_PInt .                                    (rule 9)
 
-	%eof           reduce using rule 16
+	','            reduce using rule 9
+	L_PSemicolon   reduce using rule 9
+	L_PAssignmEq   reduce using rule 9
+	L_PIdent       reduce using rule 9
 
 
 State 17
 
-	Body -> POpenGraph ListBodyStatement . PCloseGraph    (rule 29)
-	ListBodyStatement -> ListBodyStatement . BodyStatement    (rule 31)
+	PReal -> L_PReal .                                  (rule 10)
 
-	'do'           shift, and enter state 63
-	'int'          shift, and enter state 11
-	L_POpenGraph   shift, and enter state 2
-	L_PCloseGraph  shift, and enter state 64
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
+	','            reduce using rule 10
+	L_PSemicolon   reduce using rule 10
+	L_PAssignmEq   reduce using rule 10
+	L_PIdent       reduce using rule 10
 
-	POpenGraph     goto state 14
-	PCloseGraph    goto state 56
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Declaration    goto state 57
-	Function       goto state 58
-	Signature      goto state 9
-	Body           goto state 59
-	BodyStatement  goto state 60
-	Statement      goto state 61
-	Type           goto state 10
-	Exp            goto state 62
-	Exp4           goto state 35
-	Exp5           goto state 36
-	Exp6           goto state 37
-	Exp7           goto state 38
-	Exp8           goto state 39
-	Exp9           goto state 40
-	Exp10          goto state 41
-	Exp11          goto state 42
-	Exp12          goto state 43
-	Exp13          goto state 44
-	Exp14          goto state 45
-	Constant       goto state 46
 
 State 18
 
-	FunctionParams -> POpenParenthesis . ListParam PCloseParenthesis    (rule 23)
+	PVar -> L_PVar .                                    (rule 14)
 
-	'int'          shift, and enter state 11
-	'ref'          shift, and enter state 55
-	L_PCloseParenthesisreduce using rule 24
+	L_PIdent       reduce using rule 14
 
-	ListParam      goto state 51
-	Param          goto state 52
-	Type           goto state 53
-	Mode           goto state 54
 
 State 19
 
-	Declaration -> Type PIdent PSemicolon .             (rule 19)
+	PConst -> L_PConst .                                (rule 15)
 
-	'do'           reduce using rule 19
-	'int'          reduce using rule 19
-	L_POpenGraph   reduce using rule 19
-	L_PCloseGraph  reduce using rule 19
-	L_POpenParenthesisreduce using rule 19
-	L_PIdent       reduce using rule 19
-	L_PString      reduce using rule 19
-	L_PChar        reduce using rule 19
-	L_PDouble      reduce using rule 19
-	L_PInteger     reduce using rule 19
-	%eof           reduce using rule 19
+	L_PIdent       reduce using rule 15
 
 
 State 20
 
-	AssgnmOp -> PAssignmEq .                            (rule 40)
+	Signature -> Type PIdent . FunctionParams           (rule 52)
 
-	L_POpenParenthesisreduce using rule 40
-	L_PIdent       reduce using rule 40
-	L_PString      reduce using rule 40
-	L_PChar        reduce using rule 40
-	L_PDouble      reduce using rule 40
-	L_PInteger     reduce using rule 40
+	L_POpenParenthesisshift, and enter state 40
 
+	POpenParenthesisgoto state 38
+	FunctionParams goto state 39
 
 State 21
 
-	AssgnmOp -> PAssignmPlus .                          (rule 41)
+	PIdent -> L_PIdent .                                (rule 30)
 
-	L_POpenParenthesisreduce using rule 41
-	L_PIdent       reduce using rule 41
-	L_PString      reduce using rule 41
-	L_PChar        reduce using rule 41
-	L_PDouble      reduce using rule 41
-	L_PInteger     reduce using rule 41
+	','            reduce using rule 30
+	L_POpenParenthesisreduce using rule 30
+	L_PCloseParenthesisreduce using rule 30
+	L_PSemicolon   reduce using rule 30
+	L_PColon       reduce using rule 30
+	L_PAssignmEq   reduce using rule 30
+	L_PAssignmPlus reduce using rule 30
+	L_PElthen      reduce using rule 30
+	L_PEgrthen     reduce using rule 30
+	L_PEplus       reduce using rule 30
+	L_PEminus      reduce using rule 30
+	L_PEtimes      reduce using rule 30
+	L_PEdiv        reduce using rule 30
+	L_PEmod        reduce using rule 30
+	L_PDef         reduce using rule 30
+	L_PElor        reduce using rule 30
+	L_PEland       reduce using rule 30
+	L_PEeq         reduce using rule 30
+	L_PEneq        reduce using rule 30
+	L_PEle         reduce using rule 30
+	L_PEge         reduce using rule 30
 
 
 State 22
 
-	Signature -> Type PIdent FunctionParams .           (rule 22)
+	Body -> POpenGraph . ListBodyStatement PCloseGraph    (rule 59)
 
-	L_POpenGraph   reduce using rule 22
+	L_POpenGraph   reduce using rule 60
+	L_PCloseGraph  reduce using rule 60
+	L_POpenParenthesisreduce using rule 60
+	L_Pdo          reduce using rule 60
+	L_PInt         reduce using rule 60
+	L_PReal        reduce using rule 60
+	L_PVar         reduce using rule 60
+	L_PConst       reduce using rule 60
+	L_PIdent       reduce using rule 60
+	L_PString      reduce using rule 60
+	L_PChar        reduce using rule 60
+	L_PDouble      reduce using rule 60
+	L_PInteger     reduce using rule 60
 
+	ListBodyStatementgoto state 37
 
 State 23
 
-	Declaration -> Type PIdent AssgnmOp . Exp PSemicolon    (rule 20)
+	Function -> Signature Body .                        (rule 51)
 
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
+	L_PSemicolon   reduce using rule 51
+	L_PInt         reduce using rule 51
+	L_PReal        reduce using rule 51
+	L_PVar         reduce using rule 51
+	L_PConst       reduce using rule 51
+	%eof           reduce using rule 51
 
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp            goto state 34
-	Exp4           goto state 35
-	Exp5           goto state 36
-	Exp6           goto state 37
-	Exp7           goto state 38
-	Exp8           goto state 39
-	Exp9           goto state 40
-	Exp10          goto state 41
-	Exp11          goto state 42
-	Exp12          goto state 43
-	Exp13          goto state 44
-	Exp14          goto state 45
-	Constant       goto state 46
 
 State 24
 
-	POpenParenthesis -> L_POpenParenthesis .            (rule 3)
+	ListPIdent -> PIdent .                              (rule 47)
+	ListPIdent -> PIdent . ',' ListPIdent               (rule 48)
 
-	'int'          reduce using rule 3
-	'ref'          reduce using rule 3
-	L_POpenParenthesisreduce using rule 3
-	L_PCloseParenthesisreduce using rule 3
-	L_PIdent       reduce using rule 3
-	L_PString      reduce using rule 3
-	L_PChar        reduce using rule 3
-	L_PDouble      reduce using rule 3
-	L_PInteger     reduce using rule 3
+	','            shift, and enter state 36
+	L_PColon       reduce using rule 47
+	L_PAssignmEq   reduce using rule 47
 
 
 State 25
 
-	PSemicolon -> L_PSemicolon .                        (rule 5)
+	Declaration -> DecMode ListDeclList . PSemicolon    (rule 41)
 
-	'do'           reduce using rule 5
-	'int'          reduce using rule 5
-	L_POpenGraph   reduce using rule 5
-	L_PCloseGraph  reduce using rule 5
-	L_POpenParenthesisreduce using rule 5
-	L_PIdent       reduce using rule 5
-	L_PString      reduce using rule 5
-	L_PChar        reduce using rule 5
-	L_PDouble      reduce using rule 5
-	L_PInteger     reduce using rule 5
-	%eof           reduce using rule 5
+	L_PSemicolon   shift, and enter state 35
 
+	PSemicolon     goto state 34
 
 State 26
+
+	ListDeclList -> DeclList .                          (rule 42)
+	ListDeclList -> DeclList . ',' ListDeclList         (rule 43)
+
+	','            shift, and enter state 33
+	L_PSemicolon   reduce using rule 42
+
+
+State 27
+
+	DeclList -> ListPIdent . PColon Type                (rule 44)
+	DeclList -> ListPIdent . PAssignmEq Exp             (rule 45)
+	DeclList -> ListPIdent . PColon Type PAssignmEq Exp    (rule 46)
+
+	L_PColon       shift, and enter state 31
+	L_PAssignmEq   shift, and enter state 32
+
+	PColon         goto state 29
+	PAssignmEq     goto state 30
+
+State 28
+
+	ListExt -> Ext ListExt .                            (rule 38)
+
+	%eof           reduce using rule 38
+
+
+State 29
+
+	DeclList -> ListPIdent PColon . Type                (rule 44)
+	DeclList -> ListPIdent PColon . Type PAssignmEq Exp    (rule 46)
+
+	L_PInt         shift, and enter state 16
+	L_PReal        shift, and enter state 17
+
+	PInt           goto state 3
+	PReal          goto state 4
+	Type           goto state 82
+
+State 30
+
+	DeclList -> ListPIdent PAssignmEq . Exp             (rule 45)
+
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
+
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp            goto state 81
+	Exp4           goto state 61
+	Exp5           goto state 62
+	Exp8           goto state 63
+	Exp9           goto state 64
+	Exp10          goto state 65
+	Exp12          goto state 66
+	Exp13          goto state 67
+	Exp6           goto state 68
+	Exp7           goto state 69
+	Exp11          goto state 70
+	Exp14          goto state 71
+	Constant       goto state 72
+
+State 31
+
+	PColon -> L_PColon .                                (rule 6)
+
+	L_PInt         reduce using rule 6
+	L_PReal        reduce using rule 6
+
+
+State 32
 
 	PAssignmEq -> L_PAssignmEq .                        (rule 11)
 
@@ -555,7 +618,995 @@ State 26
 	L_PInteger     reduce using rule 11
 
 
-State 27
+State 33
+
+	ListDeclList -> DeclList ',' . ListDeclList         (rule 43)
+
+	L_PIdent       shift, and enter state 21
+
+	PIdent         goto state 24
+	ListDeclList   goto state 80
+	DeclList       goto state 26
+	ListPIdent     goto state 27
+
+State 34
+
+	Declaration -> DecMode ListDeclList PSemicolon .    (rule 41)
+
+	L_POpenGraph   reduce using rule 41
+	L_PCloseGraph  reduce using rule 41
+	L_POpenParenthesisreduce using rule 41
+	L_Pdo          reduce using rule 41
+	L_PInt         reduce using rule 41
+	L_PReal        reduce using rule 41
+	L_PVar         reduce using rule 41
+	L_PConst       reduce using rule 41
+	L_PIdent       reduce using rule 41
+	L_PString      reduce using rule 41
+	L_PChar        reduce using rule 41
+	L_PDouble      reduce using rule 41
+	L_PInteger     reduce using rule 41
+	%eof           reduce using rule 41
+
+
+State 35
+
+	PSemicolon -> L_PSemicolon .                        (rule 5)
+
+	L_POpenGraph   reduce using rule 5
+	L_PCloseGraph  reduce using rule 5
+	L_POpenParenthesisreduce using rule 5
+	L_Pdo          reduce using rule 5
+	L_PInt         reduce using rule 5
+	L_PReal        reduce using rule 5
+	L_PVar         reduce using rule 5
+	L_PConst       reduce using rule 5
+	L_PIdent       reduce using rule 5
+	L_PString      reduce using rule 5
+	L_PChar        reduce using rule 5
+	L_PDouble      reduce using rule 5
+	L_PInteger     reduce using rule 5
+	%eof           reduce using rule 5
+
+
+State 36
+
+	ListPIdent -> PIdent ',' . ListPIdent               (rule 48)
+
+	L_PIdent       shift, and enter state 21
+
+	PIdent         goto state 24
+	ListPIdent     goto state 79
+
+State 37
+
+	Body -> POpenGraph ListBodyStatement . PCloseGraph    (rule 59)
+	ListBodyStatement -> ListBodyStatement . BodyStatement    (rule 61)
+
+	L_POpenGraph   shift, and enter state 2
+	L_PCloseGraph  shift, and enter state 73
+	L_POpenParenthesisshift, and enter state 40
+	L_Pdo          shift, and enter state 74
+	L_PInt         shift, and enter state 16
+	L_PReal        shift, and enter state 17
+	L_PVar         shift, and enter state 18
+	L_PConst       shift, and enter state 19
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
+
+	POpenGraph     goto state 22
+	PCloseGraph    goto state 47
+	POpenParenthesisgoto state 48
+	Pdo            goto state 49
+	PInt           goto state 3
+	PReal          goto state 4
+	PVar           goto state 5
+	PConst         goto state 6
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Declaration    goto state 55
+	DecMode        goto state 12
+	Function       goto state 56
+	Signature      goto state 14
+	Body           goto state 57
+	BodyStatement  goto state 58
+	Statement      goto state 59
+	Type           goto state 15
+	Exp            goto state 60
+	Exp4           goto state 61
+	Exp5           goto state 62
+	Exp8           goto state 63
+	Exp9           goto state 64
+	Exp10          goto state 65
+	Exp12          goto state 66
+	Exp13          goto state 67
+	Exp6           goto state 68
+	Exp7           goto state 69
+	Exp11          goto state 70
+	Exp14          goto state 71
+	Constant       goto state 72
+
+State 38
+
+	FunctionParams -> POpenParenthesis . ListParam PCloseParenthesis    (rule 53)
+
+	L_PCloseParenthesisreduce using rule 54
+	L_PInt         shift, and enter state 16
+	L_PReal        shift, and enter state 17
+	L_PRef         shift, and enter state 46
+
+	PInt           goto state 3
+	PReal          goto state 4
+	PRef           goto state 41
+	ListParam      goto state 42
+	Param          goto state 43
+	Type           goto state 44
+	Mode           goto state 45
+
+State 39
+
+	Signature -> Type PIdent FunctionParams .           (rule 52)
+
+	L_POpenGraph   reduce using rule 52
+
+
+State 40
+
+	POpenParenthesis -> L_POpenParenthesis .            (rule 3)
+
+	L_POpenParenthesisreduce using rule 3
+	L_PCloseParenthesisreduce using rule 3
+	L_PInt         reduce using rule 3
+	L_PReal        reduce using rule 3
+	L_PRef         reduce using rule 3
+	L_PIdent       reduce using rule 3
+	L_PString      reduce using rule 3
+	L_PChar        reduce using rule 3
+	L_PDouble      reduce using rule 3
+	L_PInteger     reduce using rule 3
+
+
+State 41
+
+	Mode -> PRef .                                      (rule 73)
+
+	L_PInt         reduce using rule 73
+	L_PReal        reduce using rule 73
+
+
+State 42
+
+	FunctionParams -> POpenParenthesis ListParam . PCloseParenthesis    (rule 53)
+
+	L_PCloseParenthesisshift, and enter state 125
+
+	PCloseParenthesisgoto state 124
+
+State 43
+
+	ListParam -> Param .                                (rule 55)
+	ListParam -> Param . ',' ListParam                  (rule 56)
+
+	','            shift, and enter state 123
+	L_PCloseParenthesisreduce using rule 55
+
+
+State 44
+
+	Param -> Type . PIdent                              (rule 57)
+
+	L_PIdent       shift, and enter state 21
+
+	PIdent         goto state 122
+
+State 45
+
+	Param -> Mode . Type PIdent                         (rule 58)
+
+	L_PInt         shift, and enter state 16
+	L_PReal        shift, and enter state 17
+
+	PInt           goto state 3
+	PReal          goto state 4
+	Type           goto state 121
+
+State 46
+
+	PRef -> L_PRef .                                    (rule 13)
+
+	L_PInt         reduce using rule 13
+	L_PReal        reduce using rule 13
+
+
+State 47
+
+	Body -> POpenGraph ListBodyStatement PCloseGraph .    (rule 59)
+
+	L_POpenGraph   reduce using rule 59
+	L_PCloseGraph  reduce using rule 59
+	L_POpenParenthesisreduce using rule 59
+	L_PSemicolon   reduce using rule 59
+	L_Pdo          reduce using rule 59
+	L_PInt         reduce using rule 59
+	L_PReal        reduce using rule 59
+	L_PVar         reduce using rule 59
+	L_PConst       reduce using rule 59
+	L_PIdent       reduce using rule 59
+	L_PString      reduce using rule 59
+	L_PChar        reduce using rule 59
+	L_PDouble      reduce using rule 59
+	L_PInteger     reduce using rule 59
+	%eof           reduce using rule 59
+
+
+State 48
+
+	Exp14 -> POpenParenthesis . Exp PCloseParenthesis    (rule 100)
+
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
+
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp            goto state 120
+	Exp4           goto state 61
+	Exp5           goto state 62
+	Exp8           goto state 63
+	Exp9           goto state 64
+	Exp10          goto state 65
+	Exp12          goto state 66
+	Exp13          goto state 67
+	Exp6           goto state 68
+	Exp7           goto state 69
+	Exp11          goto state 70
+	Exp14          goto state 71
+	Constant       goto state 72
+
+State 49
+
+	Statement -> Pdo . PWhile Body Guard                (rule 66)
+
+	L_PWhile       shift, and enter state 119
+
+	PWhile         goto state 118
+
+State 50
+
+	Exp14 -> PIdent .                                   (rule 101)
+
+	','            reduce using rule 101
+	L_PCloseParenthesisreduce using rule 101
+	L_PSemicolon   reduce using rule 101
+	L_PAssignmEq   reduce using rule 101
+	L_PAssignmPlus reduce using rule 101
+	L_PElthen      reduce using rule 101
+	L_PEgrthen     reduce using rule 101
+	L_PEplus       reduce using rule 101
+	L_PEminus      reduce using rule 101
+	L_PEtimes      reduce using rule 101
+	L_PEdiv        reduce using rule 101
+	L_PEmod        reduce using rule 101
+	L_PDef         reduce using rule 101
+	L_PElor        reduce using rule 101
+	L_PEland       reduce using rule 101
+	L_PEeq         reduce using rule 101
+	L_PEneq        reduce using rule 101
+	L_PEle         reduce using rule 101
+	L_PEge         reduce using rule 101
+
+
+State 51
+
+	Exp14 -> PString .                                  (rule 103)
+
+	','            reduce using rule 103
+	L_PCloseParenthesisreduce using rule 103
+	L_PSemicolon   reduce using rule 103
+	L_PAssignmEq   reduce using rule 103
+	L_PAssignmPlus reduce using rule 103
+	L_PElthen      reduce using rule 103
+	L_PEgrthen     reduce using rule 103
+	L_PEplus       reduce using rule 103
+	L_PEminus      reduce using rule 103
+	L_PEtimes      reduce using rule 103
+	L_PEdiv        reduce using rule 103
+	L_PEmod        reduce using rule 103
+	L_PDef         reduce using rule 103
+	L_PElor        reduce using rule 103
+	L_PEland       reduce using rule 103
+	L_PEeq         reduce using rule 103
+	L_PEneq        reduce using rule 103
+	L_PEle         reduce using rule 103
+	L_PEge         reduce using rule 103
+
+
+State 52
+
+	Constant -> PChar .                                 (rule 105)
+
+	','            reduce using rule 105
+	L_PCloseParenthesisreduce using rule 105
+	L_PSemicolon   reduce using rule 105
+	L_PAssignmEq   reduce using rule 105
+	L_PAssignmPlus reduce using rule 105
+	L_PElthen      reduce using rule 105
+	L_PEgrthen     reduce using rule 105
+	L_PEplus       reduce using rule 105
+	L_PEminus      reduce using rule 105
+	L_PEtimes      reduce using rule 105
+	L_PEdiv        reduce using rule 105
+	L_PEmod        reduce using rule 105
+	L_PDef         reduce using rule 105
+	L_PElor        reduce using rule 105
+	L_PEland       reduce using rule 105
+	L_PEeq         reduce using rule 105
+	L_PEneq        reduce using rule 105
+	L_PEle         reduce using rule 105
+	L_PEge         reduce using rule 105
+
+
+State 53
+
+	Constant -> PDouble .                               (rule 104)
+
+	','            reduce using rule 104
+	L_PCloseParenthesisreduce using rule 104
+	L_PSemicolon   reduce using rule 104
+	L_PAssignmEq   reduce using rule 104
+	L_PAssignmPlus reduce using rule 104
+	L_PElthen      reduce using rule 104
+	L_PEgrthen     reduce using rule 104
+	L_PEplus       reduce using rule 104
+	L_PEminus      reduce using rule 104
+	L_PEtimes      reduce using rule 104
+	L_PEdiv        reduce using rule 104
+	L_PEmod        reduce using rule 104
+	L_PDef         reduce using rule 104
+	L_PElor        reduce using rule 104
+	L_PEland       reduce using rule 104
+	L_PEeq         reduce using rule 104
+	L_PEneq        reduce using rule 104
+	L_PEle         reduce using rule 104
+	L_PEge         reduce using rule 104
+
+
+State 54
+
+	Constant -> PInteger .                              (rule 106)
+
+	','            reduce using rule 106
+	L_PCloseParenthesisreduce using rule 106
+	L_PSemicolon   reduce using rule 106
+	L_PAssignmEq   reduce using rule 106
+	L_PAssignmPlus reduce using rule 106
+	L_PElthen      reduce using rule 106
+	L_PEgrthen     reduce using rule 106
+	L_PEplus       reduce using rule 106
+	L_PEminus      reduce using rule 106
+	L_PEtimes      reduce using rule 106
+	L_PEdiv        reduce using rule 106
+	L_PEmod        reduce using rule 106
+	L_PDef         reduce using rule 106
+	L_PElor        reduce using rule 106
+	L_PEland       reduce using rule 106
+	L_PEeq         reduce using rule 106
+	L_PEneq        reduce using rule 106
+	L_PEle         reduce using rule 106
+	L_PEge         reduce using rule 106
+
+
+State 55
+
+	BodyStatement -> Declaration .                      (rule 64)
+
+	L_POpenGraph   reduce using rule 64
+	L_PCloseGraph  reduce using rule 64
+	L_POpenParenthesisreduce using rule 64
+	L_Pdo          reduce using rule 64
+	L_PInt         reduce using rule 64
+	L_PReal        reduce using rule 64
+	L_PVar         reduce using rule 64
+	L_PConst       reduce using rule 64
+	L_PIdent       reduce using rule 64
+	L_PString      reduce using rule 64
+	L_PChar        reduce using rule 64
+	L_PDouble      reduce using rule 64
+	L_PInteger     reduce using rule 64
+
+
+State 56
+
+	BodyStatement -> Function . PSemicolon              (rule 63)
+
+	L_PSemicolon   shift, and enter state 35
+
+	PSemicolon     goto state 117
+
+State 57
+
+	BodyStatement -> Body .                             (rule 65)
+
+	L_POpenGraph   reduce using rule 65
+	L_PCloseGraph  reduce using rule 65
+	L_POpenParenthesisreduce using rule 65
+	L_Pdo          reduce using rule 65
+	L_PInt         reduce using rule 65
+	L_PReal        reduce using rule 65
+	L_PVar         reduce using rule 65
+	L_PConst       reduce using rule 65
+	L_PIdent       reduce using rule 65
+	L_PString      reduce using rule 65
+	L_PChar        reduce using rule 65
+	L_PDouble      reduce using rule 65
+	L_PInteger     reduce using rule 65
+
+
+State 58
+
+	ListBodyStatement -> ListBodyStatement BodyStatement .    (rule 61)
+
+	L_POpenGraph   reduce using rule 61
+	L_PCloseGraph  reduce using rule 61
+	L_POpenParenthesisreduce using rule 61
+	L_Pdo          reduce using rule 61
+	L_PInt         reduce using rule 61
+	L_PReal        reduce using rule 61
+	L_PVar         reduce using rule 61
+	L_PConst       reduce using rule 61
+	L_PIdent       reduce using rule 61
+	L_PString      reduce using rule 61
+	L_PChar        reduce using rule 61
+	L_PDouble      reduce using rule 61
+	L_PInteger     reduce using rule 61
+
+
+State 59
+
+	BodyStatement -> Statement .                        (rule 62)
+
+	L_POpenGraph   reduce using rule 62
+	L_PCloseGraph  reduce using rule 62
+	L_POpenParenthesisreduce using rule 62
+	L_Pdo          reduce using rule 62
+	L_PInt         reduce using rule 62
+	L_PReal        reduce using rule 62
+	L_PVar         reduce using rule 62
+	L_PConst       reduce using rule 62
+	L_PIdent       reduce using rule 62
+	L_PString      reduce using rule 62
+	L_PChar        reduce using rule 62
+	L_PDouble      reduce using rule 62
+	L_PInteger     reduce using rule 62
+
+
+State 60
+
+	Statement -> Exp . PSemicolon                       (rule 67)
+	Exp -> Exp . AssgnmOp Exp4                          (rule 74)
+
+	L_PSemicolon   shift, and enter state 35
+	L_PAssignmEq   shift, and enter state 32
+	L_PAssignmPlus shift, and enter state 87
+
+	PSemicolon     goto state 116
+	PAssignmEq     goto state 84
+	PAssignmPlus   goto state 85
+	AssgnmOp       goto state 86
+
+State 61
+
+	Exp -> Exp4 .                                       (rule 75)
+	Exp4 -> Exp4 . PElor Exp5                           (rule 76)
+
+	','            reduce using rule 75
+	L_PCloseParenthesisreduce using rule 75
+	L_PSemicolon   reduce using rule 75
+	L_PAssignmEq   reduce using rule 75
+	L_PAssignmPlus reduce using rule 75
+	L_PElor        shift, and enter state 115
+
+	PElor          goto state 114
+
+State 62
+
+	Exp4 -> Exp5 .                                      (rule 77)
+	Exp5 -> Exp5 . PEland Exp8                          (rule 78)
+
+	','            reduce using rule 77
+	L_PCloseParenthesisreduce using rule 77
+	L_PSemicolon   reduce using rule 77
+	L_PAssignmEq   reduce using rule 77
+	L_PAssignmPlus reduce using rule 77
+	L_PElor        reduce using rule 77
+	L_PEland       shift, and enter state 113
+
+	PEland         goto state 112
+
+State 63
+
+	Exp8 -> Exp8 . PDef Exp9                            (rule 80)
+	Exp7 -> Exp8 .                                      (rule 98)
+
+	','            reduce using rule 98
+	L_PCloseParenthesisreduce using rule 98
+	L_PSemicolon   reduce using rule 98
+	L_PAssignmEq   reduce using rule 98
+	L_PAssignmPlus reduce using rule 98
+	L_PDef         shift, and enter state 111
+	L_PElor        reduce using rule 98
+	L_PEland       reduce using rule 98
+
+	PDef           goto state 110
+
+State 64
+
+	Exp8 -> Exp9 .                                      (rule 81)
+	Exp9 -> Exp9 . PEeq Exp10                           (rule 82)
+	Exp9 -> Exp9 . PEneq Exp10                          (rule 83)
+
+	','            reduce using rule 81
+	L_PCloseParenthesisreduce using rule 81
+	L_PSemicolon   reduce using rule 81
+	L_PAssignmEq   reduce using rule 81
+	L_PAssignmPlus reduce using rule 81
+	L_PDef         reduce using rule 81
+	L_PElor        reduce using rule 81
+	L_PEland       reduce using rule 81
+	L_PEeq         shift, and enter state 108
+	L_PEneq        shift, and enter state 109
+
+	PEeq           goto state 106
+	PEneq          goto state 107
+
+State 65
+
+	Exp9 -> Exp10 .                                     (rule 84)
+	Exp10 -> Exp10 . PElthen Exp11                      (rule 85)
+	Exp10 -> Exp10 . PEgrthen Exp11                     (rule 86)
+	Exp10 -> Exp10 . PEle Exp11                         (rule 87)
+	Exp10 -> Exp10 . PEge Exp12                         (rule 88)
+
+	','            reduce using rule 84
+	L_PCloseParenthesisreduce using rule 84
+	L_PSemicolon   reduce using rule 84
+	L_PAssignmEq   reduce using rule 84
+	L_PAssignmPlus reduce using rule 84
+	L_PElthen      shift, and enter state 102
+	L_PEgrthen     shift, and enter state 103
+	L_PDef         reduce using rule 84
+	L_PElor        reduce using rule 84
+	L_PEland       reduce using rule 84
+	L_PEeq         reduce using rule 84
+	L_PEneq        reduce using rule 84
+	L_PEle         shift, and enter state 104
+	L_PEge         shift, and enter state 105
+
+	PElthen        goto state 98
+	PEgrthen       goto state 99
+	PEle           goto state 100
+	PEge           goto state 101
+
+State 66
+
+	Exp12 -> Exp12 . PEplus Exp13                       (rule 90)
+	Exp12 -> Exp12 . PEminus Exp13                      (rule 91)
+	Exp11 -> Exp12 .                                    (rule 99)
+
+	','            reduce using rule 99
+	L_PCloseParenthesisreduce using rule 99
+	L_PSemicolon   reduce using rule 99
+	L_PAssignmEq   reduce using rule 99
+	L_PAssignmPlus reduce using rule 99
+	L_PElthen      reduce using rule 99
+	L_PEgrthen     reduce using rule 99
+	L_PEplus       shift, and enter state 96
+	L_PEminus      shift, and enter state 97
+	L_PDef         reduce using rule 99
+	L_PElor        reduce using rule 99
+	L_PEland       reduce using rule 99
+	L_PEeq         reduce using rule 99
+	L_PEneq        reduce using rule 99
+	L_PEle         reduce using rule 99
+	L_PEge         reduce using rule 99
+
+	PEplus         goto state 94
+	PEminus        goto state 95
+
+State 67
+
+	Exp12 -> Exp13 .                                    (rule 92)
+	Exp13 -> Exp13 . PEtimes Exp14                      (rule 93)
+	Exp13 -> Exp13 . PEdiv Exp14                        (rule 94)
+	Exp13 -> Exp13 . PEmod Exp14                        (rule 95)
+
+	','            reduce using rule 92
+	L_PCloseParenthesisreduce using rule 92
+	L_PSemicolon   reduce using rule 92
+	L_PAssignmEq   reduce using rule 92
+	L_PAssignmPlus reduce using rule 92
+	L_PElthen      reduce using rule 92
+	L_PEgrthen     reduce using rule 92
+	L_PEplus       reduce using rule 92
+	L_PEminus      reduce using rule 92
+	L_PEtimes      shift, and enter state 91
+	L_PEdiv        shift, and enter state 92
+	L_PEmod        shift, and enter state 93
+	L_PDef         reduce using rule 92
+	L_PElor        reduce using rule 92
+	L_PEland       reduce using rule 92
+	L_PEeq         reduce using rule 92
+	L_PEneq        reduce using rule 92
+	L_PEle         reduce using rule 92
+	L_PEge         reduce using rule 92
+
+	PEtimes        goto state 88
+	PEdiv          goto state 89
+	PEmod          goto state 90
+
+State 68
+
+	Exp5 -> Exp6 .                                      (rule 79)
+
+	','            reduce using rule 79
+	L_PCloseParenthesisreduce using rule 79
+	L_PSemicolon   reduce using rule 79
+	L_PAssignmEq   reduce using rule 79
+	L_PAssignmPlus reduce using rule 79
+	L_PElor        reduce using rule 79
+	L_PEland       reduce using rule 79
+
+
+State 69
+
+	Exp6 -> Exp7 .                                      (rule 97)
+
+	','            reduce using rule 97
+	L_PCloseParenthesisreduce using rule 97
+	L_PSemicolon   reduce using rule 97
+	L_PAssignmEq   reduce using rule 97
+	L_PAssignmPlus reduce using rule 97
+	L_PElor        reduce using rule 97
+	L_PEland       reduce using rule 97
+
+
+State 70
+
+	Exp10 -> Exp11 .                                    (rule 89)
+
+	','            reduce using rule 89
+	L_PCloseParenthesisreduce using rule 89
+	L_PSemicolon   reduce using rule 89
+	L_PAssignmEq   reduce using rule 89
+	L_PAssignmPlus reduce using rule 89
+	L_PElthen      reduce using rule 89
+	L_PEgrthen     reduce using rule 89
+	L_PDef         reduce using rule 89
+	L_PElor        reduce using rule 89
+	L_PEland       reduce using rule 89
+	L_PEeq         reduce using rule 89
+	L_PEneq        reduce using rule 89
+	L_PEle         reduce using rule 89
+	L_PEge         reduce using rule 89
+
+
+State 71
+
+	Exp13 -> Exp14 .                                    (rule 96)
+
+	','            reduce using rule 96
+	L_PCloseParenthesisreduce using rule 96
+	L_PSemicolon   reduce using rule 96
+	L_PAssignmEq   reduce using rule 96
+	L_PAssignmPlus reduce using rule 96
+	L_PElthen      reduce using rule 96
+	L_PEgrthen     reduce using rule 96
+	L_PEplus       reduce using rule 96
+	L_PEminus      reduce using rule 96
+	L_PEtimes      reduce using rule 96
+	L_PEdiv        reduce using rule 96
+	L_PEmod        reduce using rule 96
+	L_PDef         reduce using rule 96
+	L_PElor        reduce using rule 96
+	L_PEland       reduce using rule 96
+	L_PEeq         reduce using rule 96
+	L_PEneq        reduce using rule 96
+	L_PEle         reduce using rule 96
+	L_PEge         reduce using rule 96
+
+
+State 72
+
+	Exp14 -> Constant .                                 (rule 102)
+
+	','            reduce using rule 102
+	L_PCloseParenthesisreduce using rule 102
+	L_PSemicolon   reduce using rule 102
+	L_PAssignmEq   reduce using rule 102
+	L_PAssignmPlus reduce using rule 102
+	L_PElthen      reduce using rule 102
+	L_PEgrthen     reduce using rule 102
+	L_PEplus       reduce using rule 102
+	L_PEminus      reduce using rule 102
+	L_PEtimes      reduce using rule 102
+	L_PEdiv        reduce using rule 102
+	L_PEmod        reduce using rule 102
+	L_PDef         reduce using rule 102
+	L_PElor        reduce using rule 102
+	L_PEland       reduce using rule 102
+	L_PEeq         reduce using rule 102
+	L_PEneq        reduce using rule 102
+	L_PEle         reduce using rule 102
+	L_PEge         reduce using rule 102
+
+
+State 73
+
+	PCloseGraph -> L_PCloseGraph .                      (rule 2)
+
+	L_POpenGraph   reduce using rule 2
+	L_PCloseGraph  reduce using rule 2
+	L_POpenParenthesisreduce using rule 2
+	L_PSemicolon   reduce using rule 2
+	L_Pdo          reduce using rule 2
+	L_PInt         reduce using rule 2
+	L_PReal        reduce using rule 2
+	L_PVar         reduce using rule 2
+	L_PConst       reduce using rule 2
+	L_PIdent       reduce using rule 2
+	L_PString      reduce using rule 2
+	L_PChar        reduce using rule 2
+	L_PDouble      reduce using rule 2
+	L_PInteger     reduce using rule 2
+	%eof           reduce using rule 2
+
+
+State 74
+
+	Pdo -> L_Pdo .                                      (rule 7)
+
+	L_PWhile       reduce using rule 7
+
+
+State 75
+
+	PString -> L_PString .                              (rule 31)
+
+	','            reduce using rule 31
+	L_PCloseParenthesisreduce using rule 31
+	L_PSemicolon   reduce using rule 31
+	L_PAssignmEq   reduce using rule 31
+	L_PAssignmPlus reduce using rule 31
+	L_PElthen      reduce using rule 31
+	L_PEgrthen     reduce using rule 31
+	L_PEplus       reduce using rule 31
+	L_PEminus      reduce using rule 31
+	L_PEtimes      reduce using rule 31
+	L_PEdiv        reduce using rule 31
+	L_PEmod        reduce using rule 31
+	L_PDef         reduce using rule 31
+	L_PElor        reduce using rule 31
+	L_PEland       reduce using rule 31
+	L_PEeq         reduce using rule 31
+	L_PEneq        reduce using rule 31
+	L_PEle         reduce using rule 31
+	L_PEge         reduce using rule 31
+
+
+State 76
+
+	PChar -> L_PChar .                                  (rule 32)
+
+	','            reduce using rule 32
+	L_PCloseParenthesisreduce using rule 32
+	L_PSemicolon   reduce using rule 32
+	L_PAssignmEq   reduce using rule 32
+	L_PAssignmPlus reduce using rule 32
+	L_PElthen      reduce using rule 32
+	L_PEgrthen     reduce using rule 32
+	L_PEplus       reduce using rule 32
+	L_PEminus      reduce using rule 32
+	L_PEtimes      reduce using rule 32
+	L_PEdiv        reduce using rule 32
+	L_PEmod        reduce using rule 32
+	L_PDef         reduce using rule 32
+	L_PElor        reduce using rule 32
+	L_PEland       reduce using rule 32
+	L_PEeq         reduce using rule 32
+	L_PEneq        reduce using rule 32
+	L_PEle         reduce using rule 32
+	L_PEge         reduce using rule 32
+
+
+State 77
+
+	PDouble -> L_PDouble .                              (rule 33)
+
+	','            reduce using rule 33
+	L_PCloseParenthesisreduce using rule 33
+	L_PSemicolon   reduce using rule 33
+	L_PAssignmEq   reduce using rule 33
+	L_PAssignmPlus reduce using rule 33
+	L_PElthen      reduce using rule 33
+	L_PEgrthen     reduce using rule 33
+	L_PEplus       reduce using rule 33
+	L_PEminus      reduce using rule 33
+	L_PEtimes      reduce using rule 33
+	L_PEdiv        reduce using rule 33
+	L_PEmod        reduce using rule 33
+	L_PDef         reduce using rule 33
+	L_PElor        reduce using rule 33
+	L_PEland       reduce using rule 33
+	L_PEeq         reduce using rule 33
+	L_PEneq        reduce using rule 33
+	L_PEle         reduce using rule 33
+	L_PEge         reduce using rule 33
+
+
+State 78
+
+	PInteger -> L_PInteger .                            (rule 34)
+
+	','            reduce using rule 34
+	L_PCloseParenthesisreduce using rule 34
+	L_PSemicolon   reduce using rule 34
+	L_PAssignmEq   reduce using rule 34
+	L_PAssignmPlus reduce using rule 34
+	L_PElthen      reduce using rule 34
+	L_PEgrthen     reduce using rule 34
+	L_PEplus       reduce using rule 34
+	L_PEminus      reduce using rule 34
+	L_PEtimes      reduce using rule 34
+	L_PEdiv        reduce using rule 34
+	L_PEmod        reduce using rule 34
+	L_PDef         reduce using rule 34
+	L_PElor        reduce using rule 34
+	L_PEland       reduce using rule 34
+	L_PEeq         reduce using rule 34
+	L_PEneq        reduce using rule 34
+	L_PEle         reduce using rule 34
+	L_PEge         reduce using rule 34
+
+
+State 79
+
+	ListPIdent -> PIdent ',' ListPIdent .               (rule 48)
+
+	L_PColon       reduce using rule 48
+	L_PAssignmEq   reduce using rule 48
+
+
+State 80
+
+	ListDeclList -> DeclList ',' ListDeclList .         (rule 43)
+
+	L_PSemicolon   reduce using rule 43
+
+
+State 81
+
+	DeclList -> ListPIdent PAssignmEq Exp .             (rule 45)
+	Exp -> Exp . AssgnmOp Exp4                          (rule 74)
+
+	','            reduce using rule 45
+	L_PSemicolon   reduce using rule 45
+	L_PAssignmEq   shift, and enter state 32
+	L_PAssignmPlus shift, and enter state 87
+
+	PAssignmEq     goto state 84
+	PAssignmPlus   goto state 85
+	AssgnmOp       goto state 86
+
+State 82
+
+	DeclList -> ListPIdent PColon Type .                (rule 44)
+	DeclList -> ListPIdent PColon Type . PAssignmEq Exp    (rule 46)
+
+	','            reduce using rule 44
+	L_PSemicolon   reduce using rule 44
+	L_PAssignmEq   shift, and enter state 32
+
+	PAssignmEq     goto state 83
+
+State 83
+
+	DeclList -> ListPIdent PColon Type PAssignmEq . Exp    (rule 46)
+
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
+
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp            goto state 145
+	Exp4           goto state 61
+	Exp5           goto state 62
+	Exp8           goto state 63
+	Exp9           goto state 64
+	Exp10          goto state 65
+	Exp12          goto state 66
+	Exp13          goto state 67
+	Exp6           goto state 68
+	Exp7           goto state 69
+	Exp11          goto state 70
+	Exp14          goto state 71
+	Constant       goto state 72
+
+State 84
+
+	AssgnmOp -> PAssignmEq .                            (rule 71)
+
+	L_POpenParenthesisreduce using rule 71
+	L_PIdent       reduce using rule 71
+	L_PString      reduce using rule 71
+	L_PChar        reduce using rule 71
+	L_PDouble      reduce using rule 71
+	L_PInteger     reduce using rule 71
+
+
+State 85
+
+	AssgnmOp -> PAssignmPlus .                          (rule 72)
+
+	L_POpenParenthesisreduce using rule 72
+	L_PIdent       reduce using rule 72
+	L_PString      reduce using rule 72
+	L_PChar        reduce using rule 72
+	L_PDouble      reduce using rule 72
+	L_PInteger     reduce using rule 72
+
+
+State 86
+
+	Exp -> Exp AssgnmOp . Exp4                          (rule 74)
+
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
+
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp4           goto state 144
+	Exp5           goto state 62
+	Exp8           goto state 63
+	Exp9           goto state 64
+	Exp10          goto state 65
+	Exp12          goto state 66
+	Exp13          goto state 67
+	Exp6           goto state 68
+	Exp7           goto state 69
+	Exp11          goto state 70
+	Exp14          goto state 71
+	Constant       goto state 72
+
+State 87
 
 	PAssignmPlus -> L_PAssignmPlus .                    (rule 12)
 
@@ -567,1894 +1618,1135 @@ State 27
 	L_PInteger     reduce using rule 12
 
 
-State 28
-
-	Exp14 -> POpenParenthesis . Exp PCloseParenthesis    (rule 73)
-
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
-
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp            goto state 93
-	Exp4           goto state 35
-	Exp5           goto state 36
-	Exp6           goto state 37
-	Exp7           goto state 38
-	Exp8           goto state 39
-	Exp9           goto state 40
-	Exp10          goto state 41
-	Exp11          goto state 42
-	Exp12          goto state 43
-	Exp13          goto state 44
-	Exp14          goto state 45
-	Constant       goto state 46
-
-State 29
-
-	Exp14 -> PIdent .                                   (rule 74)
-
-	'!='           reduce using rule 74
-	'%'            reduce using rule 74
-	'&'            reduce using rule 74
-	'&&'           reduce using rule 74
-	'*'            reduce using rule 74
-	'+'            reduce using rule 74
-	'-'            reduce using rule 74
-	'/'            reduce using rule 74
-	'<'            reduce using rule 74
-	'<<'           reduce using rule 74
-	'<='           reduce using rule 74
-	'=='           reduce using rule 74
-	'>'            reduce using rule 74
-	'>='           reduce using rule 74
-	'>>'           reduce using rule 74
-	'^'            reduce using rule 74
-	'|'            reduce using rule 74
-	'||'           reduce using rule 74
-	L_PCloseParenthesisreduce using rule 74
-	L_PSemicolon   reduce using rule 74
-	L_PAssignmEq   reduce using rule 74
-	L_PAssignmPlus reduce using rule 74
-
-
-State 30
-
-	Exp14 -> PString .                                  (rule 76)
-
-	'!='           reduce using rule 76
-	'%'            reduce using rule 76
-	'&'            reduce using rule 76
-	'&&'           reduce using rule 76
-	'*'            reduce using rule 76
-	'+'            reduce using rule 76
-	'-'            reduce using rule 76
-	'/'            reduce using rule 76
-	'<'            reduce using rule 76
-	'<<'           reduce using rule 76
-	'<='           reduce using rule 76
-	'=='           reduce using rule 76
-	'>'            reduce using rule 76
-	'>='           reduce using rule 76
-	'>>'           reduce using rule 76
-	'^'            reduce using rule 76
-	'|'            reduce using rule 76
-	'||'           reduce using rule 76
-	L_PCloseParenthesisreduce using rule 76
-	L_PSemicolon   reduce using rule 76
-	L_PAssignmEq   reduce using rule 76
-	L_PAssignmPlus reduce using rule 76
-
-
-State 31
-
-	Constant -> PChar .                                 (rule 78)
-
-	'!='           reduce using rule 78
-	'%'            reduce using rule 78
-	'&'            reduce using rule 78
-	'&&'           reduce using rule 78
-	'*'            reduce using rule 78
-	'+'            reduce using rule 78
-	'-'            reduce using rule 78
-	'/'            reduce using rule 78
-	'<'            reduce using rule 78
-	'<<'           reduce using rule 78
-	'<='           reduce using rule 78
-	'=='           reduce using rule 78
-	'>'            reduce using rule 78
-	'>='           reduce using rule 78
-	'>>'           reduce using rule 78
-	'^'            reduce using rule 78
-	'|'            reduce using rule 78
-	'||'           reduce using rule 78
-	L_PCloseParenthesisreduce using rule 78
-	L_PSemicolon   reduce using rule 78
-	L_PAssignmEq   reduce using rule 78
-	L_PAssignmPlus reduce using rule 78
-
-
-State 32
-
-	Constant -> PDouble .                               (rule 77)
-
-	'!='           reduce using rule 77
-	'%'            reduce using rule 77
-	'&'            reduce using rule 77
-	'&&'           reduce using rule 77
-	'*'            reduce using rule 77
-	'+'            reduce using rule 77
-	'-'            reduce using rule 77
-	'/'            reduce using rule 77
-	'<'            reduce using rule 77
-	'<<'           reduce using rule 77
-	'<='           reduce using rule 77
-	'=='           reduce using rule 77
-	'>'            reduce using rule 77
-	'>='           reduce using rule 77
-	'>>'           reduce using rule 77
-	'^'            reduce using rule 77
-	'|'            reduce using rule 77
-	'||'           reduce using rule 77
-	L_PCloseParenthesisreduce using rule 77
-	L_PSemicolon   reduce using rule 77
-	L_PAssignmEq   reduce using rule 77
-	L_PAssignmPlus reduce using rule 77
-
-
-State 33
-
-	Constant -> PInteger .                              (rule 79)
-
-	'!='           reduce using rule 79
-	'%'            reduce using rule 79
-	'&'            reduce using rule 79
-	'&&'           reduce using rule 79
-	'*'            reduce using rule 79
-	'+'            reduce using rule 79
-	'-'            reduce using rule 79
-	'/'            reduce using rule 79
-	'<'            reduce using rule 79
-	'<<'           reduce using rule 79
-	'<='           reduce using rule 79
-	'=='           reduce using rule 79
-	'>'            reduce using rule 79
-	'>='           reduce using rule 79
-	'>>'           reduce using rule 79
-	'^'            reduce using rule 79
-	'|'            reduce using rule 79
-	'||'           reduce using rule 79
-	L_PCloseParenthesisreduce using rule 79
-	L_PSemicolon   reduce using rule 79
-	L_PAssignmEq   reduce using rule 79
-	L_PAssignmPlus reduce using rule 79
-
-
-State 34
-
-	Declaration -> Type PIdent AssgnmOp Exp . PSemicolon    (rule 20)
-	Exp -> Exp . AssgnmOp Exp4                          (rule 43)
-
-	L_PSemicolon   shift, and enter state 25
-	L_PAssignmEq   shift, and enter state 26
-	L_PAssignmPlus shift, and enter state 27
-
-	PSemicolon     goto state 92
-	PAssignmEq     goto state 20
-	PAssignmPlus   goto state 21
-	AssgnmOp       goto state 67
-
-State 35
-
-	Exp -> Exp4 .                                       (rule 44)
-	Exp4 -> Exp4 . '||' Exp5                            (rule 45)
-
-	'||'           shift, and enter state 91
-	L_PCloseParenthesisreduce using rule 44
-	L_PSemicolon   reduce using rule 44
-	L_PAssignmEq   reduce using rule 44
-	L_PAssignmPlus reduce using rule 44
-
-
-State 36
-
-	Exp4 -> Exp5 .                                      (rule 46)
-	Exp5 -> Exp5 . '&&' Exp6                            (rule 47)
-
-	'&&'           shift, and enter state 90
-	'||'           reduce using rule 46
-	L_PCloseParenthesisreduce using rule 46
-	L_PSemicolon   reduce using rule 46
-	L_PAssignmEq   reduce using rule 46
-	L_PAssignmPlus reduce using rule 46
-
-
-State 37
-
-	Exp5 -> Exp6 .                                      (rule 48)
-	Exp6 -> Exp6 . '|' Exp7                             (rule 49)
-
-	'&&'           reduce using rule 48
-	'|'            shift, and enter state 89
-	'||'           reduce using rule 48
-	L_PCloseParenthesisreduce using rule 48
-	L_PSemicolon   reduce using rule 48
-	L_PAssignmEq   reduce using rule 48
-	L_PAssignmPlus reduce using rule 48
-
-
-State 38
-
-	Exp6 -> Exp7 .                                      (rule 50)
-	Exp7 -> Exp7 . '^' Exp8                             (rule 51)
-
-	'&&'           reduce using rule 50
-	'^'            shift, and enter state 88
-	'|'            reduce using rule 50
-	'||'           reduce using rule 50
-	L_PCloseParenthesisreduce using rule 50
-	L_PSemicolon   reduce using rule 50
-	L_PAssignmEq   reduce using rule 50
-	L_PAssignmPlus reduce using rule 50
-
-
-State 39
-
-	Exp7 -> Exp8 .                                      (rule 52)
-	Exp8 -> Exp8 . '&' Exp9                             (rule 53)
-
-	'&'            shift, and enter state 87
-	'&&'           reduce using rule 52
-	'^'            reduce using rule 52
-	'|'            reduce using rule 52
-	'||'           reduce using rule 52
-	L_PCloseParenthesisreduce using rule 52
-	L_PSemicolon   reduce using rule 52
-	L_PAssignmEq   reduce using rule 52
-	L_PAssignmPlus reduce using rule 52
-
-
-State 40
-
-	Exp8 -> Exp9 .                                      (rule 54)
-	Exp9 -> Exp9 . '==' Exp10                           (rule 55)
-	Exp9 -> Exp9 . '!=' Exp10                           (rule 56)
-
-	'!='           shift, and enter state 85
-	'&'            reduce using rule 54
-	'&&'           reduce using rule 54
-	'=='           shift, and enter state 86
-	'^'            reduce using rule 54
-	'|'            reduce using rule 54
-	'||'           reduce using rule 54
-	L_PCloseParenthesisreduce using rule 54
-	L_PSemicolon   reduce using rule 54
-	L_PAssignmEq   reduce using rule 54
-	L_PAssignmPlus reduce using rule 54
-
-
-State 41
-
-	Exp9 -> Exp10 .                                     (rule 57)
-	Exp10 -> Exp10 . '<' Exp11                          (rule 58)
-	Exp10 -> Exp10 . '>' Exp11                          (rule 59)
-	Exp10 -> Exp10 . '<=' Exp11                         (rule 60)
-	Exp10 -> Exp10 . '>=' Exp11                         (rule 61)
-
-	'!='           reduce using rule 57
-	'&'            reduce using rule 57
-	'&&'           reduce using rule 57
-	'<'            shift, and enter state 81
-	'<='           shift, and enter state 82
-	'=='           reduce using rule 57
-	'>'            shift, and enter state 83
-	'>='           shift, and enter state 84
-	'^'            reduce using rule 57
-	'|'            reduce using rule 57
-	'||'           reduce using rule 57
-	L_PCloseParenthesisreduce using rule 57
-	L_PSemicolon   reduce using rule 57
-	L_PAssignmEq   reduce using rule 57
-	L_PAssignmPlus reduce using rule 57
-
-
-State 42
-
-	Exp10 -> Exp11 .                                    (rule 62)
-	Exp11 -> Exp11 . '<<' Exp12                         (rule 63)
-	Exp11 -> Exp11 . '>>' Exp12                         (rule 64)
-
-	'!='           reduce using rule 62
-	'&'            reduce using rule 62
-	'&&'           reduce using rule 62
-	'<'            reduce using rule 62
-	'<<'           shift, and enter state 79
-	'<='           reduce using rule 62
-	'=='           reduce using rule 62
-	'>'            reduce using rule 62
-	'>='           reduce using rule 62
-	'>>'           shift, and enter state 80
-	'^'            reduce using rule 62
-	'|'            reduce using rule 62
-	'||'           reduce using rule 62
-	L_PCloseParenthesisreduce using rule 62
-	L_PSemicolon   reduce using rule 62
-	L_PAssignmEq   reduce using rule 62
-	L_PAssignmPlus reduce using rule 62
-
-
-State 43
-
-	Exp11 -> Exp12 .                                    (rule 65)
-	Exp12 -> Exp12 . '+' Exp13                          (rule 66)
-	Exp12 -> Exp12 . '-' Exp13                          (rule 67)
-
-	'!='           reduce using rule 65
-	'&'            reduce using rule 65
-	'&&'           reduce using rule 65
-	'+'            shift, and enter state 77
-	'-'            shift, and enter state 78
-	'<'            reduce using rule 65
-	'<<'           reduce using rule 65
-	'<='           reduce using rule 65
-	'=='           reduce using rule 65
-	'>'            reduce using rule 65
-	'>='           reduce using rule 65
-	'>>'           reduce using rule 65
-	'^'            reduce using rule 65
-	'|'            reduce using rule 65
-	'||'           reduce using rule 65
-	L_PCloseParenthesisreduce using rule 65
-	L_PSemicolon   reduce using rule 65
-	L_PAssignmEq   reduce using rule 65
-	L_PAssignmPlus reduce using rule 65
-
-
-State 44
-
-	Exp12 -> Exp13 .                                    (rule 68)
-	Exp13 -> Exp13 . '*' Exp14                          (rule 69)
-	Exp13 -> Exp13 . '/' Exp14                          (rule 70)
-	Exp13 -> Exp13 . '%' Exp14                          (rule 71)
-
-	'!='           reduce using rule 68
-	'%'            shift, and enter state 74
-	'&'            reduce using rule 68
-	'&&'           reduce using rule 68
-	'*'            shift, and enter state 75
-	'+'            reduce using rule 68
-	'-'            reduce using rule 68
-	'/'            shift, and enter state 76
-	'<'            reduce using rule 68
-	'<<'           reduce using rule 68
-	'<='           reduce using rule 68
-	'=='           reduce using rule 68
-	'>'            reduce using rule 68
-	'>='           reduce using rule 68
-	'>>'           reduce using rule 68
-	'^'            reduce using rule 68
-	'|'            reduce using rule 68
-	'||'           reduce using rule 68
-	L_PCloseParenthesisreduce using rule 68
-	L_PSemicolon   reduce using rule 68
-	L_PAssignmEq   reduce using rule 68
-	L_PAssignmPlus reduce using rule 68
-
-
-State 45
-
-	Exp13 -> Exp14 .                                    (rule 72)
-
-	'!='           reduce using rule 72
-	'%'            reduce using rule 72
-	'&'            reduce using rule 72
-	'&&'           reduce using rule 72
-	'*'            reduce using rule 72
-	'+'            reduce using rule 72
-	'-'            reduce using rule 72
-	'/'            reduce using rule 72
-	'<'            reduce using rule 72
-	'<<'           reduce using rule 72
-	'<='           reduce using rule 72
-	'=='           reduce using rule 72
-	'>'            reduce using rule 72
-	'>='           reduce using rule 72
-	'>>'           reduce using rule 72
-	'^'            reduce using rule 72
-	'|'            reduce using rule 72
-	'||'           reduce using rule 72
-	L_PCloseParenthesisreduce using rule 72
-	L_PSemicolon   reduce using rule 72
-	L_PAssignmEq   reduce using rule 72
-	L_PAssignmPlus reduce using rule 72
-
-
-State 46
-
-	Exp14 -> Constant .                                 (rule 75)
-
-	'!='           reduce using rule 75
-	'%'            reduce using rule 75
-	'&'            reduce using rule 75
-	'&&'           reduce using rule 75
-	'*'            reduce using rule 75
-	'+'            reduce using rule 75
-	'-'            reduce using rule 75
-	'/'            reduce using rule 75
-	'<'            reduce using rule 75
-	'<<'           reduce using rule 75
-	'<='           reduce using rule 75
-	'=='           reduce using rule 75
-	'>'            reduce using rule 75
-	'>='           reduce using rule 75
-	'>>'           reduce using rule 75
-	'^'            reduce using rule 75
-	'|'            reduce using rule 75
-	'||'           reduce using rule 75
-	L_PCloseParenthesisreduce using rule 75
-	L_PSemicolon   reduce using rule 75
-	L_PAssignmEq   reduce using rule 75
-	L_PAssignmPlus reduce using rule 75
-
-
-State 47
-
-	PString -> L_PString .                              (rule 7)
-
-	'!='           reduce using rule 7
-	'%'            reduce using rule 7
-	'&'            reduce using rule 7
-	'&&'           reduce using rule 7
-	'*'            reduce using rule 7
-	'+'            reduce using rule 7
-	'-'            reduce using rule 7
-	'/'            reduce using rule 7
-	'<'            reduce using rule 7
-	'<<'           reduce using rule 7
-	'<='           reduce using rule 7
-	'=='           reduce using rule 7
-	'>'            reduce using rule 7
-	'>='           reduce using rule 7
-	'>>'           reduce using rule 7
-	'^'            reduce using rule 7
-	'|'            reduce using rule 7
-	'||'           reduce using rule 7
-	L_PCloseParenthesisreduce using rule 7
-	L_PSemicolon   reduce using rule 7
-	L_PAssignmEq   reduce using rule 7
-	L_PAssignmPlus reduce using rule 7
-
-
-State 48
-
-	PChar -> L_PChar .                                  (rule 8)
-
-	'!='           reduce using rule 8
-	'%'            reduce using rule 8
-	'&'            reduce using rule 8
-	'&&'           reduce using rule 8
-	'*'            reduce using rule 8
-	'+'            reduce using rule 8
-	'-'            reduce using rule 8
-	'/'            reduce using rule 8
-	'<'            reduce using rule 8
-	'<<'           reduce using rule 8
-	'<='           reduce using rule 8
-	'=='           reduce using rule 8
-	'>'            reduce using rule 8
-	'>='           reduce using rule 8
-	'>>'           reduce using rule 8
-	'^'            reduce using rule 8
-	'|'            reduce using rule 8
-	'||'           reduce using rule 8
-	L_PCloseParenthesisreduce using rule 8
-	L_PSemicolon   reduce using rule 8
-	L_PAssignmEq   reduce using rule 8
-	L_PAssignmPlus reduce using rule 8
-
-
-State 49
-
-	PDouble -> L_PDouble .                              (rule 9)
-
-	'!='           reduce using rule 9
-	'%'            reduce using rule 9
-	'&'            reduce using rule 9
-	'&&'           reduce using rule 9
-	'*'            reduce using rule 9
-	'+'            reduce using rule 9
-	'-'            reduce using rule 9
-	'/'            reduce using rule 9
-	'<'            reduce using rule 9
-	'<<'           reduce using rule 9
-	'<='           reduce using rule 9
-	'=='           reduce using rule 9
-	'>'            reduce using rule 9
-	'>='           reduce using rule 9
-	'>>'           reduce using rule 9
-	'^'            reduce using rule 9
-	'|'            reduce using rule 9
-	'||'           reduce using rule 9
-	L_PCloseParenthesisreduce using rule 9
-	L_PSemicolon   reduce using rule 9
-	L_PAssignmEq   reduce using rule 9
-	L_PAssignmPlus reduce using rule 9
-
-
-State 50
-
-	PInteger -> L_PInteger .                            (rule 10)
-
-	'!='           reduce using rule 10
-	'%'            reduce using rule 10
-	'&'            reduce using rule 10
-	'&&'           reduce using rule 10
-	'*'            reduce using rule 10
-	'+'            reduce using rule 10
-	'-'            reduce using rule 10
-	'/'            reduce using rule 10
-	'<'            reduce using rule 10
-	'<<'           reduce using rule 10
-	'<='           reduce using rule 10
-	'=='           reduce using rule 10
-	'>'            reduce using rule 10
-	'>='           reduce using rule 10
-	'>>'           reduce using rule 10
-	'^'            reduce using rule 10
-	'|'            reduce using rule 10
-	'||'           reduce using rule 10
-	L_PCloseParenthesisreduce using rule 10
-	L_PSemicolon   reduce using rule 10
-	L_PAssignmEq   reduce using rule 10
-	L_PAssignmPlus reduce using rule 10
-
-
-State 51
-
-	FunctionParams -> POpenParenthesis ListParam . PCloseParenthesis    (rule 23)
-
-	L_PCloseParenthesisshift, and enter state 73
-
-	PCloseParenthesisgoto state 72
-
-State 52
-
-	ListParam -> Param .                                (rule 25)
-	ListParam -> Param . ',' ListParam                  (rule 26)
-
-	','            shift, and enter state 71
-	L_PCloseParenthesisreduce using rule 25
-
-
-State 53
-
-	Param -> Type . PIdent                              (rule 27)
-
-	L_PIdent       shift, and enter state 13
-
-	PIdent         goto state 70
-
-State 54
-
-	Param -> Mode . Type PIdent                         (rule 28)
-
-	'int'          shift, and enter state 11
-
-	Type           goto state 69
-
-State 55
-
-	Mode -> 'ref' .                                     (rule 42)
-
-	'int'          reduce using rule 42
-
-
-State 56
-
-	Body -> POpenGraph ListBodyStatement PCloseGraph .    (rule 29)
-
-	'do'           reduce using rule 29
-	'int'          reduce using rule 29
-	L_POpenGraph   reduce using rule 29
-	L_PCloseGraph  reduce using rule 29
-	L_POpenParenthesisreduce using rule 29
-	L_PSemicolon   reduce using rule 29
-	L_PIdent       reduce using rule 29
-	L_PString      reduce using rule 29
-	L_PChar        reduce using rule 29
-	L_PDouble      reduce using rule 29
-	L_PInteger     reduce using rule 29
-	%eof           reduce using rule 29
-
-
-State 57
-
-	BodyStatement -> Declaration .                      (rule 34)
-
-	'do'           reduce using rule 34
-	'int'          reduce using rule 34
-	L_POpenGraph   reduce using rule 34
-	L_PCloseGraph  reduce using rule 34
-	L_POpenParenthesisreduce using rule 34
-	L_PIdent       reduce using rule 34
-	L_PString      reduce using rule 34
-	L_PChar        reduce using rule 34
-	L_PDouble      reduce using rule 34
-	L_PInteger     reduce using rule 34
-
-
-State 58
-
-	BodyStatement -> Function . PSemicolon              (rule 33)
-
-	L_PSemicolon   shift, and enter state 25
-
-	PSemicolon     goto state 68
-
-State 59
-
-	BodyStatement -> Body .                             (rule 35)
-
-	'do'           reduce using rule 35
-	'int'          reduce using rule 35
-	L_POpenGraph   reduce using rule 35
-	L_PCloseGraph  reduce using rule 35
-	L_POpenParenthesisreduce using rule 35
-	L_PIdent       reduce using rule 35
-	L_PString      reduce using rule 35
-	L_PChar        reduce using rule 35
-	L_PDouble      reduce using rule 35
-	L_PInteger     reduce using rule 35
-
-
-State 60
-
-	ListBodyStatement -> ListBodyStatement BodyStatement .    (rule 31)
-
-	'do'           reduce using rule 31
-	'int'          reduce using rule 31
-	L_POpenGraph   reduce using rule 31
-	L_PCloseGraph  reduce using rule 31
-	L_POpenParenthesisreduce using rule 31
-	L_PIdent       reduce using rule 31
-	L_PString      reduce using rule 31
-	L_PChar        reduce using rule 31
-	L_PDouble      reduce using rule 31
-	L_PInteger     reduce using rule 31
-
-
-State 61
-
-	BodyStatement -> Statement .                        (rule 32)
-
-	'do'           reduce using rule 32
-	'int'          reduce using rule 32
-	L_POpenGraph   reduce using rule 32
-	L_PCloseGraph  reduce using rule 32
-	L_POpenParenthesisreduce using rule 32
-	L_PIdent       reduce using rule 32
-	L_PString      reduce using rule 32
-	L_PChar        reduce using rule 32
-	L_PDouble      reduce using rule 32
-	L_PInteger     reduce using rule 32
-
-
-State 62
-
-	Statement -> Exp . PSemicolon                       (rule 37)
-	Exp -> Exp . AssgnmOp Exp4                          (rule 43)
-
-	L_PSemicolon   shift, and enter state 25
-	L_PAssignmEq   shift, and enter state 26
-	L_PAssignmPlus shift, and enter state 27
-
-	PSemicolon     goto state 66
-	PAssignmEq     goto state 20
-	PAssignmPlus   goto state 21
-	AssgnmOp       goto state 67
-
-State 63
-
-	Statement -> 'do' . 'while' Body Guard              (rule 36)
-
-	'while'        shift, and enter state 65
-
-
-State 64
-
-	PCloseGraph -> L_PCloseGraph .                      (rule 2)
-
-	'do'           reduce using rule 2
-	'int'          reduce using rule 2
-	L_POpenGraph   reduce using rule 2
-	L_PCloseGraph  reduce using rule 2
-	L_POpenParenthesisreduce using rule 2
-	L_PSemicolon   reduce using rule 2
-	L_PIdent       reduce using rule 2
-	L_PString      reduce using rule 2
-	L_PChar        reduce using rule 2
-	L_PDouble      reduce using rule 2
-	L_PInteger     reduce using rule 2
-	%eof           reduce using rule 2
-
-
-State 65
-
-	Statement -> 'do' 'while' . Body Guard              (rule 36)
-
-	L_POpenGraph   shift, and enter state 2
-
-	POpenGraph     goto state 14
-	Body           goto state 116
-
-State 66
-
-	Statement -> Exp PSemicolon .                       (rule 37)
-
-	'do'           reduce using rule 37
-	'int'          reduce using rule 37
-	L_POpenGraph   reduce using rule 37
-	L_PCloseGraph  reduce using rule 37
-	L_POpenParenthesisreduce using rule 37
-	L_PIdent       reduce using rule 37
-	L_PString      reduce using rule 37
-	L_PChar        reduce using rule 37
-	L_PDouble      reduce using rule 37
-	L_PInteger     reduce using rule 37
-
-
-State 67
-
-	Exp -> Exp AssgnmOp . Exp4                          (rule 43)
-
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
-
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp4           goto state 115
-	Exp5           goto state 36
-	Exp6           goto state 37
-	Exp7           goto state 38
-	Exp8           goto state 39
-	Exp9           goto state 40
-	Exp10          goto state 41
-	Exp11          goto state 42
-	Exp12          goto state 43
-	Exp13          goto state 44
-	Exp14          goto state 45
-	Constant       goto state 46
-
-State 68
-
-	BodyStatement -> Function PSemicolon .              (rule 33)
-
-	'do'           reduce using rule 33
-	'int'          reduce using rule 33
-	L_POpenGraph   reduce using rule 33
-	L_PCloseGraph  reduce using rule 33
-	L_POpenParenthesisreduce using rule 33
-	L_PIdent       reduce using rule 33
-	L_PString      reduce using rule 33
-	L_PChar        reduce using rule 33
-	L_PDouble      reduce using rule 33
-	L_PInteger     reduce using rule 33
-
-
-State 69
-
-	Param -> Mode Type . PIdent                         (rule 28)
-
-	L_PIdent       shift, and enter state 13
-
-	PIdent         goto state 114
-
-State 70
-
-	Param -> Type PIdent .                              (rule 27)
-
-	','            reduce using rule 27
-	L_PCloseParenthesisreduce using rule 27
-
-
-State 71
-
-	ListParam -> Param ',' . ListParam                  (rule 26)
-
-	'int'          shift, and enter state 11
-	'ref'          shift, and enter state 55
-	L_PCloseParenthesisreduce using rule 24
-
-	ListParam      goto state 113
-	Param          goto state 52
-	Type           goto state 53
-	Mode           goto state 54
-
-State 72
-
-	FunctionParams -> POpenParenthesis ListParam PCloseParenthesis .    (rule 23)
-
-	L_POpenGraph   reduce using rule 23
-
-
-State 73
-
-	PCloseParenthesis -> L_PCloseParenthesis .          (rule 4)
-
-	'!='           reduce using rule 4
-	'%'            reduce using rule 4
-	'&'            reduce using rule 4
-	'&&'           reduce using rule 4
-	'*'            reduce using rule 4
-	'+'            reduce using rule 4
-	'-'            reduce using rule 4
-	'/'            reduce using rule 4
-	'<'            reduce using rule 4
-	'<<'           reduce using rule 4
-	'<='           reduce using rule 4
-	'=='           reduce using rule 4
-	'>'            reduce using rule 4
-	'>='           reduce using rule 4
-	'>>'           reduce using rule 4
-	'^'            reduce using rule 4
-	'do'           reduce using rule 4
-	'int'          reduce using rule 4
-	'|'            reduce using rule 4
-	'||'           reduce using rule 4
-	L_POpenGraph   reduce using rule 4
-	L_PCloseGraph  reduce using rule 4
-	L_POpenParenthesisreduce using rule 4
-	L_PCloseParenthesisreduce using rule 4
-	L_PSemicolon   reduce using rule 4
-	L_PIdent       reduce using rule 4
-	L_PString      reduce using rule 4
-	L_PChar        reduce using rule 4
-	L_PDouble      reduce using rule 4
-	L_PInteger     reduce using rule 4
-	L_PAssignmEq   reduce using rule 4
-	L_PAssignmPlus reduce using rule 4
-
-
-State 74
-
-	Exp13 -> Exp13 '%' . Exp14                          (rule 71)
-
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
-
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp14          goto state 112
-	Constant       goto state 46
-
-State 75
-
-	Exp13 -> Exp13 '*' . Exp14                          (rule 69)
-
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
-
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp14          goto state 111
-	Constant       goto state 46
-
-State 76
-
-	Exp13 -> Exp13 '/' . Exp14                          (rule 70)
-
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
-
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp14          goto state 110
-	Constant       goto state 46
-
-State 77
-
-	Exp12 -> Exp12 '+' . Exp13                          (rule 66)
-
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
-
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp13          goto state 109
-	Exp14          goto state 45
-	Constant       goto state 46
-
-State 78
-
-	Exp12 -> Exp12 '-' . Exp13                          (rule 67)
-
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
-
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp13          goto state 108
-	Exp14          goto state 45
-	Constant       goto state 46
-
-State 79
-
-	Exp11 -> Exp11 '<<' . Exp12                         (rule 63)
-
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
-
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp12          goto state 107
-	Exp13          goto state 44
-	Exp14          goto state 45
-	Constant       goto state 46
-
-State 80
-
-	Exp11 -> Exp11 '>>' . Exp12                         (rule 64)
-
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
-
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp12          goto state 106
-	Exp13          goto state 44
-	Exp14          goto state 45
-	Constant       goto state 46
-
-State 81
-
-	Exp10 -> Exp10 '<' . Exp11                          (rule 58)
-
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
-
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp11          goto state 105
-	Exp12          goto state 43
-	Exp13          goto state 44
-	Exp14          goto state 45
-	Constant       goto state 46
-
-State 82
-
-	Exp10 -> Exp10 '<=' . Exp11                         (rule 60)
-
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
-
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp11          goto state 104
-	Exp12          goto state 43
-	Exp13          goto state 44
-	Exp14          goto state 45
-	Constant       goto state 46
-
-State 83
-
-	Exp10 -> Exp10 '>' . Exp11                          (rule 59)
-
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
-
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp11          goto state 103
-	Exp12          goto state 43
-	Exp13          goto state 44
-	Exp14          goto state 45
-	Constant       goto state 46
-
-State 84
-
-	Exp10 -> Exp10 '>=' . Exp11                         (rule 61)
-
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
-
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp11          goto state 102
-	Exp12          goto state 43
-	Exp13          goto state 44
-	Exp14          goto state 45
-	Constant       goto state 46
-
-State 85
-
-	Exp9 -> Exp9 '!=' . Exp10                           (rule 56)
-
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
-
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp10          goto state 101
-	Exp11          goto state 42
-	Exp12          goto state 43
-	Exp13          goto state 44
-	Exp14          goto state 45
-	Constant       goto state 46
-
-State 86
-
-	Exp9 -> Exp9 '==' . Exp10                           (rule 55)
-
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
-
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp10          goto state 100
-	Exp11          goto state 42
-	Exp12          goto state 43
-	Exp13          goto state 44
-	Exp14          goto state 45
-	Constant       goto state 46
-
-State 87
-
-	Exp8 -> Exp8 '&' . Exp9                             (rule 53)
-
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
-
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp9           goto state 99
-	Exp10          goto state 41
-	Exp11          goto state 42
-	Exp12          goto state 43
-	Exp13          goto state 44
-	Exp14          goto state 45
-	Constant       goto state 46
-
 State 88
 
-	Exp7 -> Exp7 '^' . Exp8                             (rule 51)
+	Exp13 -> Exp13 PEtimes . Exp14                      (rule 93)
 
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
 
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp8           goto state 98
-	Exp9           goto state 40
-	Exp10          goto state 41
-	Exp11          goto state 42
-	Exp12          goto state 43
-	Exp13          goto state 44
-	Exp14          goto state 45
-	Constant       goto state 46
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp14          goto state 143
+	Constant       goto state 72
 
 State 89
 
-	Exp6 -> Exp6 '|' . Exp7                             (rule 49)
+	Exp13 -> Exp13 PEdiv . Exp14                        (rule 94)
 
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
 
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp7           goto state 97
-	Exp8           goto state 39
-	Exp9           goto state 40
-	Exp10          goto state 41
-	Exp11          goto state 42
-	Exp12          goto state 43
-	Exp13          goto state 44
-	Exp14          goto state 45
-	Constant       goto state 46
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp14          goto state 142
+	Constant       goto state 72
 
 State 90
 
-	Exp5 -> Exp5 '&&' . Exp6                            (rule 47)
+	Exp13 -> Exp13 PEmod . Exp14                        (rule 95)
 
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
 
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp6           goto state 96
-	Exp7           goto state 38
-	Exp8           goto state 39
-	Exp9           goto state 40
-	Exp10          goto state 41
-	Exp11          goto state 42
-	Exp12          goto state 43
-	Exp13          goto state 44
-	Exp14          goto state 45
-	Constant       goto state 46
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp14          goto state 141
+	Constant       goto state 72
 
 State 91
 
-	Exp4 -> Exp4 '||' . Exp5                            (rule 45)
+	PEtimes -> L_PEtimes .                              (rule 20)
 
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
-
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp5           goto state 95
-	Exp6           goto state 37
-	Exp7           goto state 38
-	Exp8           goto state 39
-	Exp9           goto state 40
-	Exp10          goto state 41
-	Exp11          goto state 42
-	Exp12          goto state 43
-	Exp13          goto state 44
-	Exp14          goto state 45
-	Constant       goto state 46
-
-State 92
-
-	Declaration -> Type PIdent AssgnmOp Exp PSemicolon .    (rule 20)
-
-	'do'           reduce using rule 20
-	'int'          reduce using rule 20
-	L_POpenGraph   reduce using rule 20
-	L_PCloseGraph  reduce using rule 20
 	L_POpenParenthesisreduce using rule 20
 	L_PIdent       reduce using rule 20
 	L_PString      reduce using rule 20
 	L_PChar        reduce using rule 20
 	L_PDouble      reduce using rule 20
 	L_PInteger     reduce using rule 20
-	%eof           reduce using rule 20
+
+
+State 92
+
+	PEdiv -> L_PEdiv .                                  (rule 21)
+
+	L_POpenParenthesisreduce using rule 21
+	L_PIdent       reduce using rule 21
+	L_PString      reduce using rule 21
+	L_PChar        reduce using rule 21
+	L_PDouble      reduce using rule 21
+	L_PInteger     reduce using rule 21
 
 
 State 93
 
-	Exp -> Exp . AssgnmOp Exp4                          (rule 43)
-	Exp14 -> POpenParenthesis Exp . PCloseParenthesis    (rule 73)
+	PEmod -> L_PEmod .                                  (rule 22)
 
-	L_PCloseParenthesisshift, and enter state 73
-	L_PAssignmEq   shift, and enter state 26
-	L_PAssignmPlus shift, and enter state 27
+	L_POpenParenthesisreduce using rule 22
+	L_PIdent       reduce using rule 22
+	L_PString      reduce using rule 22
+	L_PChar        reduce using rule 22
+	L_PDouble      reduce using rule 22
+	L_PInteger     reduce using rule 22
 
-	PCloseParenthesisgoto state 94
-	PAssignmEq     goto state 20
-	PAssignmPlus   goto state 21
-	AssgnmOp       goto state 67
 
 State 94
 
-	Exp14 -> POpenParenthesis Exp PCloseParenthesis .    (rule 73)
+	Exp12 -> Exp12 PEplus . Exp13                       (rule 90)
 
-	'!='           reduce using rule 73
-	'%'            reduce using rule 73
-	'&'            reduce using rule 73
-	'&&'           reduce using rule 73
-	'*'            reduce using rule 73
-	'+'            reduce using rule 73
-	'-'            reduce using rule 73
-	'/'            reduce using rule 73
-	'<'            reduce using rule 73
-	'<<'           reduce using rule 73
-	'<='           reduce using rule 73
-	'=='           reduce using rule 73
-	'>'            reduce using rule 73
-	'>='           reduce using rule 73
-	'>>'           reduce using rule 73
-	'^'            reduce using rule 73
-	'|'            reduce using rule 73
-	'||'           reduce using rule 73
-	L_PCloseParenthesisreduce using rule 73
-	L_PSemicolon   reduce using rule 73
-	L_PAssignmEq   reduce using rule 73
-	L_PAssignmPlus reduce using rule 73
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
 
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp13          goto state 140
+	Exp14          goto state 71
+	Constant       goto state 72
 
 State 95
 
-	Exp4 -> Exp4 '||' Exp5 .                            (rule 45)
-	Exp5 -> Exp5 . '&&' Exp6                            (rule 47)
+	Exp12 -> Exp12 PEminus . Exp13                      (rule 91)
 
-	'&&'           shift, and enter state 90
-	'||'           reduce using rule 45
-	L_PCloseParenthesisreduce using rule 45
-	L_PSemicolon   reduce using rule 45
-	L_PAssignmEq   reduce using rule 45
-	L_PAssignmPlus reduce using rule 45
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
 
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp13          goto state 139
+	Exp14          goto state 71
+	Constant       goto state 72
 
 State 96
 
-	Exp5 -> Exp5 '&&' Exp6 .                            (rule 47)
-	Exp6 -> Exp6 . '|' Exp7                             (rule 49)
+	PEplus -> L_PEplus .                                (rule 18)
 
-	'&&'           reduce using rule 47
-	'|'            shift, and enter state 89
-	'||'           reduce using rule 47
-	L_PCloseParenthesisreduce using rule 47
-	L_PSemicolon   reduce using rule 47
-	L_PAssignmEq   reduce using rule 47
-	L_PAssignmPlus reduce using rule 47
+	L_POpenParenthesisreduce using rule 18
+	L_PIdent       reduce using rule 18
+	L_PString      reduce using rule 18
+	L_PChar        reduce using rule 18
+	L_PDouble      reduce using rule 18
+	L_PInteger     reduce using rule 18
 
 
 State 97
 
-	Exp6 -> Exp6 '|' Exp7 .                             (rule 49)
-	Exp7 -> Exp7 . '^' Exp8                             (rule 51)
+	PEminus -> L_PEminus .                              (rule 19)
 
-	'&&'           reduce using rule 49
-	'^'            shift, and enter state 88
-	'|'            reduce using rule 49
-	'||'           reduce using rule 49
-	L_PCloseParenthesisreduce using rule 49
-	L_PSemicolon   reduce using rule 49
-	L_PAssignmEq   reduce using rule 49
-	L_PAssignmPlus reduce using rule 49
+	L_POpenParenthesisreduce using rule 19
+	L_PIdent       reduce using rule 19
+	L_PString      reduce using rule 19
+	L_PChar        reduce using rule 19
+	L_PDouble      reduce using rule 19
+	L_PInteger     reduce using rule 19
 
 
 State 98
 
-	Exp7 -> Exp7 '^' Exp8 .                             (rule 51)
-	Exp8 -> Exp8 . '&' Exp9                             (rule 53)
+	Exp10 -> Exp10 PElthen . Exp11                      (rule 85)
 
-	'&'            shift, and enter state 87
-	'&&'           reduce using rule 51
-	'^'            reduce using rule 51
-	'|'            reduce using rule 51
-	'||'           reduce using rule 51
-	L_PCloseParenthesisreduce using rule 51
-	L_PSemicolon   reduce using rule 51
-	L_PAssignmEq   reduce using rule 51
-	L_PAssignmPlus reduce using rule 51
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
 
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp12          goto state 66
+	Exp13          goto state 67
+	Exp11          goto state 138
+	Exp14          goto state 71
+	Constant       goto state 72
 
 State 99
 
-	Exp8 -> Exp8 '&' Exp9 .                             (rule 53)
-	Exp9 -> Exp9 . '==' Exp10                           (rule 55)
-	Exp9 -> Exp9 . '!=' Exp10                           (rule 56)
+	Exp10 -> Exp10 PEgrthen . Exp11                     (rule 86)
 
-	'!='           shift, and enter state 85
-	'&'            reduce using rule 53
-	'&&'           reduce using rule 53
-	'=='           shift, and enter state 86
-	'^'            reduce using rule 53
-	'|'            reduce using rule 53
-	'||'           reduce using rule 53
-	L_PCloseParenthesisreduce using rule 53
-	L_PSemicolon   reduce using rule 53
-	L_PAssignmEq   reduce using rule 53
-	L_PAssignmPlus reduce using rule 53
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
 
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp12          goto state 66
+	Exp13          goto state 67
+	Exp11          goto state 137
+	Exp14          goto state 71
+	Constant       goto state 72
 
 State 100
 
-	Exp9 -> Exp9 '==' Exp10 .                           (rule 55)
-	Exp10 -> Exp10 . '<' Exp11                          (rule 58)
-	Exp10 -> Exp10 . '>' Exp11                          (rule 59)
-	Exp10 -> Exp10 . '<=' Exp11                         (rule 60)
-	Exp10 -> Exp10 . '>=' Exp11                         (rule 61)
+	Exp10 -> Exp10 PEle . Exp11                         (rule 87)
 
-	'!='           reduce using rule 55
-	'&'            reduce using rule 55
-	'&&'           reduce using rule 55
-	'<'            shift, and enter state 81
-	'<='           shift, and enter state 82
-	'=='           reduce using rule 55
-	'>'            shift, and enter state 83
-	'>='           shift, and enter state 84
-	'^'            reduce using rule 55
-	'|'            reduce using rule 55
-	'||'           reduce using rule 55
-	L_PCloseParenthesisreduce using rule 55
-	L_PSemicolon   reduce using rule 55
-	L_PAssignmEq   reduce using rule 55
-	L_PAssignmPlus reduce using rule 55
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
 
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp12          goto state 66
+	Exp13          goto state 67
+	Exp11          goto state 136
+	Exp14          goto state 71
+	Constant       goto state 72
 
 State 101
 
-	Exp9 -> Exp9 '!=' Exp10 .                           (rule 56)
-	Exp10 -> Exp10 . '<' Exp11                          (rule 58)
-	Exp10 -> Exp10 . '>' Exp11                          (rule 59)
-	Exp10 -> Exp10 . '<=' Exp11                         (rule 60)
-	Exp10 -> Exp10 . '>=' Exp11                         (rule 61)
+	Exp10 -> Exp10 PEge . Exp12                         (rule 88)
 
-	'!='           reduce using rule 56
-	'&'            reduce using rule 56
-	'&&'           reduce using rule 56
-	'<'            shift, and enter state 81
-	'<='           shift, and enter state 82
-	'=='           reduce using rule 56
-	'>'            shift, and enter state 83
-	'>='           shift, and enter state 84
-	'^'            reduce using rule 56
-	'|'            reduce using rule 56
-	'||'           reduce using rule 56
-	L_PCloseParenthesisreduce using rule 56
-	L_PSemicolon   reduce using rule 56
-	L_PAssignmEq   reduce using rule 56
-	L_PAssignmPlus reduce using rule 56
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
 
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp12          goto state 135
+	Exp13          goto state 67
+	Exp14          goto state 71
+	Constant       goto state 72
 
 State 102
 
-	Exp10 -> Exp10 '>=' Exp11 .                         (rule 61)
-	Exp11 -> Exp11 . '<<' Exp12                         (rule 63)
-	Exp11 -> Exp11 . '>>' Exp12                         (rule 64)
+	PElthen -> L_PElthen .                              (rule 16)
 
-	'!='           reduce using rule 61
-	'&'            reduce using rule 61
-	'&&'           reduce using rule 61
-	'<'            reduce using rule 61
-	'<<'           shift, and enter state 79
-	'<='           reduce using rule 61
-	'=='           reduce using rule 61
-	'>'            reduce using rule 61
-	'>='           reduce using rule 61
-	'>>'           shift, and enter state 80
-	'^'            reduce using rule 61
-	'|'            reduce using rule 61
-	'||'           reduce using rule 61
-	L_PCloseParenthesisreduce using rule 61
-	L_PSemicolon   reduce using rule 61
-	L_PAssignmEq   reduce using rule 61
-	L_PAssignmPlus reduce using rule 61
+	L_POpenParenthesisreduce using rule 16
+	L_PIdent       reduce using rule 16
+	L_PString      reduce using rule 16
+	L_PChar        reduce using rule 16
+	L_PDouble      reduce using rule 16
+	L_PInteger     reduce using rule 16
 
 
 State 103
 
-	Exp10 -> Exp10 '>' Exp11 .                          (rule 59)
-	Exp11 -> Exp11 . '<<' Exp12                         (rule 63)
-	Exp11 -> Exp11 . '>>' Exp12                         (rule 64)
+	PEgrthen -> L_PEgrthen .                            (rule 17)
 
-	'!='           reduce using rule 59
-	'&'            reduce using rule 59
-	'&&'           reduce using rule 59
-	'<'            reduce using rule 59
-	'<<'           shift, and enter state 79
-	'<='           reduce using rule 59
-	'=='           reduce using rule 59
-	'>'            reduce using rule 59
-	'>='           reduce using rule 59
-	'>>'           shift, and enter state 80
-	'^'            reduce using rule 59
-	'|'            reduce using rule 59
-	'||'           reduce using rule 59
-	L_PCloseParenthesisreduce using rule 59
-	L_PSemicolon   reduce using rule 59
-	L_PAssignmEq   reduce using rule 59
-	L_PAssignmPlus reduce using rule 59
+	L_POpenParenthesisreduce using rule 17
+	L_PIdent       reduce using rule 17
+	L_PString      reduce using rule 17
+	L_PChar        reduce using rule 17
+	L_PDouble      reduce using rule 17
+	L_PInteger     reduce using rule 17
 
 
 State 104
 
-	Exp10 -> Exp10 '<=' Exp11 .                         (rule 60)
-	Exp11 -> Exp11 . '<<' Exp12                         (rule 63)
-	Exp11 -> Exp11 . '>>' Exp12                         (rule 64)
+	PEle -> L_PEle .                                    (rule 28)
 
-	'!='           reduce using rule 60
-	'&'            reduce using rule 60
-	'&&'           reduce using rule 60
-	'<'            reduce using rule 60
-	'<<'           shift, and enter state 79
-	'<='           reduce using rule 60
-	'=='           reduce using rule 60
-	'>'            reduce using rule 60
-	'>='           reduce using rule 60
-	'>>'           shift, and enter state 80
-	'^'            reduce using rule 60
-	'|'            reduce using rule 60
-	'||'           reduce using rule 60
-	L_PCloseParenthesisreduce using rule 60
-	L_PSemicolon   reduce using rule 60
-	L_PAssignmEq   reduce using rule 60
-	L_PAssignmPlus reduce using rule 60
+	L_POpenParenthesisreduce using rule 28
+	L_PIdent       reduce using rule 28
+	L_PString      reduce using rule 28
+	L_PChar        reduce using rule 28
+	L_PDouble      reduce using rule 28
+	L_PInteger     reduce using rule 28
 
 
 State 105
 
-	Exp10 -> Exp10 '<' Exp11 .                          (rule 58)
-	Exp11 -> Exp11 . '<<' Exp12                         (rule 63)
-	Exp11 -> Exp11 . '>>' Exp12                         (rule 64)
+	PEge -> L_PEge .                                    (rule 29)
 
-	'!='           reduce using rule 58
-	'&'            reduce using rule 58
-	'&&'           reduce using rule 58
-	'<'            reduce using rule 58
-	'<<'           shift, and enter state 79
-	'<='           reduce using rule 58
-	'=='           reduce using rule 58
-	'>'            reduce using rule 58
-	'>='           reduce using rule 58
-	'>>'           shift, and enter state 80
-	'^'            reduce using rule 58
-	'|'            reduce using rule 58
-	'||'           reduce using rule 58
-	L_PCloseParenthesisreduce using rule 58
-	L_PSemicolon   reduce using rule 58
-	L_PAssignmEq   reduce using rule 58
-	L_PAssignmPlus reduce using rule 58
+	L_POpenParenthesisreduce using rule 29
+	L_PIdent       reduce using rule 29
+	L_PString      reduce using rule 29
+	L_PChar        reduce using rule 29
+	L_PDouble      reduce using rule 29
+	L_PInteger     reduce using rule 29
 
 
 State 106
 
-	Exp11 -> Exp11 '>>' Exp12 .                         (rule 64)
-	Exp12 -> Exp12 . '+' Exp13                          (rule 66)
-	Exp12 -> Exp12 . '-' Exp13                          (rule 67)
+	Exp9 -> Exp9 PEeq . Exp10                           (rule 82)
 
-	'!='           reduce using rule 64
-	'&'            reduce using rule 64
-	'&&'           reduce using rule 64
-	'+'            shift, and enter state 77
-	'-'            shift, and enter state 78
-	'<'            reduce using rule 64
-	'<<'           reduce using rule 64
-	'<='           reduce using rule 64
-	'=='           reduce using rule 64
-	'>'            reduce using rule 64
-	'>='           reduce using rule 64
-	'>>'           reduce using rule 64
-	'^'            reduce using rule 64
-	'|'            reduce using rule 64
-	'||'           reduce using rule 64
-	L_PCloseParenthesisreduce using rule 64
-	L_PSemicolon   reduce using rule 64
-	L_PAssignmEq   reduce using rule 64
-	L_PAssignmPlus reduce using rule 64
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
 
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp10          goto state 134
+	Exp12          goto state 66
+	Exp13          goto state 67
+	Exp11          goto state 70
+	Exp14          goto state 71
+	Constant       goto state 72
 
 State 107
 
-	Exp11 -> Exp11 '<<' Exp12 .                         (rule 63)
-	Exp12 -> Exp12 . '+' Exp13                          (rule 66)
-	Exp12 -> Exp12 . '-' Exp13                          (rule 67)
+	Exp9 -> Exp9 PEneq . Exp10                          (rule 83)
 
-	'!='           reduce using rule 63
-	'&'            reduce using rule 63
-	'&&'           reduce using rule 63
-	'+'            shift, and enter state 77
-	'-'            shift, and enter state 78
-	'<'            reduce using rule 63
-	'<<'           reduce using rule 63
-	'<='           reduce using rule 63
-	'=='           reduce using rule 63
-	'>'            reduce using rule 63
-	'>='           reduce using rule 63
-	'>>'           reduce using rule 63
-	'^'            reduce using rule 63
-	'|'            reduce using rule 63
-	'||'           reduce using rule 63
-	L_PCloseParenthesisreduce using rule 63
-	L_PSemicolon   reduce using rule 63
-	L_PAssignmEq   reduce using rule 63
-	L_PAssignmPlus reduce using rule 63
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
 
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp10          goto state 133
+	Exp12          goto state 66
+	Exp13          goto state 67
+	Exp11          goto state 70
+	Exp14          goto state 71
+	Constant       goto state 72
 
 State 108
 
-	Exp12 -> Exp12 '-' Exp13 .                          (rule 67)
-	Exp13 -> Exp13 . '*' Exp14                          (rule 69)
-	Exp13 -> Exp13 . '/' Exp14                          (rule 70)
-	Exp13 -> Exp13 . '%' Exp14                          (rule 71)
+	PEeq -> L_PEeq .                                    (rule 26)
 
-	'!='           reduce using rule 67
-	'%'            shift, and enter state 74
-	'&'            reduce using rule 67
-	'&&'           reduce using rule 67
-	'*'            shift, and enter state 75
-	'+'            reduce using rule 67
-	'-'            reduce using rule 67
-	'/'            shift, and enter state 76
-	'<'            reduce using rule 67
-	'<<'           reduce using rule 67
-	'<='           reduce using rule 67
-	'=='           reduce using rule 67
-	'>'            reduce using rule 67
-	'>='           reduce using rule 67
-	'>>'           reduce using rule 67
-	'^'            reduce using rule 67
-	'|'            reduce using rule 67
-	'||'           reduce using rule 67
-	L_PCloseParenthesisreduce using rule 67
-	L_PSemicolon   reduce using rule 67
-	L_PAssignmEq   reduce using rule 67
-	L_PAssignmPlus reduce using rule 67
+	L_POpenParenthesisreduce using rule 26
+	L_PIdent       reduce using rule 26
+	L_PString      reduce using rule 26
+	L_PChar        reduce using rule 26
+	L_PDouble      reduce using rule 26
+	L_PInteger     reduce using rule 26
 
 
 State 109
 
-	Exp12 -> Exp12 '+' Exp13 .                          (rule 66)
-	Exp13 -> Exp13 . '*' Exp14                          (rule 69)
-	Exp13 -> Exp13 . '/' Exp14                          (rule 70)
-	Exp13 -> Exp13 . '%' Exp14                          (rule 71)
+	PEneq -> L_PEneq .                                  (rule 27)
 
-	'!='           reduce using rule 66
-	'%'            shift, and enter state 74
-	'&'            reduce using rule 66
-	'&&'           reduce using rule 66
-	'*'            shift, and enter state 75
-	'+'            reduce using rule 66
-	'-'            reduce using rule 66
-	'/'            shift, and enter state 76
-	'<'            reduce using rule 66
-	'<<'           reduce using rule 66
-	'<='           reduce using rule 66
-	'=='           reduce using rule 66
-	'>'            reduce using rule 66
-	'>='           reduce using rule 66
-	'>>'           reduce using rule 66
-	'^'            reduce using rule 66
-	'|'            reduce using rule 66
-	'||'           reduce using rule 66
-	L_PCloseParenthesisreduce using rule 66
-	L_PSemicolon   reduce using rule 66
-	L_PAssignmEq   reduce using rule 66
-	L_PAssignmPlus reduce using rule 66
+	L_POpenParenthesisreduce using rule 27
+	L_PIdent       reduce using rule 27
+	L_PString      reduce using rule 27
+	L_PChar        reduce using rule 27
+	L_PDouble      reduce using rule 27
+	L_PInteger     reduce using rule 27
 
 
 State 110
 
-	Exp13 -> Exp13 '/' Exp14 .                          (rule 70)
+	Exp8 -> Exp8 PDef . Exp9                            (rule 80)
 
-	'!='           reduce using rule 70
-	'%'            reduce using rule 70
-	'&'            reduce using rule 70
-	'&&'           reduce using rule 70
-	'*'            reduce using rule 70
-	'+'            reduce using rule 70
-	'-'            reduce using rule 70
-	'/'            reduce using rule 70
-	'<'            reduce using rule 70
-	'<<'           reduce using rule 70
-	'<='           reduce using rule 70
-	'=='           reduce using rule 70
-	'>'            reduce using rule 70
-	'>='           reduce using rule 70
-	'>>'           reduce using rule 70
-	'^'            reduce using rule 70
-	'|'            reduce using rule 70
-	'||'           reduce using rule 70
-	L_PCloseParenthesisreduce using rule 70
-	L_PSemicolon   reduce using rule 70
-	L_PAssignmEq   reduce using rule 70
-	L_PAssignmPlus reduce using rule 70
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
 
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp9           goto state 132
+	Exp10          goto state 65
+	Exp12          goto state 66
+	Exp13          goto state 67
+	Exp11          goto state 70
+	Exp14          goto state 71
+	Constant       goto state 72
 
 State 111
 
-	Exp13 -> Exp13 '*' Exp14 .                          (rule 69)
+	PDef -> L_PDef .                                    (rule 23)
 
-	'!='           reduce using rule 69
-	'%'            reduce using rule 69
-	'&'            reduce using rule 69
-	'&&'           reduce using rule 69
-	'*'            reduce using rule 69
-	'+'            reduce using rule 69
-	'-'            reduce using rule 69
-	'/'            reduce using rule 69
-	'<'            reduce using rule 69
-	'<<'           reduce using rule 69
-	'<='           reduce using rule 69
-	'=='           reduce using rule 69
-	'>'            reduce using rule 69
-	'>='           reduce using rule 69
-	'>>'           reduce using rule 69
-	'^'            reduce using rule 69
-	'|'            reduce using rule 69
-	'||'           reduce using rule 69
-	L_PCloseParenthesisreduce using rule 69
-	L_PSemicolon   reduce using rule 69
-	L_PAssignmEq   reduce using rule 69
-	L_PAssignmPlus reduce using rule 69
+	L_POpenParenthesisreduce using rule 23
+	L_PIdent       reduce using rule 23
+	L_PString      reduce using rule 23
+	L_PChar        reduce using rule 23
+	L_PDouble      reduce using rule 23
+	L_PInteger     reduce using rule 23
 
 
 State 112
 
-	Exp13 -> Exp13 '%' Exp14 .                          (rule 71)
+	Exp5 -> Exp5 PEland . Exp8                          (rule 78)
 
-	'!='           reduce using rule 71
-	'%'            reduce using rule 71
-	'&'            reduce using rule 71
-	'&&'           reduce using rule 71
-	'*'            reduce using rule 71
-	'+'            reduce using rule 71
-	'-'            reduce using rule 71
-	'/'            reduce using rule 71
-	'<'            reduce using rule 71
-	'<<'           reduce using rule 71
-	'<='           reduce using rule 71
-	'=='           reduce using rule 71
-	'>'            reduce using rule 71
-	'>='           reduce using rule 71
-	'>>'           reduce using rule 71
-	'^'            reduce using rule 71
-	'|'            reduce using rule 71
-	'||'           reduce using rule 71
-	L_PCloseParenthesisreduce using rule 71
-	L_PSemicolon   reduce using rule 71
-	L_PAssignmEq   reduce using rule 71
-	L_PAssignmPlus reduce using rule 71
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
 
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp8           goto state 131
+	Exp9           goto state 64
+	Exp10          goto state 65
+	Exp12          goto state 66
+	Exp13          goto state 67
+	Exp11          goto state 70
+	Exp14          goto state 71
+	Constant       goto state 72
 
 State 113
 
-	ListParam -> Param ',' ListParam .                  (rule 26)
+	PEland -> L_PEland .                                (rule 25)
 
-	L_PCloseParenthesisreduce using rule 26
+	L_POpenParenthesisreduce using rule 25
+	L_PIdent       reduce using rule 25
+	L_PString      reduce using rule 25
+	L_PChar        reduce using rule 25
+	L_PDouble      reduce using rule 25
+	L_PInteger     reduce using rule 25
 
 
 State 114
 
-	Param -> Mode Type PIdent .                         (rule 28)
+	Exp4 -> Exp4 PElor . Exp5                           (rule 76)
 
-	','            reduce using rule 28
-	L_PCloseParenthesisreduce using rule 28
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
 
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp5           goto state 130
+	Exp8           goto state 63
+	Exp9           goto state 64
+	Exp10          goto state 65
+	Exp12          goto state 66
+	Exp13          goto state 67
+	Exp6           goto state 68
+	Exp7           goto state 69
+	Exp11          goto state 70
+	Exp14          goto state 71
+	Constant       goto state 72
 
 State 115
 
-	Exp -> Exp AssgnmOp Exp4 .                          (rule 43)
-	Exp4 -> Exp4 . '||' Exp5                            (rule 45)
+	PElor -> L_PElor .                                  (rule 24)
 
-	'||'           shift, and enter state 91
-	L_PCloseParenthesisreduce using rule 43
-	L_PSemicolon   reduce using rule 43
-	L_PAssignmEq   reduce using rule 43
-	L_PAssignmPlus reduce using rule 43
+	L_POpenParenthesisreduce using rule 24
+	L_PIdent       reduce using rule 24
+	L_PString      reduce using rule 24
+	L_PChar        reduce using rule 24
+	L_PDouble      reduce using rule 24
+	L_PInteger     reduce using rule 24
 
 
 State 116
 
-	Statement -> 'do' 'while' Body . Guard              (rule 36)
+	Statement -> Exp PSemicolon .                       (rule 67)
 
-	L_POpenParenthesisshift, and enter state 24
+	L_POpenGraph   reduce using rule 67
+	L_PCloseGraph  reduce using rule 67
+	L_POpenParenthesisreduce using rule 67
+	L_Pdo          reduce using rule 67
+	L_PInt         reduce using rule 67
+	L_PReal        reduce using rule 67
+	L_PVar         reduce using rule 67
+	L_PConst       reduce using rule 67
+	L_PIdent       reduce using rule 67
+	L_PString      reduce using rule 67
+	L_PChar        reduce using rule 67
+	L_PDouble      reduce using rule 67
+	L_PInteger     reduce using rule 67
 
-	POpenParenthesisgoto state 117
-	Guard          goto state 118
 
 State 117
 
-	Guard -> POpenParenthesis . Exp PCloseParenthesis    (rule 38)
+	BodyStatement -> Function PSemicolon .              (rule 63)
 
-	L_POpenParenthesisshift, and enter state 24
-	L_PIdent       shift, and enter state 13
-	L_PString      shift, and enter state 47
-	L_PChar        shift, and enter state 48
-	L_PDouble      shift, and enter state 49
-	L_PInteger     shift, and enter state 50
+	L_POpenGraph   reduce using rule 63
+	L_PCloseGraph  reduce using rule 63
+	L_POpenParenthesisreduce using rule 63
+	L_Pdo          reduce using rule 63
+	L_PInt         reduce using rule 63
+	L_PReal        reduce using rule 63
+	L_PVar         reduce using rule 63
+	L_PConst       reduce using rule 63
+	L_PIdent       reduce using rule 63
+	L_PString      reduce using rule 63
+	L_PChar        reduce using rule 63
+	L_PDouble      reduce using rule 63
+	L_PInteger     reduce using rule 63
 
-	POpenParenthesisgoto state 28
-	PIdent         goto state 29
-	PString        goto state 30
-	PChar          goto state 31
-	PDouble        goto state 32
-	PInteger       goto state 33
-	Exp            goto state 119
-	Exp4           goto state 35
-	Exp5           goto state 36
-	Exp6           goto state 37
-	Exp7           goto state 38
-	Exp8           goto state 39
-	Exp9           goto state 40
-	Exp10          goto state 41
-	Exp11          goto state 42
-	Exp12          goto state 43
-	Exp13          goto state 44
-	Exp14          goto state 45
-	Constant       goto state 46
 
 State 118
 
-	Statement -> 'do' 'while' Body Guard .              (rule 36)
+	Statement -> Pdo PWhile . Body Guard                (rule 66)
 
-	'do'           reduce using rule 36
-	'int'          reduce using rule 36
-	L_POpenGraph   reduce using rule 36
-	L_PCloseGraph  reduce using rule 36
-	L_POpenParenthesisreduce using rule 36
-	L_PIdent       reduce using rule 36
-	L_PString      reduce using rule 36
-	L_PChar        reduce using rule 36
-	L_PDouble      reduce using rule 36
-	L_PInteger     reduce using rule 36
+	L_POpenGraph   shift, and enter state 2
 
+	POpenGraph     goto state 22
+	Body           goto state 129
 
 State 119
 
-	Guard -> POpenParenthesis Exp . PCloseParenthesis    (rule 38)
-	Exp -> Exp . AssgnmOp Exp4                          (rule 43)
+	PWhile -> L_PWhile .                                (rule 8)
 
-	L_PCloseParenthesisshift, and enter state 73
-	L_PAssignmEq   shift, and enter state 26
-	L_PAssignmPlus shift, and enter state 27
+	L_POpenGraph   reduce using rule 8
 
-	PCloseParenthesisgoto state 120
-	PAssignmEq     goto state 20
-	PAssignmPlus   goto state 21
-	AssgnmOp       goto state 67
 
 State 120
 
-	Guard -> POpenParenthesis Exp PCloseParenthesis .    (rule 38)
+	Exp -> Exp . AssgnmOp Exp4                          (rule 74)
+	Exp14 -> POpenParenthesis Exp . PCloseParenthesis    (rule 100)
 
-	'do'           reduce using rule 38
-	'int'          reduce using rule 38
-	L_POpenGraph   reduce using rule 38
-	L_PCloseGraph  reduce using rule 38
-	L_POpenParenthesisreduce using rule 38
-	L_PIdent       reduce using rule 38
-	L_PString      reduce using rule 38
-	L_PChar        reduce using rule 38
-	L_PDouble      reduce using rule 38
-	L_PInteger     reduce using rule 38
+	L_PCloseParenthesisshift, and enter state 125
+	L_PAssignmEq   shift, and enter state 32
+	L_PAssignmPlus shift, and enter state 87
+
+	PCloseParenthesisgoto state 128
+	PAssignmEq     goto state 84
+	PAssignmPlus   goto state 85
+	AssgnmOp       goto state 86
+
+State 121
+
+	Param -> Mode Type . PIdent                         (rule 58)
+
+	L_PIdent       shift, and enter state 21
+
+	PIdent         goto state 127
+
+State 122
+
+	Param -> Type PIdent .                              (rule 57)
+
+	','            reduce using rule 57
+	L_PCloseParenthesisreduce using rule 57
+
+
+State 123
+
+	ListParam -> Param ',' . ListParam                  (rule 56)
+
+	L_PCloseParenthesisreduce using rule 54
+	L_PInt         shift, and enter state 16
+	L_PReal        shift, and enter state 17
+	L_PRef         shift, and enter state 46
+
+	PInt           goto state 3
+	PReal          goto state 4
+	PRef           goto state 41
+	ListParam      goto state 126
+	Param          goto state 43
+	Type           goto state 44
+	Mode           goto state 45
+
+State 124
+
+	FunctionParams -> POpenParenthesis ListParam PCloseParenthesis .    (rule 53)
+
+	L_POpenGraph   reduce using rule 53
+
+
+State 125
+
+	PCloseParenthesis -> L_PCloseParenthesis .          (rule 4)
+
+	','            reduce using rule 4
+	L_POpenGraph   reduce using rule 4
+	L_PCloseGraph  reduce using rule 4
+	L_POpenParenthesisreduce using rule 4
+	L_PCloseParenthesisreduce using rule 4
+	L_PSemicolon   reduce using rule 4
+	L_Pdo          reduce using rule 4
+	L_PInt         reduce using rule 4
+	L_PReal        reduce using rule 4
+	L_PAssignmEq   reduce using rule 4
+	L_PAssignmPlus reduce using rule 4
+	L_PVar         reduce using rule 4
+	L_PConst       reduce using rule 4
+	L_PElthen      reduce using rule 4
+	L_PEgrthen     reduce using rule 4
+	L_PEplus       reduce using rule 4
+	L_PEminus      reduce using rule 4
+	L_PEtimes      reduce using rule 4
+	L_PEdiv        reduce using rule 4
+	L_PEmod        reduce using rule 4
+	L_PDef         reduce using rule 4
+	L_PElor        reduce using rule 4
+	L_PEland       reduce using rule 4
+	L_PEeq         reduce using rule 4
+	L_PEneq        reduce using rule 4
+	L_PEle         reduce using rule 4
+	L_PEge         reduce using rule 4
+	L_PIdent       reduce using rule 4
+	L_PString      reduce using rule 4
+	L_PChar        reduce using rule 4
+	L_PDouble      reduce using rule 4
+	L_PInteger     reduce using rule 4
+
+
+State 126
+
+	ListParam -> Param ',' ListParam .                  (rule 56)
+
+	L_PCloseParenthesisreduce using rule 56
+
+
+State 127
+
+	Param -> Mode Type PIdent .                         (rule 58)
+
+	','            reduce using rule 58
+	L_PCloseParenthesisreduce using rule 58
+
+
+State 128
+
+	Exp14 -> POpenParenthesis Exp PCloseParenthesis .    (rule 100)
+
+	','            reduce using rule 100
+	L_PCloseParenthesisreduce using rule 100
+	L_PSemicolon   reduce using rule 100
+	L_PAssignmEq   reduce using rule 100
+	L_PAssignmPlus reduce using rule 100
+	L_PElthen      reduce using rule 100
+	L_PEgrthen     reduce using rule 100
+	L_PEplus       reduce using rule 100
+	L_PEminus      reduce using rule 100
+	L_PEtimes      reduce using rule 100
+	L_PEdiv        reduce using rule 100
+	L_PEmod        reduce using rule 100
+	L_PDef         reduce using rule 100
+	L_PElor        reduce using rule 100
+	L_PEland       reduce using rule 100
+	L_PEeq         reduce using rule 100
+	L_PEneq        reduce using rule 100
+	L_PEle         reduce using rule 100
+	L_PEge         reduce using rule 100
+
+
+State 129
+
+	Statement -> Pdo PWhile Body . Guard                (rule 66)
+
+	L_POpenParenthesisshift, and enter state 40
+
+	POpenParenthesisgoto state 146
+	Guard          goto state 147
+
+State 130
+
+	Exp4 -> Exp4 PElor Exp5 .                           (rule 76)
+	Exp5 -> Exp5 . PEland Exp8                          (rule 78)
+
+	','            reduce using rule 76
+	L_PCloseParenthesisreduce using rule 76
+	L_PSemicolon   reduce using rule 76
+	L_PAssignmEq   reduce using rule 76
+	L_PAssignmPlus reduce using rule 76
+	L_PElor        reduce using rule 76
+	L_PEland       shift, and enter state 113
+
+	PEland         goto state 112
+
+State 131
+
+	Exp5 -> Exp5 PEland Exp8 .                          (rule 78)
+	Exp8 -> Exp8 . PDef Exp9                            (rule 80)
+
+	','            reduce using rule 78
+	L_PCloseParenthesisreduce using rule 78
+	L_PSemicolon   reduce using rule 78
+	L_PAssignmEq   reduce using rule 78
+	L_PAssignmPlus reduce using rule 78
+	L_PDef         shift, and enter state 111
+	L_PElor        reduce using rule 78
+	L_PEland       reduce using rule 78
+
+	PDef           goto state 110
+
+State 132
+
+	Exp8 -> Exp8 PDef Exp9 .                            (rule 80)
+	Exp9 -> Exp9 . PEeq Exp10                           (rule 82)
+	Exp9 -> Exp9 . PEneq Exp10                          (rule 83)
+
+	','            reduce using rule 80
+	L_PCloseParenthesisreduce using rule 80
+	L_PSemicolon   reduce using rule 80
+	L_PAssignmEq   reduce using rule 80
+	L_PAssignmPlus reduce using rule 80
+	L_PDef         reduce using rule 80
+	L_PElor        reduce using rule 80
+	L_PEland       reduce using rule 80
+	L_PEeq         shift, and enter state 108
+	L_PEneq        shift, and enter state 109
+
+	PEeq           goto state 106
+	PEneq          goto state 107
+
+State 133
+
+	Exp9 -> Exp9 PEneq Exp10 .                          (rule 83)
+	Exp10 -> Exp10 . PElthen Exp11                      (rule 85)
+	Exp10 -> Exp10 . PEgrthen Exp11                     (rule 86)
+	Exp10 -> Exp10 . PEle Exp11                         (rule 87)
+	Exp10 -> Exp10 . PEge Exp12                         (rule 88)
+
+	','            reduce using rule 83
+	L_PCloseParenthesisreduce using rule 83
+	L_PSemicolon   reduce using rule 83
+	L_PAssignmEq   reduce using rule 83
+	L_PAssignmPlus reduce using rule 83
+	L_PElthen      shift, and enter state 102
+	L_PEgrthen     shift, and enter state 103
+	L_PDef         reduce using rule 83
+	L_PElor        reduce using rule 83
+	L_PEland       reduce using rule 83
+	L_PEeq         reduce using rule 83
+	L_PEneq        reduce using rule 83
+	L_PEle         shift, and enter state 104
+	L_PEge         shift, and enter state 105
+
+	PElthen        goto state 98
+	PEgrthen       goto state 99
+	PEle           goto state 100
+	PEge           goto state 101
+
+State 134
+
+	Exp9 -> Exp9 PEeq Exp10 .                           (rule 82)
+	Exp10 -> Exp10 . PElthen Exp11                      (rule 85)
+	Exp10 -> Exp10 . PEgrthen Exp11                     (rule 86)
+	Exp10 -> Exp10 . PEle Exp11                         (rule 87)
+	Exp10 -> Exp10 . PEge Exp12                         (rule 88)
+
+	','            reduce using rule 82
+	L_PCloseParenthesisreduce using rule 82
+	L_PSemicolon   reduce using rule 82
+	L_PAssignmEq   reduce using rule 82
+	L_PAssignmPlus reduce using rule 82
+	L_PElthen      shift, and enter state 102
+	L_PEgrthen     shift, and enter state 103
+	L_PDef         reduce using rule 82
+	L_PElor        reduce using rule 82
+	L_PEland       reduce using rule 82
+	L_PEeq         reduce using rule 82
+	L_PEneq        reduce using rule 82
+	L_PEle         shift, and enter state 104
+	L_PEge         shift, and enter state 105
+
+	PElthen        goto state 98
+	PEgrthen       goto state 99
+	PEle           goto state 100
+	PEge           goto state 101
+
+State 135
+
+	Exp10 -> Exp10 PEge Exp12 .                         (rule 88)
+	Exp12 -> Exp12 . PEplus Exp13                       (rule 90)
+	Exp12 -> Exp12 . PEminus Exp13                      (rule 91)
+
+	','            reduce using rule 88
+	L_PCloseParenthesisreduce using rule 88
+	L_PSemicolon   reduce using rule 88
+	L_PAssignmEq   reduce using rule 88
+	L_PAssignmPlus reduce using rule 88
+	L_PElthen      reduce using rule 88
+	L_PEgrthen     reduce using rule 88
+	L_PEplus       shift, and enter state 96
+	L_PEminus      shift, and enter state 97
+	L_PDef         reduce using rule 88
+	L_PElor        reduce using rule 88
+	L_PEland       reduce using rule 88
+	L_PEeq         reduce using rule 88
+	L_PEneq        reduce using rule 88
+	L_PEle         reduce using rule 88
+	L_PEge         reduce using rule 88
+
+	PEplus         goto state 94
+	PEminus        goto state 95
+
+State 136
+
+	Exp10 -> Exp10 PEle Exp11 .                         (rule 87)
+
+	','            reduce using rule 87
+	L_PCloseParenthesisreduce using rule 87
+	L_PSemicolon   reduce using rule 87
+	L_PAssignmEq   reduce using rule 87
+	L_PAssignmPlus reduce using rule 87
+	L_PElthen      reduce using rule 87
+	L_PEgrthen     reduce using rule 87
+	L_PDef         reduce using rule 87
+	L_PElor        reduce using rule 87
+	L_PEland       reduce using rule 87
+	L_PEeq         reduce using rule 87
+	L_PEneq        reduce using rule 87
+	L_PEle         reduce using rule 87
+	L_PEge         reduce using rule 87
+
+
+State 137
+
+	Exp10 -> Exp10 PEgrthen Exp11 .                     (rule 86)
+
+	','            reduce using rule 86
+	L_PCloseParenthesisreduce using rule 86
+	L_PSemicolon   reduce using rule 86
+	L_PAssignmEq   reduce using rule 86
+	L_PAssignmPlus reduce using rule 86
+	L_PElthen      reduce using rule 86
+	L_PEgrthen     reduce using rule 86
+	L_PDef         reduce using rule 86
+	L_PElor        reduce using rule 86
+	L_PEland       reduce using rule 86
+	L_PEeq         reduce using rule 86
+	L_PEneq        reduce using rule 86
+	L_PEle         reduce using rule 86
+	L_PEge         reduce using rule 86
+
+
+State 138
+
+	Exp10 -> Exp10 PElthen Exp11 .                      (rule 85)
+
+	','            reduce using rule 85
+	L_PCloseParenthesisreduce using rule 85
+	L_PSemicolon   reduce using rule 85
+	L_PAssignmEq   reduce using rule 85
+	L_PAssignmPlus reduce using rule 85
+	L_PElthen      reduce using rule 85
+	L_PEgrthen     reduce using rule 85
+	L_PDef         reduce using rule 85
+	L_PElor        reduce using rule 85
+	L_PEland       reduce using rule 85
+	L_PEeq         reduce using rule 85
+	L_PEneq        reduce using rule 85
+	L_PEle         reduce using rule 85
+	L_PEge         reduce using rule 85
+
+
+State 139
+
+	Exp12 -> Exp12 PEminus Exp13 .                      (rule 91)
+	Exp13 -> Exp13 . PEtimes Exp14                      (rule 93)
+	Exp13 -> Exp13 . PEdiv Exp14                        (rule 94)
+	Exp13 -> Exp13 . PEmod Exp14                        (rule 95)
+
+	','            reduce using rule 91
+	L_PCloseParenthesisreduce using rule 91
+	L_PSemicolon   reduce using rule 91
+	L_PAssignmEq   reduce using rule 91
+	L_PAssignmPlus reduce using rule 91
+	L_PElthen      reduce using rule 91
+	L_PEgrthen     reduce using rule 91
+	L_PEplus       reduce using rule 91
+	L_PEminus      reduce using rule 91
+	L_PEtimes      shift, and enter state 91
+	L_PEdiv        shift, and enter state 92
+	L_PEmod        shift, and enter state 93
+	L_PDef         reduce using rule 91
+	L_PElor        reduce using rule 91
+	L_PEland       reduce using rule 91
+	L_PEeq         reduce using rule 91
+	L_PEneq        reduce using rule 91
+	L_PEle         reduce using rule 91
+	L_PEge         reduce using rule 91
+
+	PEtimes        goto state 88
+	PEdiv          goto state 89
+	PEmod          goto state 90
+
+State 140
+
+	Exp12 -> Exp12 PEplus Exp13 .                       (rule 90)
+	Exp13 -> Exp13 . PEtimes Exp14                      (rule 93)
+	Exp13 -> Exp13 . PEdiv Exp14                        (rule 94)
+	Exp13 -> Exp13 . PEmod Exp14                        (rule 95)
+
+	','            reduce using rule 90
+	L_PCloseParenthesisreduce using rule 90
+	L_PSemicolon   reduce using rule 90
+	L_PAssignmEq   reduce using rule 90
+	L_PAssignmPlus reduce using rule 90
+	L_PElthen      reduce using rule 90
+	L_PEgrthen     reduce using rule 90
+	L_PEplus       reduce using rule 90
+	L_PEminus      reduce using rule 90
+	L_PEtimes      shift, and enter state 91
+	L_PEdiv        shift, and enter state 92
+	L_PEmod        shift, and enter state 93
+	L_PDef         reduce using rule 90
+	L_PElor        reduce using rule 90
+	L_PEland       reduce using rule 90
+	L_PEeq         reduce using rule 90
+	L_PEneq        reduce using rule 90
+	L_PEle         reduce using rule 90
+	L_PEge         reduce using rule 90
+
+	PEtimes        goto state 88
+	PEdiv          goto state 89
+	PEmod          goto state 90
+
+State 141
+
+	Exp13 -> Exp13 PEmod Exp14 .                        (rule 95)
+
+	','            reduce using rule 95
+	L_PCloseParenthesisreduce using rule 95
+	L_PSemicolon   reduce using rule 95
+	L_PAssignmEq   reduce using rule 95
+	L_PAssignmPlus reduce using rule 95
+	L_PElthen      reduce using rule 95
+	L_PEgrthen     reduce using rule 95
+	L_PEplus       reduce using rule 95
+	L_PEminus      reduce using rule 95
+	L_PEtimes      reduce using rule 95
+	L_PEdiv        reduce using rule 95
+	L_PEmod        reduce using rule 95
+	L_PDef         reduce using rule 95
+	L_PElor        reduce using rule 95
+	L_PEland       reduce using rule 95
+	L_PEeq         reduce using rule 95
+	L_PEneq        reduce using rule 95
+	L_PEle         reduce using rule 95
+	L_PEge         reduce using rule 95
+
+
+State 142
+
+	Exp13 -> Exp13 PEdiv Exp14 .                        (rule 94)
+
+	','            reduce using rule 94
+	L_PCloseParenthesisreduce using rule 94
+	L_PSemicolon   reduce using rule 94
+	L_PAssignmEq   reduce using rule 94
+	L_PAssignmPlus reduce using rule 94
+	L_PElthen      reduce using rule 94
+	L_PEgrthen     reduce using rule 94
+	L_PEplus       reduce using rule 94
+	L_PEminus      reduce using rule 94
+	L_PEtimes      reduce using rule 94
+	L_PEdiv        reduce using rule 94
+	L_PEmod        reduce using rule 94
+	L_PDef         reduce using rule 94
+	L_PElor        reduce using rule 94
+	L_PEland       reduce using rule 94
+	L_PEeq         reduce using rule 94
+	L_PEneq        reduce using rule 94
+	L_PEle         reduce using rule 94
+	L_PEge         reduce using rule 94
+
+
+State 143
+
+	Exp13 -> Exp13 PEtimes Exp14 .                      (rule 93)
+
+	','            reduce using rule 93
+	L_PCloseParenthesisreduce using rule 93
+	L_PSemicolon   reduce using rule 93
+	L_PAssignmEq   reduce using rule 93
+	L_PAssignmPlus reduce using rule 93
+	L_PElthen      reduce using rule 93
+	L_PEgrthen     reduce using rule 93
+	L_PEplus       reduce using rule 93
+	L_PEminus      reduce using rule 93
+	L_PEtimes      reduce using rule 93
+	L_PEdiv        reduce using rule 93
+	L_PEmod        reduce using rule 93
+	L_PDef         reduce using rule 93
+	L_PElor        reduce using rule 93
+	L_PEland       reduce using rule 93
+	L_PEeq         reduce using rule 93
+	L_PEneq        reduce using rule 93
+	L_PEle         reduce using rule 93
+	L_PEge         reduce using rule 93
+
+
+State 144
+
+	Exp -> Exp AssgnmOp Exp4 .                          (rule 74)
+	Exp4 -> Exp4 . PElor Exp5                           (rule 76)
+
+	','            reduce using rule 74
+	L_PCloseParenthesisreduce using rule 74
+	L_PSemicolon   reduce using rule 74
+	L_PAssignmEq   reduce using rule 74
+	L_PAssignmPlus reduce using rule 74
+	L_PElor        shift, and enter state 115
+
+	PElor          goto state 114
+
+State 145
+
+	DeclList -> ListPIdent PColon Type PAssignmEq Exp .    (rule 46)
+	Exp -> Exp . AssgnmOp Exp4                          (rule 74)
+
+	','            reduce using rule 46
+	L_PSemicolon   reduce using rule 46
+	L_PAssignmEq   shift, and enter state 32
+	L_PAssignmPlus shift, and enter state 87
+
+	PAssignmEq     goto state 84
+	PAssignmPlus   goto state 85
+	AssgnmOp       goto state 86
+
+State 146
+
+	Guard -> POpenParenthesis . Exp PCloseParenthesis    (rule 68)
+
+	L_POpenParenthesisshift, and enter state 40
+	L_PIdent       shift, and enter state 21
+	L_PString      shift, and enter state 75
+	L_PChar        shift, and enter state 76
+	L_PDouble      shift, and enter state 77
+	L_PInteger     shift, and enter state 78
+
+	POpenParenthesisgoto state 48
+	PIdent         goto state 50
+	PString        goto state 51
+	PChar          goto state 52
+	PDouble        goto state 53
+	PInteger       goto state 54
+	Exp            goto state 148
+	Exp4           goto state 61
+	Exp5           goto state 62
+	Exp8           goto state 63
+	Exp9           goto state 64
+	Exp10          goto state 65
+	Exp12          goto state 66
+	Exp13          goto state 67
+	Exp6           goto state 68
+	Exp7           goto state 69
+	Exp11          goto state 70
+	Exp14          goto state 71
+	Constant       goto state 72
+
+State 147
+
+	Statement -> Pdo PWhile Body Guard .                (rule 66)
+
+	L_POpenGraph   reduce using rule 66
+	L_PCloseGraph  reduce using rule 66
+	L_POpenParenthesisreduce using rule 66
+	L_Pdo          reduce using rule 66
+	L_PInt         reduce using rule 66
+	L_PReal        reduce using rule 66
+	L_PVar         reduce using rule 66
+	L_PConst       reduce using rule 66
+	L_PIdent       reduce using rule 66
+	L_PString      reduce using rule 66
+	L_PChar        reduce using rule 66
+	L_PDouble      reduce using rule 66
+	L_PInteger     reduce using rule 66
+
+
+State 148
+
+	Guard -> POpenParenthesis Exp . PCloseParenthesis    (rule 68)
+	Exp -> Exp . AssgnmOp Exp4                          (rule 74)
+
+	L_PCloseParenthesisshift, and enter state 125
+	L_PAssignmEq   shift, and enter state 32
+	L_PAssignmPlus shift, and enter state 87
+
+	PCloseParenthesisgoto state 149
+	PAssignmEq     goto state 84
+	PAssignmPlus   goto state 85
+	AssgnmOp       goto state 86
+
+State 149
+
+	Guard -> POpenParenthesis Exp PCloseParenthesis .    (rule 68)
+
+	L_POpenGraph   reduce using rule 68
+	L_PCloseGraph  reduce using rule 68
+	L_POpenParenthesisreduce using rule 68
+	L_Pdo          reduce using rule 68
+	L_PInt         reduce using rule 68
+	L_PReal        reduce using rule 68
+	L_PVar         reduce using rule 68
+	L_PConst       reduce using rule 68
+	L_PIdent       reduce using rule 68
+	L_PString      reduce using rule 68
+	L_PChar        reduce using rule 68
+	L_PDouble      reduce using rule 68
+	L_PInteger     reduce using rule 68
 
 
 -----------------------------------------------------------------------------
 Grammar Totals
 -----------------------------------------------------------------------------
-Number of rules: 80
+Number of rules: 107
 Number of terminals: 35
-Number of non-terminals: 44
-Number of states: 121
+Number of non-terminals: 70
+Number of states: 150
