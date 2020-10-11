@@ -52,9 +52,9 @@ typeCheckerExt (x:xs) = case x of
         typeCheckerExt xs
 
 typeCheckerDeclaration x = case x of
-    NoAssgmDec identifiers _ types -> typeCheckerIdentifiers identifiers types
-    AssgmDec identifiers _ exp -> typeCheckerIdentifiersWithExpression identifiers Nothing exp
-    AssgmTypeDec identifiers _ types _ exp -> typeCheckerIdentifiersWithExpression identifiers (Just types) exp
+    NoAssgmDec identifiers colon types -> typeCheckerIdentifiers identifiers types
+    AssgmDec identifiers assigment exp -> typeCheckerIdentifiersWithExpression identifiers Nothing exp
+    AssgmTypeDec identifiers assignment types colon exp -> typeCheckerIdentifiersWithExpression identifiers (Just types) exp
 
 typeCheckerIdentifiers identifiers types = 
    mapM_ (typeCheckerIdentifier (convertTypeSpecToTypeInferred types)) identifiers
