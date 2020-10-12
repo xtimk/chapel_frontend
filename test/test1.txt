@@ -2,26 +2,19 @@ var u: int ;
 const b, c, d: int = 5;
 var n = 34;
 var a = 1.0, b, c:int, d, e = 1.0, f : real ;
-proc pippo (ref x : int, y, z: real) {
+
+proc pluto (ref x : int, y, z: real) : int {
+
+    var x: real;
+
     {
-        do while
-        {
-            var x = x;
+       
+            var x :int = x;
+            var y = luigiDiMaio;
             y = z;
-            var pippo = 5 + 6 + (7 * 6);
-        } (merda == cacca)
+            var pippo = 5 + 6 + 7 + 6;
     }
     return x + 4;
 }
 
-proc pluto (ref x : int, y, z: real) : int {
-    {
-        do while
-        {
-            var x = x;
-            y = z;
-            var pippo = 5 + 6 + (7 * 6);
-        } (merda == cacca)
-    }
-    return x + 4;
-}
+
