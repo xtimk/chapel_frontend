@@ -6,7 +6,7 @@ import qualified Data.Map as DMap
 import AbsChapel
 
 
-type Env = DMap.Map PIdent EnvEntry
+--type Env = DMap.Map PIdent EnvEntry
 
 data EnvEntry = 
   Variable Loc TypeChecker.Type 
@@ -27,9 +27,9 @@ initVarError = ErrorInitExpr
 
 type Loc = (Int,Int)
 
-type MonState = State EnvEntry
+--type MonState = State EnvEntry 
 
-startState = DMap.empty
+startState = (0, DMap.insert 0 DMap.empty DMap.empty) 
 
 
 typeChecker (Progr p) = typeCheckerModule p
@@ -60,32 +60,37 @@ typeCheckerIdentifiers identifiers types =
    mapM_ (typeCheckerIdentifier (convertTypeSpecToTypeInferred types)) identifiers
     
 typeCheckerIdentifiersWithExpression identifiers types exp = do
-  env <- get
+  environment <- get
   case types of
-    Nothing -> mapM_ (typeCheckerIdentifier (typeCheckerExpression env exp)) identifiers
-    Just defineType -> mapM_ (typeCheckerIdentifier (supdecl (convertTypeSpecToTypeInferred defineType) (typeCheckerExpression env exp))) identifiers
+    Nothing -> mapM_ (typeCheckerIdentifier (typeCheckerExpression environment exp)) identifiers
+    Just defineType -> mapM_ (typeCheckerIdentifier (supdecl (convertTypeSpecToTypeInferred defineType) (typeCheckerExpression environment exp))) identifiers
 
 -- typechecking nel caso di dichiarazioni senza inizializzazione
-typeCheckerIdentifier types (PIdent ((line,column),identifier)) = do
-  env <-get
-  put (DMap.insert identifier (Variable (line,column) types) env)
+typeCheckerIdentifier types (PIdent ((line,column), identifier)) = do
+  (depth, env) <- get
+  put (depth, DMap.insert depth (DMap.insert identifier (Variable (line,column) types) (getDepthMap depth env)) env)
   get
 
-typeCheckerExpression env expression = case expression of
-  Eplus e1 plus e2 -> sup (typeCheckerExpression env e1) (typeCheckerExpression env e2)
-  Evar (PIdent (_, identifier)) -> getVarType identifier env
+typeCheckerExpression environment@(depth, env) expression = case expression of
+  Eplus e1 plus e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
+  Evar (PIdent (_, identifier)) -> getVarType identifier (getDepthMap depth env)
   Econst (Eint _) -> Int
   Econst (Efloat _) -> Real
+
+
 
 -- typechecking nel caso di dichiarazioni con inizializzazione
 --typeCheckerGlobalDecls'' (t:types) (InitDecl (NoPointer (Name (Ident ((l,c),name)))) (InitExpr expr) ) = do
 --    env <-get
 --    put (DMap.insert name (Variable (l,c) ((supdecl t (typeOf env expr)):[]) ) env)
 --    get
+getDepthMap depth env = case DMap.lookup depth env of
+  Just envDepth -> envDepth
+  Nothing -> DMap.empty
 
 getVarType var env = case DMap.lookup var env of
-    Just (Variable _ t) -> t
-    Nothing -> Error
+  Just (Variable _ t) -> t
+  Nothing -> Error
 
 -- infer del tipo fra due tipi. Da capire meglio cosa fare in caso di errore.
 sup Int Int = Int
