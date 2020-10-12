@@ -13,6 +13,7 @@ position token PSemicolon (';');
 position token PColon (':');
 -- position token PComma (',');
 
+
 position token Pdo {"do"};
 position token PWhile {"while"};
 
@@ -26,6 +27,10 @@ position token PRef ({"ref"});
 
 position token PVar ({"var"});
 position token PConst ({"const"});
+
+position token PProc({"proc"});
+
+position token PReturn ({"return"});
 
 position token PElthen ('<');
 position token PEgrthen ('>');
@@ -82,9 +87,12 @@ PConstMode.   DecMode ::= PConst ;
 
 
 
-FunDec.       Function ::= Signature Body ;
+FunDec.       Function ::= PProc Signature Body ;
 
-Sign.            Signature ::= Type PIdent FunctionParams ;
+-- procedure structure
+SignNoRet.            Signature ::= PIdent FunctionParams ;
+SignWRet.            Signature ::= PIdent FunctionParams PColon Type;
+
 
 FunParams.      FunctionParams ::= POpenParenthesis [Param] PCloseParenthesis ;
 
@@ -92,9 +100,10 @@ FunParams.      FunctionParams ::= POpenParenthesis [Param] PCloseParenthesis ;
 (:[]).    [Param] ::= Param;
 (:).      [Param] ::= Param "," [Param];
 
-ParNoMode.   Param  ::= Type PIdent ;
-ParWMode.    Param  ::= Mode Type PIdent ;
 
+-- parameters of procedures
+ParNoMode.     Param ::= [PIdent] PColon Type ;
+ParWMode.      Param  ::= Mode [PIdent] PColon Type ;
 
 FunBlock.       Body ::= POpenGraph [BodyStatement] PCloseGraph ;
 
@@ -105,6 +114,8 @@ Stm.       BodyStatement  ::= Statement ;
 Fun.       BodyStatement  ::= Function PSemicolon ;
 DeclStm.      BodyStatement  ::= Declaration ;
 Block.     BodyStatement  ::= Body ;
+RetVal.       BodyStatement  ::= PReturn Exp PSemicolon ;
+RetVoid.       BodyStatement  ::= PReturn PSemicolon ;
 
 DoWhile.   Statement      ::= Pdo PWhile Body Guard ;
 

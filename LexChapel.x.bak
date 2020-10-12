@@ -46,6 +46,8 @@ w h i l e
     { tok (\p s -> PT p (eitherResIdent (T_PWhile . share) s)) }
 i n t
     { tok (\p s -> PT p (eitherResIdent (T_PInt . share) s)) }
+r e a l
+    { tok (\p s -> PT p (eitherResIdent (T_PReal . share) s)) }
 \=
     { tok (\p s -> PT p (eitherResIdent (T_PAssignmEq . share) s)) }
 \+ \=
@@ -56,6 +58,8 @@ v a r
     { tok (\p s -> PT p (eitherResIdent (T_PVar . share) s)) }
 c o n s t
     { tok (\p s -> PT p (eitherResIdent (T_PConst . share) s)) }
+r e t u r n
+    { tok (\p s -> PT p (eitherResIdent (T_PReturn . share) s)) }
 \<
     { tok (\p s -> PT p (eitherResIdent (T_PElthen . share) s)) }
 \>
@@ -126,11 +130,13 @@ data Tok =
  | T_Pdo !String
  | T_PWhile !String
  | T_PInt !String
+ | T_PReal !String
  | T_PAssignmEq !String
  | T_PAssignmPlus !String
  | T_PRef !String
  | T_PVar !String
  | T_PConst !String
+ | T_PReturn !String
  | T_PElthen !String
  | T_PEgrthen !String
  | T_PEplus !String
@@ -196,11 +202,13 @@ prToken t = case t of
   PT _ (T_Pdo s) -> s
   PT _ (T_PWhile s) -> s
   PT _ (T_PInt s) -> s
+  PT _ (T_PReal s) -> s
   PT _ (T_PAssignmEq s) -> s
   PT _ (T_PAssignmPlus s) -> s
   PT _ (T_PRef s) -> s
   PT _ (T_PVar s) -> s
   PT _ (T_PConst s) -> s
+  PT _ (T_PReturn s) -> s
   PT _ (T_PElthen s) -> s
   PT _ (T_PEgrthen s) -> s
   PT _ (T_PEplus s) -> s

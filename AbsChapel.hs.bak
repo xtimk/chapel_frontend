@@ -30,6 +30,9 @@ newtype PWhile = PWhile ((Int,Int),String)
 newtype PInt = PInt ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
+newtype PReal = PReal ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
 newtype PAssignmEq = PAssignmEq ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
@@ -43,6 +46,9 @@ newtype PVar = PVar ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
 newtype PConst = PConst ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PReturn = PReturn ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
 newtype PElthen = PElthen ((Int,Int),String)
@@ -126,14 +132,18 @@ data DecMode = PVarMode PVar | PConstMode PConst
 data Function = FunDec Signature Body
   deriving (Eq, Ord, Show, Read)
 
-data Signature = Sign Type PIdent FunctionParams
+data Signature
+    = SignNoRet PIdent FunctionParams
+    | SignWRet PIdent FunctionParams PColon Type
   deriving (Eq, Ord, Show, Read)
 
 data FunctionParams
     = FunParams POpenParenthesis [Param] PCloseParenthesis
   deriving (Eq, Ord, Show, Read)
 
-data Param = ParNoMode Type PIdent | ParWMode Mode Type PIdent
+data Param
+    = ParNoMode [PIdent] PColon Type
+    | ParWMode Mode [PIdent] PColon Type
   deriving (Eq, Ord, Show, Read)
 
 data Body = FunBlock POpenGraph [BodyStatement] PCloseGraph
@@ -144,6 +154,8 @@ data BodyStatement
     | Fun Function PSemicolon
     | DeclStm Declaration
     | Block Body
+    | RetVal PReturn Exp PSemicolon
+    | RetVoid PReturn PSemicolon
   deriving (Eq, Ord, Show, Read)
 
 data Statement
@@ -153,7 +165,7 @@ data Statement
 data Guard = SGuard POpenParenthesis Exp PCloseParenthesis
   deriving (Eq, Ord, Show, Read)
 
-data Type = Tint PInt
+data Type = Tint PInt | Treal PReal
   deriving (Eq, Ord, Show, Read)
 
 data AssgnmOp = AssgnEq PAssignmEq | AssgnPlEq PAssignmPlus

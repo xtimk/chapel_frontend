@@ -54,6 +54,12 @@ transPVar x = case x of
 transPConst :: PConst -> Result
 transPConst x = case x of
   PConst string -> failure x
+transPProc :: PProc -> Result
+transPProc x = case x of
+  PProc string -> failure x
+transPReturn :: PReturn -> Result
+transPReturn x = case x of
+  PReturn string -> failure x
 transPElthen :: PElthen -> Result
 transPElthen x = case x of
   PElthen string -> failure x
@@ -135,17 +141,18 @@ transDecMode x = case x of
   PConstMode pconst -> failure x
 transFunction :: Function -> Result
 transFunction x = case x of
-  FunDec signature body -> failure x
+  FunDec pproc signature body -> failure x
 transSignature :: Signature -> Result
 transSignature x = case x of
-  Sign type_ pident functionparams -> failure x
+  SignNoRet pident functionparams -> failure x
+  SignWRet pident functionparams pcolon type_ -> failure x
 transFunctionParams :: FunctionParams -> Result
 transFunctionParams x = case x of
   FunParams popenparenthesis params pcloseparenthesis -> failure x
 transParam :: Param -> Result
 transParam x = case x of
-  ParNoMode type_ pident -> failure x
-  ParWMode mode type_ pident -> failure x
+  ParNoMode pidents pcolon type_ -> failure x
+  ParWMode mode pidents pcolon type_ -> failure x
 transBody :: Body -> Result
 transBody x = case x of
   FunBlock popengraph bodystatements pclosegraph -> failure x
@@ -155,6 +162,8 @@ transBodyStatement x = case x of
   Fun function psemicolon -> failure x
   DeclStm declaration -> failure x
   Block body -> failure x
+  RetVal preturn exp psemicolon -> failure x
+  RetVoid preturn psemicolon -> failure x
 transStatement :: Statement -> Result
 transStatement x = case x of
   DoWhile pdo pwhile body guard -> failure x

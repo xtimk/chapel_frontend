@@ -29,6 +29,8 @@ import ErrM
   L_PRef { PT _ (T_PRef _) }
   L_PVar { PT _ (T_PVar _) }
   L_PConst { PT _ (T_PConst _) }
+  L_PProc { PT _ (T_PProc _) }
+  L_PReturn { PT _ (T_PReturn _) }
   L_PElthen { PT _ (T_PElthen _) }
   L_PEgrthen { PT _ (T_PEgrthen _) }
   L_PEplus { PT _ (T_PEplus _) }
@@ -95,6 +97,12 @@ PVar  : L_PVar { PVar (mkPosToken $1)}
 
 PConst :: { PConst}
 PConst  : L_PConst { PConst (mkPosToken $1)}
+
+PProc :: { PProc}
+PProc  : L_PProc { PProc (mkPosToken $1)}
+
+PReturn :: { PReturn}
+PReturn  : L_PReturn { PReturn (mkPosToken $1)}
 
 PElthen :: { PElthen}
 PElthen  : L_PElthen { PElthen (mkPosToken $1)}
@@ -178,9 +186,10 @@ DecMode :: { DecMode }
 DecMode : PVar { AbsChapel.PVarMode $1 }
         | PConst { AbsChapel.PConstMode $1 }
 Function :: { Function }
-Function : Signature Body { AbsChapel.FunDec $1 $2 }
+Function : PProc Signature Body { AbsChapel.FunDec $1 $2 $3 }
 Signature :: { Signature }
-Signature : Type PIdent FunctionParams { AbsChapel.Sign $1 $2 $3 }
+Signature : PIdent FunctionParams { AbsChapel.SignNoRet $1 $2 }
+          | PIdent FunctionParams PColon Type { AbsChapel.SignWRet $1 $2 $3 $4 }
 FunctionParams :: { FunctionParams }
 FunctionParams : POpenParenthesis ListParam PCloseParenthesis { AbsChapel.FunParams $1 $2 $3 }
 ListParam :: { [Param] }
@@ -188,8 +197,8 @@ ListParam : {- empty -} { [] }
           | Param { (:[]) $1 }
           | Param ',' ListParam { (:) $1 $3 }
 Param :: { Param }
-Param : Type PIdent { AbsChapel.ParNoMode $1 $2 }
-      | Mode Type PIdent { AbsChapel.ParWMode $1 $2 $3 }
+Param : ListPIdent PColon Type { AbsChapel.ParNoMode $1 $2 $3 }
+      | Mode ListPIdent PColon Type { AbsChapel.ParWMode $1 $2 $3 $4 }
 Body :: { Body }
 Body : POpenGraph ListBodyStatement PCloseGraph { AbsChapel.FunBlock $1 (reverse $2) $3 }
 ListBodyStatement :: { [BodyStatement] }
@@ -200,6 +209,8 @@ BodyStatement : Statement { AbsChapel.Stm $1 }
               | Function PSemicolon { AbsChapel.Fun $1 $2 }
               | Declaration { AbsChapel.DeclStm $1 }
               | Body { AbsChapel.Block $1 }
+              | PReturn Exp PSemicolon { AbsChapel.RetVal $1 $2 $3 }
+              | PReturn PSemicolon { AbsChapel.RetVoid $1 $2 }
 Statement :: { Statement }
 Statement : Pdo PWhile Body Guard { AbsChapel.DoWhile $1 $2 $3 $4 }
           | Exp PSemicolon { AbsChapel.StExp $1 $2 }

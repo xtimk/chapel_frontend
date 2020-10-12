@@ -115,6 +115,9 @@ instance Print AbsChapel.PWhile where
 instance Print AbsChapel.PInt where
   prt _ (AbsChapel.PInt (_,i)) = doc (showString i)
 
+instance Print AbsChapel.PReal where
+  prt _ (AbsChapel.PReal (_,i)) = doc (showString i)
+
 instance Print AbsChapel.PAssignmEq where
   prt _ (AbsChapel.PAssignmEq (_,i)) = doc (showString i)
 
@@ -129,6 +132,9 @@ instance Print AbsChapel.PVar where
 
 instance Print AbsChapel.PConst where
   prt _ (AbsChapel.PConst (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PReturn where
+  prt _ (AbsChapel.PReturn (_,i)) = doc (showString i)
 
 instance Print AbsChapel.PElthen where
   prt _ (AbsChapel.PElthen (_,i)) = doc (showString i)
@@ -236,7 +242,8 @@ instance Print AbsChapel.Function where
 
 instance Print AbsChapel.Signature where
   prt i e = case e of
-    AbsChapel.Sign type_ pident functionparams -> prPrec i 0 (concatD [prt 0 type_, prt 0 pident, prt 0 functionparams])
+    AbsChapel.SignNoRet pident functionparams -> prPrec i 0 (concatD [prt 0 pident, prt 0 functionparams])
+    AbsChapel.SignWRet pident functionparams pcolon type_ -> prPrec i 0 (concatD [prt 0 pident, prt 0 functionparams, prt 0 pcolon, prt 0 type_])
 
 instance Print AbsChapel.FunctionParams where
   prt i e = case e of
@@ -247,8 +254,8 @@ instance Print [AbsChapel.Param] where
 
 instance Print AbsChapel.Param where
   prt i e = case e of
-    AbsChapel.ParNoMode type_ pident -> prPrec i 0 (concatD [prt 0 type_, prt 0 pident])
-    AbsChapel.ParWMode mode type_ pident -> prPrec i 0 (concatD [prt 0 mode, prt 0 type_, prt 0 pident])
+    AbsChapel.ParNoMode pidents pcolon type_ -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 type_])
+    AbsChapel.ParWMode mode pidents pcolon type_ -> prPrec i 0 (concatD [prt 0 mode, prt 0 pidents, prt 0 pcolon, prt 0 type_])
   prtList _ [] = concatD []
   prtList _ [x] = concatD [prt 0 x]
   prtList _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
@@ -266,6 +273,8 @@ instance Print AbsChapel.BodyStatement where
     AbsChapel.Fun function psemicolon -> prPrec i 0 (concatD [prt 0 function, prt 0 psemicolon])
     AbsChapel.DeclStm declaration -> prPrec i 0 (concatD [prt 0 declaration])
     AbsChapel.Block body -> prPrec i 0 (concatD [prt 0 body])
+    AbsChapel.RetVal preturn exp psemicolon -> prPrec i 0 (concatD [prt 0 preturn, prt 0 exp, prt 0 psemicolon])
+    AbsChapel.RetVoid preturn psemicolon -> prPrec i 0 (concatD [prt 0 preturn, prt 0 psemicolon])
   prtList _ [] = concatD []
   prtList _ (x:xs) = concatD [prt 0 x, prt 0 xs]
 
@@ -281,6 +290,7 @@ instance Print AbsChapel.Guard where
 instance Print AbsChapel.Type where
   prt i e = case e of
     AbsChapel.Tint pint -> prPrec i 0 (concatD [prt 0 pint])
+    AbsChapel.Treal preal -> prPrec i 0 (concatD [prt 0 preal])
 
 instance Print AbsChapel.AssgnmOp where
   prt i e = case e of
