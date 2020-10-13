@@ -29,7 +29,7 @@ type Loc = (Int,Int)
 
 --type MonState = State EnvEntry 
 
-startState = (0, DMap.insert 0 DMap.empty DMap.empty) 
+startState = (0, (DMap.insert 0 DMap.empty DMap.empty), DMap.empty) 
 
 
 typeChecker (Progr p) = typeCheckerModule p
@@ -53,7 +53,7 @@ typeCheckerExt (x:xs) = case x of
     ExtFun (FunDec _ signature (FunBlock _ statements _ )) -> do
         typeCheckerSignature signature
         --typeIncreaseLevel statements
-        typeCheckerBody statements
+        mapM_ typeCheckerBody' statements
         --typeDecreaseLevel statements
         typeCheckerExt xs
 
@@ -62,12 +62,12 @@ typeCheckerSignature signature = case signature of
   SignWRet identifier (FunParams _ params _) _ types -> get
 
 typeIncreaseLevel _ = do
-  (depth, env) <- get
-  put (depth + 1, env)
+  (depth, env, _sym) <- get
+  put (depth + 1, env, _sym)
 
 typeDecreaseLevel _ = do
-  (depth, env) <- get
-  put (depth - 1, env)  
+  (depth, env, _sym) <- get
+  put (depth - 1, env, _sym)  
 
 typeCheckerBody [] = get
 typeCheckerBody (x:xs) = do
@@ -108,11 +108,14 @@ typeCheckerStatement statement = case statement of
     mapM_ typeCheckerBody' bodyIfStatements
     mapM_ typeCheckerBody' bodyElseStatements
     get
-  StExp exp _semicolon -> get
+  StExp exp _semicolon -> do
+    get
+--    typeCheckerExpression environment exp
+--    get
 
 typeCheckerGuard (SGuard _ expression _) = do
-  (depth, env) <- get
-  case (typeCheckerExpression (depth, env) expression) of
+  (depth, env, _sym) <- get
+  case (typeCheckerExpression (depth, env,_sym) expression) of
     Bool -> get -- questo dovrebbe essere l'unico caso accettato, se expression non e' bool devo segnalarlo come errore
     Int -> get
     _ -> get
@@ -134,11 +137,11 @@ typeCheckerIdentifiersWithExpression identifiers types exp = do
 
 -- typechecking nel caso di dichiarazioni senza inizializzazione
 typeCheckerIdentifier types (PIdent ((line,column), identifier)) = do
-  (depth, env) <- get
-  put (depth, DMap.insert depth (DMap.insert identifier (Variable (line,column) types) (getDepthMap (depth,env))) env)
+  (depth, env, symtable) <- get
+  put (depth, DMap.insert depth (DMap.insert identifier (Variable (line,column) types) (getDepthMap (depth, env, symtable))) env, DMap.insert (line,column) (identifier, (Variable (line,column) types)) symtable )
   get
 
-typeCheckerExpression environment@(depth, env) expression = case expression of
+typeCheckerExpression environment@(depth, env, _sym) expression = case expression of
   Eplus e1 plus e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
   Elthen e1 pElthen e2 -> supBool (typeCheckerExpression environment e1) (typeCheckerExpression environment e2) 
   Evar (PIdent (_, identifier)) -> getVarType identifier environment
@@ -153,22 +156,22 @@ typeCheckerExpression environment@(depth, env) expression = case expression of
 --    env <-get
 --    put (DMap.insert name (Variable (l,c) ((supdecl t (typeOf env expr)):[]) ) env)
 --    get
-getDepthMap (depth,env) = case DMap.lookup depth env of
+getDepthMap (depth,env, _sym) = case DMap.lookup depth env of
   Just envDepth -> envDepth
   Nothing -> DMap.empty
 
-getVarType var (0,env) = case DMap.lookup 0 env of
+getVarType var (0,env, _sym) = case DMap.lookup 0 env of
   Just variables -> case DMap.lookup var variables of
     Just (Variable _ t) -> t
     Nothing -> Error
   Nothing -> Error
-getVarType var (depth,env) = case DMap.lookup depth env of
+getVarType var (depth,env, _sym) = case DMap.lookup depth env of
   Just variables -> case DMap.lookup var variables of
     Just (Variable _ t) -> t
     Nothing -> case depth of
       0 -> Error
-      _ -> getVarType var (depth - 1, env)
-  _ -> getVarType var (depth - 1, env)
+      _ -> getVarType var (depth - 1, env, _sym)
+  _ -> getVarType var (depth - 1, env, _sym)
 
 -- infer del tipo fra due tipi. Da capire meglio cosa fare in caso di errore.
 sup Int Int = Int
