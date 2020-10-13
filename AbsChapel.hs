@@ -15,10 +15,19 @@ newtype POpenParenthesis = POpenParenthesis ((Int,Int),String)
 newtype PCloseParenthesis = PCloseParenthesis ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
+newtype POpenBracket = POpenBracket ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PCloseBracket = PCloseBracket ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
 newtype PSemicolon = PSemicolon ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
 newtype PColon = PColon ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PPoint = PPoint ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
 newtype PIf = PIf ((Int,Int),String)
@@ -134,8 +143,21 @@ data Declaration = Decl DecMode [DeclList] PSemicolon
 
 data DeclList
     = NoAssgmDec [PIdent] PColon Type
+    | NoAssgmArrayFixDec [PIdent] PColon ArDecl
+    | NoAssgmArrayDec [PIdent] PColon ArDecl Type
     | AssgmDec [PIdent] PAssignmEq Exp
     | AssgmTypeDec [PIdent] PColon Type PAssignmEq Exp
+  deriving (Eq, Ord, Show, Read)
+
+data ArDecl
+    = ArrayDeclIndex POpenBracket [ArDim] PCloseBracket
+    | ArrayDeclFixed POpenBracket [ArBound] PCloseBracket
+  deriving (Eq, Ord, Show, Read)
+
+data ArDim = ArrayDim ArBound PPoint PPoint ArBound
+  deriving (Eq, Ord, Show, Read)
+
+data ArBound = ArrayBoundIdent PIdent | ArratBoundConst Constant
   deriving (Eq, Ord, Show, Read)
 
 data DecMode = PVarMode PVar | PConstMode PConst
