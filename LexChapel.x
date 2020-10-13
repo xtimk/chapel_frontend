@@ -40,6 +40,12 @@ $white+ ;
     { tok (\p s -> PT p (eitherResIdent (T_PSemicolon . share) s)) }
 \:
     { tok (\p s -> PT p (eitherResIdent (T_PColon . share) s)) }
+i f
+    { tok (\p s -> PT p (eitherResIdent (T_PIf . share) s)) }
+t h e n
+    { tok (\p s -> PT p (eitherResIdent (T_PThen . share) s)) }
+e l s e
+    { tok (\p s -> PT p (eitherResIdent (T_PElse . share) s)) }
 d o
     { tok (\p s -> PT p (eitherResIdent (T_Pdo . share) s)) }
 w h i l e
@@ -129,6 +135,9 @@ data Tok =
  | T_PCloseParenthesis !String
  | T_PSemicolon !String
  | T_PColon !String
+ | T_PIf !String
+ | T_PThen !String
+ | T_PElse !String
  | T_Pdo !String
  | T_PWhile !String
  | T_PInt !String
@@ -202,6 +211,9 @@ prToken t = case t of
   PT _ (T_PCloseParenthesis s) -> s
   PT _ (T_PSemicolon s) -> s
   PT _ (T_PColon s) -> s
+  PT _ (T_PIf s) -> s
+  PT _ (T_PThen s) -> s
+  PT _ (T_PElse s) -> s
   PT _ (T_Pdo s) -> s
   PT _ (T_PWhile s) -> s
   PT _ (T_PInt s) -> s

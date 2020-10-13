@@ -54,6 +54,9 @@ transPVar x = case x of
 transPConst :: PConst -> Result
 transPConst x = case x of
   PConst string -> failure x
+transPProc :: PProc -> Result
+transPProc x = case x of
+  PProc string -> failure x
 transPReturn :: PReturn -> Result
 transPReturn x = case x of
   PReturn string -> failure x
@@ -138,7 +141,7 @@ transDecMode x = case x of
   PConstMode pconst -> failure x
 transFunction :: Function -> Result
 transFunction x = case x of
-  FunDec signature body -> failure x
+  FunDec pproc signature body -> failure x
 transSignature :: Signature -> Result
 transSignature x = case x of
   SignNoRet pident functionparams -> failure x

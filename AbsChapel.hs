@@ -21,6 +21,15 @@ newtype PSemicolon = PSemicolon ((Int,Int),String)
 newtype PColon = PColon ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
+newtype PIf = PIf ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PThen = PThen ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PElse = PElse ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
 newtype Pdo = Pdo ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
@@ -162,7 +171,11 @@ data BodyStatement
   deriving (Eq, Ord, Show, Read)
 
 data Statement
-    = DoWhile Pdo PWhile Body Guard | StExp Exp PSemicolon
+    = DoWhile Pdo PWhile Body Guard
+    | While PWhile Guard Body
+    | If PIf Guard PThen Body
+    | IfElse PIf Guard PThen Body PElse Body
+    | StExp Exp PSemicolon
   deriving (Eq, Ord, Show, Read)
 
 data Guard = SGuard POpenParenthesis Exp PCloseParenthesis

@@ -14,7 +14,7 @@ data EnvEntry =
 --  | Constant Literal
  deriving (Show)
 
-data Type = Int | Real | Error
+data Type = Int | Real | Bool | Error
   deriving (Show)
 
 data Type' = Int' | Real' | Error' ErrorType
@@ -73,7 +73,7 @@ typeCheckerBody [] = get
 typeCheckerBody (x:xs) = do
   typeIncreaseLevel x
   case x of
-    Stm _ -> get
+    Stm statement -> typeCheckerStatement statement
     Fun _ _ -> get
     DeclStm (Decl decMode declList _ ) -> do
       mapM_ typeCheckerDeclaration declList
@@ -85,6 +85,47 @@ typeCheckerBody (x:xs) = do
   typeCheckerBody xs
   get
 
+
+typeCheckerBody' x = do
+  typeIncreaseLevel x
+  case x of
+    Stm statement -> typeCheckerStatement statement
+    Fun _ _ -> get
+    DeclStm (Decl decMode declList _ ) -> do
+      mapM_ typeCheckerDeclaration declList
+      get
+    Block (FunBlock _ statements _ ) -> typeCheckerBody statements
+    RetVal _ _ _ -> get
+    RetVoid _ _ -> get
+  typeDecreaseLevel x
+  get
+
+typeCheckerStatement statement = case statement of
+  DoWhile _do _while (FunBlock _ bodyStatements _) guard -> do
+    mapM_ typeCheckerBody' bodyStatements
+    typeCheckerGuard guard
+    get
+  While _while guard (FunBlock _ bodyStatements _) -> do
+    typeCheckerGuard guard
+    mapM_ typeCheckerBody' bodyStatements
+    get
+  If _if guard _then (FunBlock _ bodyStatements _) -> do
+    typeCheckerGuard guard
+    mapM_ typeCheckerBody' bodyStatements
+    get
+  IfElse _if guard _then (FunBlock _ bodyIfStatements _) _else (FunBlock _ bodyElseStatements _) -> do
+    typeCheckerGuard guard
+    mapM_ typeCheckerBody' bodyIfStatements
+    mapM_ typeCheckerBody' bodyElseStatements
+    get
+  StExp exp _semicolon -> get
+
+typeCheckerGuard (SGuard _ expression _) = do
+  (depth, env) <- get
+  case (typeCheckerExpression (depth, env) expression) of
+    Bool -> get -- questo dovrebbe essere l'unico caso accettato, se expression non e' bool devo segnalarlo come errore
+    Int -> get
+    _ -> get
 
 
 typeCheckerDeclaration x = case x of
@@ -109,9 +150,11 @@ typeCheckerIdentifier types (PIdent ((line,column), identifier)) = do
 
 typeCheckerExpression environment@(depth, env) expression = case expression of
   Eplus e1 plus e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
+  Elthen e1 pElthen e2 -> supBool (typeCheckerExpression environment e1) (typeCheckerExpression environment e2) 
   Evar (PIdent (_, identifier)) -> getVarType identifier environment
   Econst (Eint _) -> Int
   Econst (Efloat _) -> Real
+  -- todo: aggiungere tutti i casi degli operatori esistenti
 
 
 
@@ -145,6 +188,12 @@ sup Real Real = Real
 sup Error _ = Error
 sup _ Error = Error
 
+-- infer del tipo tra due expr messe in relazione tramite un operatore booleano binario
+supBool Error _ = Error
+supBool _ Error = Error
+supBool Int Int = Bool
+supBool Real Real = Bool
+supBool _ _ = Bool
 
 -- infer del tipo nel caso di dichiarazioni con inizializzazione della variabile
 -- e' leggermente diversa dalla sup definita sopra, sotto un commento al riguardo.

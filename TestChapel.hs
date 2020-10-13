@@ -12,9 +12,6 @@ import ParChapel
 import SkelChapel
 import PrintChapel
 import AbsChapel
-import qualified Data.Map as DMap
-import TypeChecker
-import Control.Monad.Trans.State
 
 
 
@@ -42,6 +39,7 @@ run v p s = let ts = myLLexer s in case p ts of
                           exitFailure
            Ok  tree -> do putStrLn "\nParse Successful!"
                           showTree v tree
+
                           exitSuccess
 
 
@@ -70,18 +68,6 @@ main = do
     [] -> getContents >>= run 2 pProgram
     "-s":fs -> mapM_ (runFile 0 pProgram) fs
     fs -> mapM_ (runFile 2 pProgram) fs
-
-    
-parseTest filepath = do
-  s <- readFile filepath
-  let p = pProgram (myLLexer s) in case p of
-    Bad s    -> do putStrLn s
-                   exitFailure
-    Ok  tree -> do putStrLn "\nParse Successful!"
-                   showTree 2 tree
-                   putStrLn "\n\n ** After Type Checker **\n\n"
-                   print (evalState (typeChecker tree) startState)
-                   exitSuccess
 
 
 

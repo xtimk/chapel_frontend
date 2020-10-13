@@ -14,6 +14,10 @@ position token PColon (':');
 -- position token PComma (',');
 
 
+position token PIf ({"if"});
+position token PThen ({"then"});
+position token PElse ({"else"});
+
 position token Pdo {"do"};
 position token PWhile {"while"};
 
@@ -59,8 +63,8 @@ Progr.  Program ::= Module ;
 
 Mod.    Module ::= [Ext] ;
 
--- [].       [Ext] ::= ;
-(:[]).    [Ext] ::= Ext;
+[].       [Ext] ::= ;
+-- (:[]).    [Ext] ::= Ext;
 (:).      [Ext] ::= Ext [Ext];
 
 ExtDecl.   Ext    ::= Declaration ;
@@ -118,7 +122,10 @@ RetVal.       BodyStatement  ::= PReturn Exp PSemicolon ;
 RetVoid.       BodyStatement  ::= PReturn PSemicolon ;
 
 DoWhile.   Statement      ::= Pdo PWhile Body Guard ;
+While.   Statement      ::= PWhile Guard Body ;
 
+If.        Statement      ::= PIf Guard PThen Body ;
+IfElse.        Statement      ::= PIf Guard PThen Body PElse Body;
 
 
 StExp.     Statement      ::= Exp PSemicolon;

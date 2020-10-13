@@ -106,6 +106,15 @@ instance Print AbsChapel.PSemicolon where
 instance Print AbsChapel.PColon where
   prt _ (AbsChapel.PColon (_,i)) = doc (showString i)
 
+instance Print AbsChapel.PIf where
+  prt _ (AbsChapel.PIf (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PThen where
+  prt _ (AbsChapel.PThen (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PElse where
+  prt _ (AbsChapel.PElse (_,i)) = doc (showString i)
+
 instance Print AbsChapel.Pdo where
   prt _ (AbsChapel.Pdo (_,i)) = doc (showString i)
 
@@ -132,6 +141,9 @@ instance Print AbsChapel.PVar where
 
 instance Print AbsChapel.PConst where
   prt _ (AbsChapel.PConst (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PProc where
+  prt _ (AbsChapel.PProc (_,i)) = doc (showString i)
 
 instance Print AbsChapel.PReturn where
   prt _ (AbsChapel.PReturn (_,i)) = doc (showString i)
@@ -238,7 +250,7 @@ instance Print AbsChapel.DecMode where
 
 instance Print AbsChapel.Function where
   prt i e = case e of
-    AbsChapel.FunDec signature body -> prPrec i 0 (concatD [prt 0 signature, prt 0 body])
+    AbsChapel.FunDec pproc signature body -> prPrec i 0 (concatD [prt 0 pproc, prt 0 signature, prt 0 body])
 
 instance Print AbsChapel.Signature where
   prt i e = case e of
@@ -281,6 +293,9 @@ instance Print AbsChapel.BodyStatement where
 instance Print AbsChapel.Statement where
   prt i e = case e of
     AbsChapel.DoWhile pdo pwhile body guard -> prPrec i 0 (concatD [prt 0 pdo, prt 0 pwhile, prt 0 body, prt 0 guard])
+    AbsChapel.While pwhile guard body -> prPrec i 0 (concatD [prt 0 pwhile, prt 0 guard, prt 0 body])
+    AbsChapel.If pif guard pthen body -> prPrec i 0 (concatD [prt 0 pif, prt 0 guard, prt 0 pthen, prt 0 body])
+    AbsChapel.IfElse pif guard pthen body1 pelse body2 -> prPrec i 0 (concatD [prt 0 pif, prt 0 guard, prt 0 pthen, prt 0 body1, prt 0 pelse, prt 0 body2])
     AbsChapel.StExp exp psemicolon -> prPrec i 0 (concatD [prt 0 exp, prt 0 psemicolon])
 
 instance Print AbsChapel.Guard where

@@ -20,6 +20,9 @@ import ErrM
   L_PCloseParenthesis { PT _ (T_PCloseParenthesis _) }
   L_PSemicolon { PT _ (T_PSemicolon _) }
   L_PColon { PT _ (T_PColon _) }
+  L_PIf { PT _ (T_PIf _) }
+  L_PThen { PT _ (T_PThen _) }
+  L_PElse { PT _ (T_PElse _) }
   L_Pdo { PT _ (T_Pdo _) }
   L_PWhile { PT _ (T_PWhile _) }
   L_PInt { PT _ (T_PInt _) }
@@ -29,6 +32,7 @@ import ErrM
   L_PRef { PT _ (T_PRef _) }
   L_PVar { PT _ (T_PVar _) }
   L_PConst { PT _ (T_PConst _) }
+  L_PProc { PT _ (T_PProc _) }
   L_PReturn { PT _ (T_PReturn _) }
   L_PElthen { PT _ (T_PElthen _) }
   L_PEgrthen { PT _ (T_PEgrthen _) }
@@ -70,6 +74,15 @@ PSemicolon  : L_PSemicolon { PSemicolon (mkPosToken $1)}
 PColon :: { PColon}
 PColon  : L_PColon { PColon (mkPosToken $1)}
 
+PIf :: { PIf}
+PIf  : L_PIf { PIf (mkPosToken $1)}
+
+PThen :: { PThen}
+PThen  : L_PThen { PThen (mkPosToken $1)}
+
+PElse :: { PElse}
+PElse  : L_PElse { PElse (mkPosToken $1)}
+
 Pdo :: { Pdo}
 Pdo  : L_Pdo { Pdo (mkPosToken $1)}
 
@@ -96,6 +109,9 @@ PVar  : L_PVar { PVar (mkPosToken $1)}
 
 PConst :: { PConst}
 PConst  : L_PConst { PConst (mkPosToken $1)}
+
+PProc :: { PProc}
+PProc  : L_PProc { PProc (mkPosToken $1)}
 
 PReturn :: { PReturn}
 PReturn  : L_PReturn { PReturn (mkPosToken $1)}
@@ -182,7 +198,7 @@ DecMode :: { DecMode }
 DecMode : PVar { AbsChapel.PVarMode $1 }
         | PConst { AbsChapel.PConstMode $1 }
 Function :: { Function }
-Function : Signature Body { AbsChapel.FunDec $1 $2 }
+Function : PProc Signature Body { AbsChapel.FunDec $1 $2 $3 }
 Signature :: { Signature }
 Signature : PIdent FunctionParams { AbsChapel.SignNoRet $1 $2 }
           | PIdent FunctionParams PColon Type { AbsChapel.SignWRet $1 $2 $3 $4 }
@@ -209,6 +225,9 @@ BodyStatement : Statement { AbsChapel.Stm $1 }
               | PReturn PSemicolon { AbsChapel.RetVoid $1 $2 }
 Statement :: { Statement }
 Statement : Pdo PWhile Body Guard { AbsChapel.DoWhile $1 $2 $3 $4 }
+          | PWhile Guard Body { AbsChapel.While $1 $2 $3 }
+          | PIf Guard PThen Body { AbsChapel.If $1 $2 $3 $4 }
+          | PIf Guard PThen Body PElse Body { AbsChapel.IfElse $1 $2 $3 $4 $5 $6 }
           | Exp PSemicolon { AbsChapel.StExp $1 $2 }
 Guard :: { Guard }
 Guard : POpenParenthesis Exp PCloseParenthesis { AbsChapel.SGuard $1 $2 $3 }

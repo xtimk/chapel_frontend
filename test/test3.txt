@@ -1,0 +1,11 @@
+var j = 3;
+proc pluto (ref x : int, y, z: real) : int {
+    var pippo = 3;
+
+    do while
+    {
+        var z = 1;
+    }  (x < 5)
+
+    return x + 4;
+}
