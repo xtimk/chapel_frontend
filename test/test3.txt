@@ -10,7 +10,7 @@ proc pluto (ref x : int, y, z: real) : int {
         do while
     {
         var z = 3;
-        j = 3.3;
+        j = 33;
     }  (x < 5)
 
     return x + 4;

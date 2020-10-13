@@ -22,7 +22,7 @@ ErrM.hs LexChapel.x PrintChapel.hs ParChapel.y TestChapel.hs : chapel.cf
 TestChapel : TestChapel.hs ErrM.hs LexChapel.hs ParChapel.hs PrintChapel.hs
 	ghc --make $< -o $@
 
-ChapelParse : ChapelParse.hs ErrM.hs LexChapel.hs ParChapel.hs PrintChapel.hs
+ChapelParse : ChapelParse.hs TypeChecker.hs ErrM.hs LexChapel.hs ParChapel.hs PrintChapel.hs
 	ghc --make $< -o $@
 # Rules for cleaning generated files.
 
