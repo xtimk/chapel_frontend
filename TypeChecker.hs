@@ -71,17 +71,7 @@ typeDecreaseLevel _ = do
 
 typeCheckerBody [] = get
 typeCheckerBody (x:xs) = do
-  typeIncreaseLevel x
-  case x of
-    Stm statement -> typeCheckerStatement statement
-    Fun _ _ -> get
-    DeclStm (Decl decMode declList _ ) -> do
-      mapM_ typeCheckerDeclaration declList
-      get
-    Block (FunBlock _ statements _ ) -> typeCheckerBody statements
-    RetVal _ _ _ -> get
-    RetVoid _ _ -> get
-  typeDecreaseLevel x
+  typeCheckerBody' x
   typeCheckerBody xs
   get
 
