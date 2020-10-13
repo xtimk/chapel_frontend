@@ -71,7 +71,7 @@ typeDecreaseLevel _ = do
 
 typeCheckerBody [] = get
 typeCheckerBody (x:xs) = do
-  typeCheckerBody x
+  typeCheckerBody' x
   typeCheckerBody xs
   get
 
