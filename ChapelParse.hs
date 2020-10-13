@@ -81,9 +81,15 @@ parseTest filepath = do
                    showTree 2 tree
                    putStrLn "\n\n ** After Type Checker **\n\n"
                    print (evalState (typeChecker tree) startState)
+
+                   putStrLn "\n\n ** ENV **"
+                   print (getEnv (evalState (typeChecker tree) startState))
+
+                   putStrLn "\n\n ** SYMBOL TABLE **"
+                   print (getSymTable (evalState (typeChecker tree) startState))
                    exitSuccess
 
 
-
-
+getSymTable (_,_,x) = x
+getEnv (_,x,_) = x
 
