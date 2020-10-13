@@ -9,7 +9,8 @@ import AbsChapel
 --type Env = DMap.Map PIdent EnvEntry
 
 data EnvEntry = 
-  Variable Loc TypeChecker.Type 
+  Variable Loc TypeChecker.Type
+  | Assignm Loc TypeChecker.Type
 --  | Function Loc [Parameter] Type 
 --  | Constant Literal
  deriving (Show)
@@ -108,16 +109,46 @@ typeCheckerStatement statement = case statement of
     mapM_ typeCheckerBody' bodyIfStatements
     mapM_ typeCheckerBody' bodyElseStatements
     get
-  StExp exp _semicolon -> do
-    get
---    typeCheckerExpression environment exp
---    get
+  StExp exp@(EAss e1 eqsym e2) _semicolon -> do
+    case (isExpVar e1) of
+      True -> do
+        env <- get
+        case (typeCheckerExpression env (EAss e1 eqsym e2)) of
+          Error -> do 
+            (d,e,sym) <- get
+            put (d,e, DMap.insert (getVarPos e1) (getVarId e1, (Variable (getVarPos e1) Error)) sym )
+            get
+          otherwhise -> do
+            (d,e,sym) <- get
+            put (d,e, DMap.insert (getVarPos e1) (getVarId e1, (Variable (getVarPos e1) otherwhise)) sym )
+            get
+      False -> do -- caso di lvalue non var
+        (d,e,sym) <- get
+        put (d,e, DMap.insert (getAssignOpPos eqsym) (getAssignOpTok eqsym, (Assignm (getAssignOpPos eqsym) Error)) sym )
+        get
+      
+
+isExpVar e = case e of
+  (Evar (PIdent ((l,c),indentifier))) -> True
+  _otherwhise -> False
+
+getVarPos (Evar (PIdent ((l,c),indentifier))) = (l,c)
+
+getVarId (Evar (PIdent ((l,c),indentifier))) = indentifier
+
+getAssignOpPos op = case op of
+  (AssgnEq (PAssignmEq ((l,c),_))) -> (l,c)
+  (AssgnPlEq (PAssignmPlus ((l,c),_))) -> (l,c)
+
+
+getAssignOpTok op = case op of
+  (AssgnEq (PAssignmEq ((l,c),t))) -> t
+  (AssgnPlEq (PAssignmPlus ((l,c),t))) -> t
 
 typeCheckerGuard (SGuard _ expression _) = do
   (depth, env, _sym) <- get
   case (typeCheckerExpression (depth, env,_sym) expression) of
     Bool -> get -- questo dovrebbe essere l'unico caso accettato, se expression non e' bool devo segnalarlo come errore
-    Int -> get
     _ -> get
 
 
@@ -145,6 +176,7 @@ typeCheckerExpression environment@(depth, env, _sym) expression = case expressio
   Eplus e1 plus e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
   Elthen e1 pElthen e2 -> supBool (typeCheckerExpression environment e1) (typeCheckerExpression environment e2) 
   Evar (PIdent (_, identifier)) -> getVarType identifier environment
+  EAss e1 _eqsym e2 -> supdecl (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
   Econst (Eint _) -> Int
   Econst (Efloat _) -> Real
   -- todo: aggiungere tutti i casi degli operatori esistenti
@@ -192,6 +224,7 @@ supBool _ _ = Bool
 -- e' leggermente diversa dalla sup definita sopra, sotto un commento al riguardo.
 --supdecl Int Int = Int
 -- errore perche' questo corrisponde a codice del tipo: int x = 1.3; che deve ovviamente dare errore di tipo
+supdecl Int Int = Int
 supdecl Int Real = Error
 supdecl Real Int = Real
 supdecl Real Real = Real
