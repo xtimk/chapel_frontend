@@ -48,6 +48,9 @@ newtype PVar = PVar ((Int,Int),String)
 newtype PConst = PConst ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
+newtype PProc = PProc ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
 newtype PReturn = PReturn ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
@@ -129,7 +132,7 @@ data DeclList
 data DecMode = PVarMode PVar | PConstMode PConst
   deriving (Eq, Ord, Show, Read)
 
-data Function = FunDec Signature Body
+data Function = FunDec PProc Signature Body
   deriving (Eq, Ord, Show, Read)
 
 data Signature

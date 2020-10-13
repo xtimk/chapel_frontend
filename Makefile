@@ -6,7 +6,7 @@
 
 # Default goal.
 
-all : TestChapel
+all : TestChapel ChapelParse
 
 # Rules for building the parser.
 
@@ -22,6 +22,8 @@ ErrM.hs LexChapel.x PrintChapel.hs ParChapel.y TestChapel.hs : chapel.cf
 TestChapel : TestChapel.hs ErrM.hs LexChapel.hs ParChapel.hs PrintChapel.hs
 	ghc --make $< -o $@
 
+ChapelParse : ChapelParse.hs ErrM.hs LexChapel.hs ParChapel.hs PrintChapel.hs
+	ghc --make $< -o $@
 # Rules for cleaning generated files.
 
 clean :

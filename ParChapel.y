@@ -20,6 +20,9 @@ import ErrM
   L_PCloseParenthesis { PT _ (T_PCloseParenthesis _) }
   L_PSemicolon { PT _ (T_PSemicolon _) }
   L_PColon { PT _ (T_PColon _) }
+  L_PIf { PT _ (T_PIf _) }
+  L_PThen { PT _ (T_PThen _) }
+  L_PElse { PT _ (T_PElse _) }
   L_Pdo { PT _ (T_Pdo _) }
   L_PWhile { PT _ (T_PWhile _) }
   L_PInt { PT _ (T_PInt _) }
@@ -70,6 +73,15 @@ PSemicolon  : L_PSemicolon { PSemicolon (mkPosToken $1)}
 
 PColon :: { PColon}
 PColon  : L_PColon { PColon (mkPosToken $1)}
+
+PIf :: { PIf}
+PIf  : L_PIf { PIf (mkPosToken $1)}
+
+PThen :: { PThen}
+PThen  : L_PThen { PThen (mkPosToken $1)}
+
+PElse :: { PElse}
+PElse  : L_PElse { PElse (mkPosToken $1)}
 
 Pdo :: { Pdo}
 Pdo  : L_Pdo { Pdo (mkPosToken $1)}
@@ -164,9 +176,9 @@ PInteger  : L_PInteger { PInteger (mkPosToken $1)}
 Program :: { Program }
 Program : Module { AbsChapel.Progr $1 }
 Module :: { Module }
-Module : ListExt { AbsChapel.Mod $1 }
+Module : ListExt { AbsChapel.Mod (reverse $1) }
 ListExt :: { [Ext] }
-ListExt : Ext { (:[]) $1 } | Ext ListExt { (:) $1 $2 }
+ListExt : {- empty -} { [] } | ListExt Ext { flip (:) $1 $2 }
 Ext :: { Ext }
 Ext : Declaration { AbsChapel.ExtDecl $1 }
     | Function { AbsChapel.ExtFun $1 }
@@ -213,6 +225,9 @@ BodyStatement : Statement { AbsChapel.Stm $1 }
               | PReturn PSemicolon { AbsChapel.RetVoid $1 $2 }
 Statement :: { Statement }
 Statement : Pdo PWhile Body Guard { AbsChapel.DoWhile $1 $2 $3 $4 }
+          | PWhile Guard Body { AbsChapel.While $1 $2 $3 }
+          | PIf Guard PThen Body { AbsChapel.If $1 $2 $3 $4 }
+          | PIf Guard PThen Body PElse Body { AbsChapel.IfElse $1 $2 $3 $4 $5 $6 }
           | Exp PSemicolon { AbsChapel.StExp $1 $2 }
 Guard :: { Guard }
 Guard : POpenParenthesis Exp PCloseParenthesis { AbsChapel.SGuard $1 $2 $3 }

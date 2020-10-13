@@ -27,6 +27,15 @@ transPSemicolon x = case x of
 transPColon :: PColon -> Result
 transPColon x = case x of
   PColon string -> failure x
+transPIf :: PIf -> Result
+transPIf x = case x of
+  PIf string -> failure x
+transPThen :: PThen -> Result
+transPThen x = case x of
+  PThen string -> failure x
+transPElse :: PElse -> Result
+transPElse x = case x of
+  PElse string -> failure x
 transPdo :: Pdo -> Result
 transPdo x = case x of
   Pdo string -> failure x
@@ -167,6 +176,9 @@ transBodyStatement x = case x of
 transStatement :: Statement -> Result
 transStatement x = case x of
   DoWhile pdo pwhile body guard -> failure x
+  While pwhile guard body -> failure x
+  If pif guard pthen body -> failure x
+  IfElse pif guard pthen body1 pelse body2 -> failure x
   StExp exp psemicolon -> failure x
 transGuard :: Guard -> Result
 transGuard x = case x of
