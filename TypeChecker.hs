@@ -154,8 +154,28 @@ typeCheckerGuard (SGuard _ expression _) = do
 
 typeCheckerDeclaration x = case x of
     NoAssgmDec identifiers colon types -> typeCheckerIdentifiers identifiers types
+    NoAssgmArrayFixDec identifiers colon array -> typeCheckerIdentifiersArray identifiers array Nothing
+    NoAssgmArrayDec identifiers colon array types -> typeCheckerIdentifiersArray identifiers array (Just types)
+    AssgmTypeDec identifiers colon types assignment exp -> typeCheckerIdentifiersWithExpression identifiers (Just types) exp
+    AssgmArrayTypeDec identifiers colon array types assignment exp -> typeCheckerIdentifiersArrayWithExpression identifiers array (Just types) exp
+    AssgmArrayDec identifiers colon array assignment exp -> typeCheckerIdentifiersArrayWithExpression identifiers array Nothing exp
     AssgmDec identifiers assigment exp -> typeCheckerIdentifiersWithExpression identifiers Nothing exp
-    AssgmTypeDec identifiers assignment types colon exp -> typeCheckerIdentifiersWithExpression identifiers (Just types) exp
+    
+
+typeCheckerIdentifiersArray identifiers array types = 
+   mapM_ (typeCheckerIdentifier (typeCheckerArray array types)) identifiers    
+
+typeCheckerIdentifiersArrayWithExpression identifiers array types exp = do
+  environment <- get
+  case types of
+    Nothing -> mapM_ (typeCheckerIdentifier (typeCheckerExpression environment exp)) identifiers
+    Just defineType -> mapM_ (typeCheckerIdentifier (supdecl (typeCheckerArray array types) (typeCheckerExpression environment exp))) identifiers 
+
+
+typeCheckerArray array types = case types of
+  Nothing -> Int
+  Just definedType -> Int
+
 
 typeCheckerIdentifiers identifiers types = 
    mapM_ (typeCheckerIdentifier (convertTypeSpecToTypeInferred types)) identifiers
@@ -174,6 +194,10 @@ typeCheckerIdentifier types (PIdent ((line,column), identifier)) = do
 
 typeCheckerExpression environment@(depth, env, _sym) expression = case expression of
   Eplus e1 plus e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
+  Eminus e1 minus e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
+  Ediv e1 div e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
+  Etimes e1 div e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
+  InnerExp _ e _ -> typeCheckerExpression environment e
   Elthen e1 pElthen e2 -> supBool (typeCheckerExpression environment e1) (typeCheckerExpression environment e2) 
   Evar (PIdent (_, identifier)) -> getVarType identifier environment
   EAss e1 _eqsym e2 -> supdecl (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)

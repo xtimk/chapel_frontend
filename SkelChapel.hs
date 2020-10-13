@@ -153,15 +153,17 @@ transDeclList x = case x of
   NoAssgmDec pidents pcolon type_ -> failure x
   NoAssgmArrayFixDec pidents pcolon ardecl -> failure x
   NoAssgmArrayDec pidents pcolon ardecl type_ -> failure x
-  AssgmDec pidents passignmeq exp -> failure x
   AssgmTypeDec pidents pcolon type_ passignmeq exp -> failure x
+  AssgmArrayTypeDec pidents pcolon ardecl type_ passignmeq exp -> failure x
+  AssgmArrayDec pidents pcolon ardecl passignmeq exp -> failure x
+  AssgmDec pidents passignmeq exp -> failure x
 transArDecl :: ArDecl -> Result
 transArDecl x = case x of
   ArrayDeclIndex popenbracket ardims pclosebracket -> failure x
-  ArrayDeclFixed popenbracket arbounds pclosebracket -> failure x
+  ArrayDeclFixed popenbracket arbound pclosebracket -> failure x
 transArDim :: ArDim -> Result
 transArDim x = case x of
-  ArrayDim arbound1 ppoint1 ppoint2 arbound2 -> failure x
+  ArrayDimSingle arbound1 ppoint1 ppoint2 arbound2 -> failure x
 transArBound :: ArBound -> Result
 transArBound x = case x of
   ArrayBoundIdent pident -> failure x

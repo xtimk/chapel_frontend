@@ -246,34 +246,31 @@ instance Print AbsChapel.DeclList where
     AbsChapel.NoAssgmDec pidents pcolon type_ -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 type_])
     AbsChapel.NoAssgmArrayFixDec pidents pcolon ardecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl])
     AbsChapel.NoAssgmArrayDec pidents pcolon ardecl type_ -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl, prt 0 type_])
-    AbsChapel.AssgmDec pidents passignmeq exp -> prPrec i 0 (concatD [prt 0 pidents, prt 0 passignmeq, prt 0 exp])
     AbsChapel.AssgmTypeDec pidents pcolon type_ passignmeq exp -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 type_, prt 0 passignmeq, prt 0 exp])
+    AbsChapel.AssgmArrayTypeDec pidents pcolon ardecl type_ passignmeq exp -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl, prt 0 type_, prt 0 passignmeq, prt 0 exp])
+    AbsChapel.AssgmArrayDec pidents pcolon ardecl passignmeq exp -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl, prt 0 passignmeq, prt 0 exp])
+    AbsChapel.AssgmDec pidents passignmeq exp -> prPrec i 0 (concatD [prt 0 pidents, prt 0 passignmeq, prt 0 exp])
   prtList _ [x] = concatD [prt 0 x]
   prtList _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
 
 instance Print AbsChapel.ArDecl where
   prt i e = case e of
     AbsChapel.ArrayDeclIndex popenbracket ardims pclosebracket -> prPrec i 0 (concatD [prt 0 popenbracket, prt 0 ardims, prt 0 pclosebracket])
-    AbsChapel.ArrayDeclFixed popenbracket arbounds pclosebracket -> prPrec i 0 (concatD [prt 0 popenbracket, prt 0 arbounds, prt 0 pclosebracket])
+    AbsChapel.ArrayDeclFixed popenbracket arbound pclosebracket -> prPrec i 0 (concatD [prt 0 popenbracket, prt 0 arbound, prt 0 pclosebracket])
 
 instance Print AbsChapel.ArDim where
   prt i e = case e of
-    AbsChapel.ArrayDim arbound1 ppoint1 ppoint2 arbound2 -> prPrec i 0 (concatD [prt 0 arbound1, prt 0 ppoint1, prt 0 ppoint2, prt 0 arbound2])
+    AbsChapel.ArrayDimSingle arbound1 ppoint1 ppoint2 arbound2 -> prPrec i 0 (concatD [prt 0 arbound1, prt 0 ppoint1, prt 0 ppoint2, prt 0 arbound2])
   prtList _ [x] = concatD [prt 0 x]
   prtList _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
 
 instance Print [AbsChapel.ArDim] where
   prt = prtList
 
-instance Print [AbsChapel.ArBound] where
-  prt = prtList
-
 instance Print AbsChapel.ArBound where
   prt i e = case e of
     AbsChapel.ArrayBoundIdent pident -> prPrec i 0 (concatD [prt 0 pident])
     AbsChapel.ArratBoundConst constant -> prPrec i 0 (concatD [prt 0 constant])
-  prtList _ [x] = concatD [prt 0 x]
-  prtList _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
 
 instance Print [AbsChapel.PIdent] where
   prt = prtList

@@ -145,16 +145,18 @@ data DeclList
     = NoAssgmDec [PIdent] PColon Type
     | NoAssgmArrayFixDec [PIdent] PColon ArDecl
     | NoAssgmArrayDec [PIdent] PColon ArDecl Type
-    | AssgmDec [PIdent] PAssignmEq Exp
     | AssgmTypeDec [PIdent] PColon Type PAssignmEq Exp
+    | AssgmArrayTypeDec [PIdent] PColon ArDecl Type PAssignmEq Exp
+    | AssgmArrayDec [PIdent] PColon ArDecl PAssignmEq Exp
+    | AssgmDec [PIdent] PAssignmEq Exp
   deriving (Eq, Ord, Show, Read)
 
 data ArDecl
     = ArrayDeclIndex POpenBracket [ArDim] PCloseBracket
-    | ArrayDeclFixed POpenBracket [ArBound] PCloseBracket
+    | ArrayDeclFixed POpenBracket ArBound PCloseBracket
   deriving (Eq, Ord, Show, Read)
 
-data ArDim = ArrayDim ArBound PPoint PPoint ArBound
+data ArDim = ArrayDimSingle ArBound PPoint PPoint ArBound
   deriving (Eq, Ord, Show, Read)
 
 data ArBound = ArrayBoundIdent PIdent | ArratBoundConst Constant

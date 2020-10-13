@@ -203,18 +203,17 @@ DeclList :: { DeclList }
 DeclList : ListPIdent PColon Type { AbsChapel.NoAssgmDec $1 $2 $3 }
          | ListPIdent PColon ArDecl { AbsChapel.NoAssgmArrayFixDec $1 $2 $3 }
          | ListPIdent PColon ArDecl Type { AbsChapel.NoAssgmArrayDec $1 $2 $3 $4 }
-         | ListPIdent PAssignmEq Exp { AbsChapel.AssgmDec $1 $2 $3 }
          | ListPIdent PColon Type PAssignmEq Exp { AbsChapel.AssgmTypeDec $1 $2 $3 $4 $5 }
+         | ListPIdent PColon ArDecl Type PAssignmEq Exp { AbsChapel.AssgmArrayTypeDec $1 $2 $3 $4 $5 $6 }
+         | ListPIdent PColon ArDecl PAssignmEq Exp { AbsChapel.AssgmArrayDec $1 $2 $3 $4 $5 }
+         | ListPIdent PAssignmEq Exp { AbsChapel.AssgmDec $1 $2 $3 }
 ArDecl :: { ArDecl }
 ArDecl : POpenBracket ListArDim PCloseBracket { AbsChapel.ArrayDeclIndex $1 $2 $3 }
-       | POpenBracket ListArBound PCloseBracket { AbsChapel.ArrayDeclFixed $1 $2 $3 }
+       | POpenBracket ArBound PCloseBracket { AbsChapel.ArrayDeclFixed $1 $2 $3 }
 ArDim :: { ArDim }
-ArDim : ArBound PPoint PPoint ArBound { AbsChapel.ArrayDim $1 $2 $3 $4 }
+ArDim : ArBound PPoint PPoint ArBound { AbsChapel.ArrayDimSingle $1 $2 $3 $4 }
 ListArDim :: { [ArDim] }
 ListArDim : ArDim { (:[]) $1 } | ArDim ',' ListArDim { (:) $1 $3 }
-ListArBound :: { [ArBound] }
-ListArBound : ArBound { (:[]) $1 }
-            | ArBound ',' ListArBound { (:) $1 $3 }
 ArBound :: { ArBound }
 ArBound : PIdent { AbsChapel.ArrayBoundIdent $1 }
         | Constant { AbsChapel.ArratBoundConst $1 }

@@ -82,20 +82,20 @@ Decl.     Declaration ::= DecMode [DeclList] PSemicolon;
 NoAssgmDec.          DeclList ::= [PIdent] PColon Type ;
 NoAssgmArrayFixDec.  DeclList ::= [PIdent] PColon ArDecl ;
 NoAssgmArrayDec.     DeclList ::= [PIdent] PColon ArDecl Type ;
-AssgmDec.            DeclList ::= [PIdent] PAssignmEq Exp ;
 AssgmTypeDec.        DeclList ::= [PIdent] PColon Type PAssignmEq Exp ;
+AssgmArrayTypeDec.   DeclList ::= [PIdent] PColon ArDecl Type PAssignmEq Exp ;
+AssgmArrayDec.       DeclList ::= [PIdent] PColon ArDecl PAssignmEq Exp ;
+AssgmDec.            DeclList ::= [PIdent] PAssignmEq Exp ;
 
 
 ArrayDeclIndex.      ArDecl ::= POpenBracket [ArDim] PCloseBracket ;
-ArrayDeclFixed.      ArDecl ::= POpenBracket [ArBound] PCloseBracket ;
+ArrayDeclFixed.      ArDecl ::= POpenBracket ArBound PCloseBracket ;
 
-ArrayDim.            ArDim ::= ArBound PPoint PPoint ArBound;
+ArrayDimSingle.      ArDim ::= ArBound PPoint PPoint ArBound;
+
 
 (:[]).    [ArDim] ::= ArDim;
 (:).      [ArDim] ::= ArDim "," [ArDim];
-
-(:[]).    [ArBound] ::= ArBound;
-(:).      [ArBound] ::= ArBound "," [ArBound];
 
 
 ArrayBoundIdent.     ArBound ::= PIdent ;
