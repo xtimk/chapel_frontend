@@ -213,15 +213,15 @@ All other symbols are terminals.
   | //DeclList// | -> | //[PIdent]// //PColon// //Type//
   |  |  **|**  | //[PIdent]// //PColon// //ArDecl//
   |  |  **|**  | //[PIdent]// //PColon// //ArDecl// //Type//
-  |  |  **|**  | //[PIdent]// //PAssignmEq// //Exp//
   |  |  **|**  | //[PIdent]// //PColon// //Type// //PAssignmEq// //Exp//
+  |  |  **|**  | //[PIdent]// //PColon// //ArDecl// //Type// //PAssignmEq// //Exp//
+  |  |  **|**  | //[PIdent]// //PColon// //ArDecl// //PAssignmEq// //Exp//
+  |  |  **|**  | //[PIdent]// //PAssignmEq// //Exp//
   | //ArDecl// | -> | //POpenBracket// //[ArDim]// //PCloseBracket//
-  |  |  **|**  | //POpenBracket// //[ArBound]// //PCloseBracket//
+  |  |  **|**  | //POpenBracket// //ArBound// //PCloseBracket//
   | //ArDim// | -> | //ArBound// //PPoint// //PPoint// //ArBound//
   | //[ArDim]// | -> | //ArDim//
   |  |  **|**  | //ArDim// ``,`` //[ArDim]//
-  | //[ArBound]// | -> | //ArBound//
-  |  |  **|**  | //ArBound// ``,`` //[ArBound]//
   | //ArBound// | -> | //PIdent//
   |  |  **|**  | //Constant//
   | //[PIdent]// | -> | //PIdent//

@@ -1,14 +1,15 @@
 var j : [1..2, 1..n] real;
 var m : [1..2] real ;
 var m : [1..2] ;
-var l : [2,3,4,s,5,fff,gh];
+var v : [6] int = 5;
+var p : [4];
 
 proc pluto (ref x : int, y, z: real) : int {
     var pippo = 3;
-    1 + [2] = 3 + a [5];
+    a = 3 + a;
     do while
     {
-        var z = 1;
+        var z = 1 * 2 + (10 + 8.6 - 7);
     }  (x < 5)
 
     return x + 4;
