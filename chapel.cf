@@ -6,11 +6,12 @@ position token PCloseGraph ('}');
 position token POpenParenthesis ('(');
 position token PCloseParenthesis (')');
 
---position token POpenBracket ('[');
---position token PCloseBracket (']');
+position token POpenBracket ('[');
+position token PCloseBracket (']');
 
 position token PSemicolon (';');
 position token PColon (':');
+position token PPoint ('.');
 -- position token PComma (',');
 
 
@@ -78,10 +79,27 @@ Decl.     Declaration ::= DecMode [DeclList] PSemicolon;
 (:[]).    [DeclList] ::= DeclList;
 (:).      [DeclList] ::= DeclList "," [DeclList];
 
-NoAssgmDec.     DeclList ::= [PIdent] PColon Type ;
-AssgmDec.       DeclList ::= [PIdent] PAssignmEq Exp ;
-AssgmTypeDec.   DeclList ::= [PIdent] PColon Type PAssignmEq Exp ;
+NoAssgmDec.          DeclList ::= [PIdent] PColon Type ;
+NoAssgmArrayFixDec.  DeclList ::= [PIdent] PColon ArDecl ;
+NoAssgmArrayDec.     DeclList ::= [PIdent] PColon ArDecl Type ;
+AssgmDec.            DeclList ::= [PIdent] PAssignmEq Exp ;
+AssgmTypeDec.        DeclList ::= [PIdent] PColon Type PAssignmEq Exp ;
 
+
+ArrayDeclIndex.      ArDecl ::= POpenBracket [ArDim] PCloseBracket ;
+ArrayDeclFixed.      ArDecl ::= POpenBracket [ArBound] PCloseBracket ;
+
+ArrayDim.            ArDim ::= ArBound PPoint PPoint ArBound;
+
+(:[]).    [ArDim] ::= ArDim;
+(:).      [ArDim] ::= ArDim "," [ArDim];
+
+(:[]).    [ArBound] ::= ArBound;
+(:).      [ArBound] ::= ArBound "," [ArBound];
+
+
+ArrayBoundIdent.     ArBound ::= PIdent ;
+ArratBoundConst.     ArBound ::= Constant ;
 
 (:[]).    [PIdent] ::= PIdent;
 (:).      [PIdent] ::= PIdent "," [PIdent];
@@ -116,16 +134,16 @@ FunBlock.       Body ::= POpenGraph [BodyStatement] PCloseGraph ;
 
 Stm.       BodyStatement  ::= Statement ;
 Fun.       BodyStatement  ::= Function PSemicolon ;
-DeclStm.      BodyStatement  ::= Declaration ;
+DeclStm.   BodyStatement  ::= Declaration ;
 Block.     BodyStatement  ::= Body ;
-RetVal.       BodyStatement  ::= PReturn Exp PSemicolon ;
-RetVoid.       BodyStatement  ::= PReturn PSemicolon ;
+RetVal.    BodyStatement  ::= PReturn Exp PSemicolon ;
+RetVoid.   BodyStatement  ::= PReturn PSemicolon ;
 
 DoWhile.   Statement      ::= Pdo PWhile Body Guard ;
-While.   Statement      ::= PWhile Guard Body ;
+While.     Statement      ::= PWhile Guard Body ;
 
 If.        Statement      ::= PIf Guard PThen Body ;
-IfElse.        Statement      ::= PIf Guard PThen Body PElse Body;
+IfElse.    Statement      ::= PIf Guard PThen Body PElse Body;
 
 
 StExp.     Statement      ::= Exp PSemicolon;
@@ -136,7 +154,7 @@ Tint.      Type ::= PInt ;
 Treal.     Type ::= PReal ;
 
 AssgnEq.   AssgnmOp ::= PAssignmEq ;
-AssgnPlEq.   AssgnmOp ::= PAssignmPlus ;
+AssgnPlEq. AssgnmOp ::= PAssignmPlus ;
 
 RefMode.   Mode ::= PRef ;
 

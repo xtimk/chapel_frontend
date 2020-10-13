@@ -21,12 +21,21 @@ transPOpenParenthesis x = case x of
 transPCloseParenthesis :: PCloseParenthesis -> Result
 transPCloseParenthesis x = case x of
   PCloseParenthesis string -> failure x
+transPOpenBracket :: POpenBracket -> Result
+transPOpenBracket x = case x of
+  POpenBracket string -> failure x
+transPCloseBracket :: PCloseBracket -> Result
+transPCloseBracket x = case x of
+  PCloseBracket string -> failure x
 transPSemicolon :: PSemicolon -> Result
 transPSemicolon x = case x of
   PSemicolon string -> failure x
 transPColon :: PColon -> Result
 transPColon x = case x of
   PColon string -> failure x
+transPPoint :: PPoint -> Result
+transPPoint x = case x of
+  PPoint string -> failure x
 transPIf :: PIf -> Result
 transPIf x = case x of
   PIf string -> failure x
@@ -142,8 +151,21 @@ transDeclaration x = case x of
 transDeclList :: DeclList -> Result
 transDeclList x = case x of
   NoAssgmDec pidents pcolon type_ -> failure x
+  NoAssgmArrayFixDec pidents pcolon ardecl -> failure x
+  NoAssgmArrayDec pidents pcolon ardecl type_ -> failure x
   AssgmDec pidents passignmeq exp -> failure x
   AssgmTypeDec pidents pcolon type_ passignmeq exp -> failure x
+transArDecl :: ArDecl -> Result
+transArDecl x = case x of
+  ArrayDeclIndex popenbracket ardims pclosebracket -> failure x
+  ArrayDeclFixed popenbracket arbounds pclosebracket -> failure x
+transArDim :: ArDim -> Result
+transArDim x = case x of
+  ArrayDim arbound1 ppoint1 ppoint2 arbound2 -> failure x
+transArBound :: ArBound -> Result
+transArBound x = case x of
+  ArrayBoundIdent pident -> failure x
+  ArratBoundConst constant -> failure x
 transDecMode :: DecMode -> Result
 transDecMode x = case x of
   PVarMode pvar -> failure x

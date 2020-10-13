@@ -18,8 +18,11 @@ import ErrM
   L_PCloseGraph { PT _ (T_PCloseGraph _) }
   L_POpenParenthesis { PT _ (T_POpenParenthesis _) }
   L_PCloseParenthesis { PT _ (T_PCloseParenthesis _) }
+  L_POpenBracket { PT _ (T_POpenBracket _) }
+  L_PCloseBracket { PT _ (T_PCloseBracket _) }
   L_PSemicolon { PT _ (T_PSemicolon _) }
   L_PColon { PT _ (T_PColon _) }
+  L_PPoint { PT _ (T_PPoint _) }
   L_PIf { PT _ (T_PIf _) }
   L_PThen { PT _ (T_PThen _) }
   L_PElse { PT _ (T_PElse _) }
@@ -68,11 +71,20 @@ POpenParenthesis  : L_POpenParenthesis { POpenParenthesis (mkPosToken $1)}
 PCloseParenthesis :: { PCloseParenthesis}
 PCloseParenthesis  : L_PCloseParenthesis { PCloseParenthesis (mkPosToken $1)}
 
+POpenBracket :: { POpenBracket}
+POpenBracket  : L_POpenBracket { POpenBracket (mkPosToken $1)}
+
+PCloseBracket :: { PCloseBracket}
+PCloseBracket  : L_PCloseBracket { PCloseBracket (mkPosToken $1)}
+
 PSemicolon :: { PSemicolon}
 PSemicolon  : L_PSemicolon { PSemicolon (mkPosToken $1)}
 
 PColon :: { PColon}
 PColon  : L_PColon { PColon (mkPosToken $1)}
+
+PPoint :: { PPoint}
+PPoint  : L_PPoint { PPoint (mkPosToken $1)}
 
 PIf :: { PIf}
 PIf  : L_PIf { PIf (mkPosToken $1)}
@@ -189,8 +201,23 @@ ListDeclList : DeclList { (:[]) $1 }
              | DeclList ',' ListDeclList { (:) $1 $3 }
 DeclList :: { DeclList }
 DeclList : ListPIdent PColon Type { AbsChapel.NoAssgmDec $1 $2 $3 }
+         | ListPIdent PColon ArDecl { AbsChapel.NoAssgmArrayFixDec $1 $2 $3 }
+         | ListPIdent PColon ArDecl Type { AbsChapel.NoAssgmArrayDec $1 $2 $3 $4 }
          | ListPIdent PAssignmEq Exp { AbsChapel.AssgmDec $1 $2 $3 }
          | ListPIdent PColon Type PAssignmEq Exp { AbsChapel.AssgmTypeDec $1 $2 $3 $4 $5 }
+ArDecl :: { ArDecl }
+ArDecl : POpenBracket ListArDim PCloseBracket { AbsChapel.ArrayDeclIndex $1 $2 $3 }
+       | POpenBracket ListArBound PCloseBracket { AbsChapel.ArrayDeclFixed $1 $2 $3 }
+ArDim :: { ArDim }
+ArDim : ArBound PPoint PPoint ArBound { AbsChapel.ArrayDim $1 $2 $3 $4 }
+ListArDim :: { [ArDim] }
+ListArDim : ArDim { (:[]) $1 } | ArDim ',' ListArDim { (:) $1 $3 }
+ListArBound :: { [ArBound] }
+ListArBound : ArBound { (:[]) $1 }
+            | ArBound ',' ListArBound { (:) $1 $3 }
+ArBound :: { ArBound }
+ArBound : PIdent { AbsChapel.ArrayBoundIdent $1 }
+        | Constant { AbsChapel.ArratBoundConst $1 }
 ListPIdent :: { [PIdent] }
 ListPIdent : PIdent { (:[]) $1 }
            | PIdent ',' ListPIdent { (:) $1 $3 }
