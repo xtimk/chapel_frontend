@@ -5,6 +5,7 @@ import Control.Monad.Trans.State
 import qualified Data.Map as DMap
 import AbsChapel
 import Checker.SymbolTable
+import Checker.BPTree
 
 --type Env = DMap.Map PIdent EnvEntry
 
@@ -15,7 +16,7 @@ initVarError = ErrorInitExpr
 
 --type MonState = State EnvEntry 
 
-startState = (0, (DMap.insert 0 DMap.empty DMap.empty), DMap.empty) 
+startState = (0, (DMap.insert 0 DMap.empty DMap.empty), DMap.empty)
 
 
 typeChecker (Progr p) = typeCheckerModule p
