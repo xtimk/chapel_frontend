@@ -4,7 +4,7 @@ import Checker.SymbolTable
 
 data BPTree  = Void | Node {
     val :: BP,
-    children :: [BPTree]
+    children :: [BPTree],
     parent :: BPTree
 }
 
