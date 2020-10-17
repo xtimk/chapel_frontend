@@ -247,13 +247,13 @@ BodyStatement : Statement { AbsChapel.Stm $1 }
               | Function PSemicolon { AbsChapel.Fun $1 $2 }
               | Declaration { AbsChapel.DeclStm $1 }
               | Body { AbsChapel.Block $1 }
-              | PReturn Exp PSemicolon { AbsChapel.RetVal $1 $2 $3 }
-              | PReturn PSemicolon { AbsChapel.RetVoid $1 $2 }
 Statement :: { Statement }
 Statement : Pdo PWhile Body Guard { AbsChapel.DoWhile $1 $2 $3 $4 }
           | PWhile Guard Body { AbsChapel.While $1 $2 $3 }
           | PIf Guard PThen Body { AbsChapel.If $1 $2 $3 $4 }
           | PIf Guard PThen Body PElse Body { AbsChapel.IfElse $1 $2 $3 $4 $5 $6 }
+          | PReturn Exp PSemicolon { AbsChapel.RetVal $1 $2 $3 }
+          | PReturn PSemicolon { AbsChapel.RetVoid $1 $2 }
           | Exp PSemicolon { AbsChapel.StExp $1 $2 }
 Guard :: { Guard }
 Guard : POpenParenthesis Exp PCloseParenthesis { AbsChapel.SGuard $1 $2 $3 }

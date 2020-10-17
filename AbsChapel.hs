@@ -190,8 +190,6 @@ data BodyStatement
     | Fun Function PSemicolon
     | DeclStm Declaration
     | Block Body
-    | RetVal PReturn Exp PSemicolon
-    | RetVoid PReturn PSemicolon
   deriving (Eq, Ord, Show, Read)
 
 data Statement
@@ -199,6 +197,8 @@ data Statement
     | While PWhile Guard Body
     | If PIf Guard PThen Body
     | IfElse PIf Guard PThen Body PElse Body
+    | RetVal PReturn Exp PSemicolon
+    | RetVoid PReturn PSemicolon
     | StExp Exp PSemicolon
   deriving (Eq, Ord, Show, Read)
 

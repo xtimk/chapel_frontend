@@ -136,14 +136,15 @@ Stm.       BodyStatement  ::= Statement ;
 Fun.       BodyStatement  ::= Function PSemicolon ;
 DeclStm.   BodyStatement  ::= Declaration ;
 Block.     BodyStatement  ::= Body ;
-RetVal.    BodyStatement  ::= PReturn Exp PSemicolon ;
-RetVoid.   BodyStatement  ::= PReturn PSemicolon ;
 
 DoWhile.   Statement      ::= Pdo PWhile Body Guard ;
 While.     Statement      ::= PWhile Guard Body ;
 
 If.        Statement      ::= PIf Guard PThen Body ;
 IfElse.    Statement      ::= PIf Guard PThen Body PElse Body;
+
+RetVal.    Statement  ::= PReturn Exp PSemicolon ;
+RetVoid.   Statement  ::= PReturn PSemicolon ;
 
 
 StExp.     Statement      ::= Exp PSemicolon;

@@ -195,14 +195,14 @@ transBodyStatement x = case x of
   Fun function psemicolon -> failure x
   DeclStm declaration -> failure x
   Block body -> failure x
-  RetVal preturn exp psemicolon -> failure x
-  RetVoid preturn psemicolon -> failure x
 transStatement :: Statement -> Result
 transStatement x = case x of
   DoWhile pdo pwhile body guard -> failure x
   While pwhile guard body -> failure x
   If pif guard pthen body -> failure x
   IfElse pif guard pthen body1 pelse body2 -> failure x
+  RetVal preturn exp psemicolon -> failure x
+  RetVoid preturn psemicolon -> failure x
   StExp exp psemicolon -> failure x
 transGuard :: Guard -> Result
 transGuard x = case x of

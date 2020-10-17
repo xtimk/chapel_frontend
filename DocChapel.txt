@@ -244,12 +244,12 @@ All other symbols are terminals.
   |  |  **|**  | //Function// //PSemicolon//
   |  |  **|**  | //Declaration//
   |  |  **|**  | //Body//
-  |  |  **|**  | //PReturn// //Exp// //PSemicolon//
-  |  |  **|**  | //PReturn// //PSemicolon//
   | //Statement// | -> | //Pdo// //PWhile// //Body// //Guard//
   |  |  **|**  | //PWhile// //Guard// //Body//
   |  |  **|**  | //PIf// //Guard// //PThen// //Body//
   |  |  **|**  | //PIf// //Guard// //PThen// //Body// //PElse// //Body//
+  |  |  **|**  | //PReturn// //Exp// //PSemicolon//
+  |  |  **|**  | //PReturn// //PSemicolon//
   |  |  **|**  | //Exp// //PSemicolon//
   | //Guard// | -> | //POpenParenthesis// //Exp// //PCloseParenthesis//
   | //Type// | -> | //PInt//

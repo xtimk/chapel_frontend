@@ -4,29 +4,14 @@ module TypeChecker where
 import Control.Monad.Trans.State
 import qualified Data.Map as DMap
 import AbsChapel
-
+import Checker.SymbolTable
 
 --type Env = DMap.Map PIdent EnvEntry
 
-data EnvEntry = 
-  Variable Loc TypeChecker.Type
-  | Assignm Loc TypeChecker.Type
---  | Function Loc [Parameter] Type 
---  | Constant Literal
- deriving (Show)
 
-data Type = Int | Real | Bool | Error
-  deriving (Show)
-
-data Type' = Int' | Real' | Error' ErrorType
-  deriving (Show)
-
-data ErrorType = ErrorInitExpr PIdent Type' Type' | ErrorNotInitVar 
-  deriving(Show) 
 
 initVarError = ErrorInitExpr
 
-type Loc = (Int,Int)
 
 --type MonState = State EnvEntry 
 
@@ -86,8 +71,6 @@ typeCheckerBody' x = do
       mapM_ typeCheckerDeclaration declList
       get
     Block (FunBlock _ statements _ ) -> typeCheckerBody statements
-    RetVal _ _ _ -> get
-    RetVoid _ _ -> get
   typeDecreaseLevel x
   get
 
@@ -126,6 +109,9 @@ typeCheckerStatement statement = case statement of
         (d,e,sym) <- get
         put (d,e, DMap.insert (getAssignOpPos eqsym) (getAssignOpTok eqsym, (Assignm (getAssignOpPos eqsym) Error)) sym )
         get
+  RetVal _ _ _ -> get
+  RetVoid _ _ -> get
+
       
 
 isExpVar e = case e of
