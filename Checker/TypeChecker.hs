@@ -61,19 +61,15 @@ typeDecreaseLevel _ = do
   (depth, env, _sym, _tree, _current_id) <- get
   put (depth - 1, env, _sym, _tree, _current_id)  
 
-typeCheckerBody identifier (FunBlock  _ xs _  ) = do
-
+typeCheckerBody identifier (BodyBlock  _ xs _  ) = do
   (depth, env, _sym, tree, current_id) <- get
   let actualNode = findNodeById current_id tree in
     put (depth, env, _sym, addChild actualNode (createChild identifier actualNode) tree, identifier)
   typeIncreaseLevel xs
-
   mapM_ typeCheckerBody' xs
-
   typeDecreaseLevel xs
   (depth, env, _sym, tree, _) <- get
   put (depth, env, _sym, tree, current_id)
-
   get
 
 typeCheckerBody' x = do
@@ -83,7 +79,7 @@ typeCheckerBody' x = do
     DeclStm (Decl decMode declList _ ) -> do
       mapM_ typeCheckerDeclaration declList
       get
-    Block body@(FunBlock (POpenGraph ((l,c), name)) _ _) -> typeCheckerBody (createId l c name) body
+    Block body@(BodyBlock (POpenGraph ((l,c), name)) _ _) -> typeCheckerBody (createId l c name) body
   get
 
 typeCheckerStatement statement = case statement of

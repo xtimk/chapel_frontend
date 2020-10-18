@@ -188,7 +188,7 @@ transParam x = case x of
   ParWMode mode pidents pcolon type_ -> failure x
 transBody :: Body -> Result
 transBody x = case x of
-  FunBlock popengraph bodystatements pclosegraph -> failure x
+  BodyBlock popengraph bodystatements pclosegraph -> failure x
 transBodyStatement :: BodyStatement -> Result
 transBodyStatement x = case x of
   Stm statement -> failure x

@@ -127,7 +127,7 @@ FunParams.      FunctionParams ::= POpenParenthesis [Param] PCloseParenthesis ;
 ParNoMode.     Param ::= [PIdent] PColon Type ;
 ParWMode.      Param  ::= Mode [PIdent] PColon Type ;
 
-FunBlock.       Body ::= POpenGraph [BodyStatement] PCloseGraph ;
+BodyBlock.       Body ::= POpenGraph [BodyStatement] PCloseGraph ;
 
 [].       [BodyStatement] ::= ;
 (:).      [BodyStatement] ::= BodyStatement [BodyStatement];
