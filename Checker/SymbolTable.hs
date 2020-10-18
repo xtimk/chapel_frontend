@@ -19,7 +19,7 @@ data Parameter =
 data Mode = Ref | Out | Name | In
  deriving (Show)
 
-data Type = Int | Real | Bool | Void | NotDeclared | Error 
+data Type = Int | Real | Bool | Void | NotDeclared | Error  
   deriving (Show)
 
 data Type' = Int' | Real' | Error' ErrorType

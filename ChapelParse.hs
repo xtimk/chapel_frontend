@@ -82,9 +82,6 @@ parseTest filepath = do
                    putStrLn "\n\n ** After Type Checker **\n\n"
                    print (evalState (typeChecker tree) startState)
 
-                   putStrLn "\n\n ** ENV **"
-                   print (getEnv (evalState (typeChecker tree) startState))
-
                    putStrLn "\n\n ** SYMBOL TABLE **"
                    print (getSymTable (evalState (typeChecker tree) startState))
 
@@ -94,7 +91,6 @@ parseTest filepath = do
                    exitSuccess
 
 
-getSymTable (_,_,x,_,_) = x
-getEnv (_,x,_,_,_) = x
-getTree (_,_,_,x,_) = x
+getSymTable (x,_,_) = x
+getTree (_,x,_) = x
 

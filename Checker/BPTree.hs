@@ -17,7 +17,7 @@ data BP = BP {
     statements :: [Statement]
 } deriving (Show)
 
-findNodeById searchedId tree = findNode (bst2list tree)
+findNodeById searchedId tree = findNode (bp2list tree)
     where
         findNode [] = Checker.BPTree.Void
         findNode (Checker.BPTree.Void:xs) = findNode xs
@@ -57,8 +57,32 @@ gotoParent tree (Node id val parent children) = case parent of
 
 
 
-bst2list = bsttolist []
+getVarType (PIdent ((l,c), identifier)) (sym, tree, currentNode) = getVarType' (reverse (bpPathToList currentNode (updateTree(setSymbolTable sym tree) tree)))
     where
-        bsttolist xs Checker.BPTree.Void = xs
-        bsttolist xs x@(Node _ _ _ []) = x:xs
-        bsttolist xs x@(Node _ _ _ children) =  x : concatMap (bsttolist xs) children
+        getVarType' [] = Checker.SymbolTable.Error
+        getVarType' ((Node _ (BP actualSym _) _ _):xs) = case DMap.lookup (l,c) actualSym of
+            Just (_,Variable _ t) -> t
+            Just (_,Function _ _ t) -> t
+            Nothing -> getVarType' xs
+
+
+bpPathToList = bpPathToList' []     
+    where
+        bpPathToList' xs searchId  tree@(Node id val parent []) = if id == searchId 
+            then tree:xs
+            else []
+        bpPathToList' xs searchId tree@(Node id val parent children) = if id == searchId 
+            then tree:xs
+            else bpTakeGoodPath (map (bpPathToList' (tree:xs) searchId  ) children)
+                where
+                    bpTakeGoodPath [] = []
+                    bpTakeGoodPath (x:xs) = if null x
+                        then bpTakeGoodPath xs
+                        else x
+
+
+bp2list = bpttolist []
+    where
+        bpttolist xs Checker.BPTree.Void = xs
+        bpttolist xs x@(Node _ _ _ []) = x:xs
+        bpttolist xs x@(Node _ _ _ children) =  x : concatMap (bpttolist xs) children
