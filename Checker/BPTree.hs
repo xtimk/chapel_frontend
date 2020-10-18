@@ -1,6 +1,7 @@
 module Checker.BPTree where
 
 import Checker.SymbolTable
+import AbsChapel
 
 data BPTree a = Void | Node {
     id :: String,
@@ -11,7 +12,7 @@ data BPTree a = Void | Node {
 
 data BP = BP {
     symboltable :: SymbolTable,
-    statemets :: [String]
+    statemets :: [Statement]
 } deriving (Show)
 
 findNodeById searchedId tree@(Node id val parentID children) = 

@@ -13,7 +13,7 @@ import SkelChapel
 import PrintChapel
 import AbsChapel
 import qualified Data.Map as DMap
-import TypeChecker
+import Checker.TypeChecker
 import Control.Monad.Trans.State
 
 
