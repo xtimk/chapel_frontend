@@ -64,7 +64,7 @@ typeCheckerBody identifier (FunBlock  _ xs _  ) = do
 
   (depth, env, _sym, tree, current_id) <- get
   let actualNode = findNodeById current_id tree in
-    put (depth, env, _sym, (addChild actualNode (createChild identifier tree) tree), identifier)
+    put (depth, env, _sym, (addChild actualNode (createChild identifier actualNode) tree), identifier)
   typeIncreaseLevel xs
 
   mapM_ typeCheckerBody' xs

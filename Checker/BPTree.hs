@@ -27,8 +27,8 @@ getParentID (Node id val parentID children) = parentID
 
 addChild actualNode@(Node idActual val parentId childrenActualNode) childNodeToAdd Void = Void
 addChild actualNode@(Node idActual val parentId childrenActualNode) childNodeToAdd entireTree@(Node idEntire _a _b children)  = case idEntire == idActual of
-    True -> Node idActual val parentId (childNodeToAdd:childrenActualNode)
-    otherwise -> Node idActual _a _b (map (addChild actualNode childNodeToAdd) children)
+    True -> Node idActual val parentId (reverse (childNodeToAdd:childrenActualNode))
+    otherwise -> Node idEntire _a _b (map (addChild actualNode childNodeToAdd) children)
 
 createChild identifier tree@(Node id val parent children) = Checker.BPTree.Node {Checker.BPTree.id = identifier, 
                                                                    parentID = Just id, 
