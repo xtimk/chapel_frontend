@@ -41,7 +41,7 @@ typeCheckerExt (x:xs) = case x of
     ExtDecl (Decl decMode declList _ ) -> do
         mapM_ typeCheckerDeclaration declList
         typeCheckerExt xs
-    ExtFun (FunDec (PProc ((l,c),funname)  ) signature body) -> do
+    ExtFun (FunDec (PProc ((l,c),funname) ) signature body) -> do
         typeCheckerSignature signature
         typeCheckerBody (createId l c funname) body
         typeCheckerExt xs
@@ -82,26 +82,26 @@ typeCheckerBody' x = do
     DeclStm (Decl decMode declList _ ) -> do
       mapM_ typeCheckerDeclaration declList
       get
-    Block body -> typeCheckerBody "a" body
+    Block body@(FunBlock (POpenGraph ((l,c), name)) _ _) -> typeCheckerBody (createId l c name) body
   get
 
 typeCheckerStatement statement = case statement of
-  DoWhile _do _while body guard -> do
-    typeCheckerBody "a" body
+  DoWhile (Pdo ((l,c),name)) _while body guard -> do
+    typeCheckerBody (createId l c name) body
     typeCheckerGuard guard
     get
-  While _while guard body -> do
+  While (PWhile ((l,c), name)) guard body -> do
     typeCheckerGuard guard
-    typeCheckerBody "a" body
+    typeCheckerBody (createId l c name) body
     get
-  If _if guard _then body -> do
+  If (PIf ((l,c), name)) guard _then body -> do
     typeCheckerGuard guard
-    typeCheckerBody "a" body
+    typeCheckerBody (createId l c name) body
     get
-  IfElse _if guard _then bodyIf _else bodyElse -> do
+  IfElse (PIf ((lIf,cIf), nameIf)) guard _then bodyIf (PElse ((lElse,cElse), nameElse)) bodyElse -> do
     typeCheckerGuard guard
-    typeCheckerBody "a" bodyIf
-    typeCheckerBody "a" bodyElse
+    typeCheckerBody (createId lIf cIf nameIf) bodyIf
+    typeCheckerBody (createId lElse cElse nameElse) bodyElse
     get
   StExp exp@(EAss e1 eqsym e2) _semicolon -> do
     case (isExpVar e1) of
