@@ -87,9 +87,14 @@ parseTest filepath = do
 
                    putStrLn "\n\n ** SYMBOL TABLE **"
                    print (getSymTable (evalState (typeChecker tree) startState))
+
+                   putStrLn "\n\n ** TREE **"
+                   print (getTree (evalState (typeChecker tree) startState))
+
                    exitSuccess
 
 
-getSymTable (_,_,x) = x
-getEnv (_,x,_) = x
+getSymTable (_,_,x,_,_) = x
+getEnv (_,x,_,_,_) = x
+getTree (_,_,_,x,_) = x
 
