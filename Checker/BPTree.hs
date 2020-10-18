@@ -72,7 +72,7 @@ getVarType (PIdent ((l,c), identifier)) (sym, tree, currentNode) =
         case DMap.lookup identifier symtable of
             Just (_,Variable _ t) -> t
             Just (_,Function _ _ t) -> t
-            Nothing -> Checker.SymbolTable.ErrorFackocero
+            Nothing -> Checker.SymbolTable.ErrorVarNotDeclared (l,c) identifier
 
 bpPathToList = bpPathToList' []     
     where
