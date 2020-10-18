@@ -17,7 +17,7 @@ initVarError = ErrorInitExpr
 
 --type MonState = State EnvEntry 
 
-startState = (0, DMap.insert 0 DMap.empty DMap.empty, DMap.empty, Checker.BPTree.Node {Checker.BPTree.id = "0", val = "tregt", parentID = Nothing, children = []}, "0")
+startState = (0, DMap.insert 0 DMap.empty DMap.empty, DMap.empty, Checker.BPTree.Node {Checker.BPTree.id = "0", val = BP {symboltable = DMap.empty, statements = []}, parentID = Nothing, children = []}, "0")
 
 
 typeChecker (Progr p) = typeCheckerModule p
@@ -62,14 +62,20 @@ typeDecreaseLevel _ = do
   put (depth - 1, env, _sym, _tree, _current_id)  
 
 typeCheckerBody identifier (BodyBlock  _ xs _  ) = do
+  -- create new child for the blk and enter in it
   (depth, env, _sym, tree, current_id) <- get
   let actualNode = findNodeById current_id tree in
-    put (depth, env, _sym, addChild actualNode (createChild identifier actualNode) tree, identifier)
+    put (depth, env, DMap.empty, addChild actualNode (createChild identifier actualNode) tree, identifier)
   typeIncreaseLevel xs
+  -- process body
   mapM_ typeCheckerBody' xs
   typeDecreaseLevel xs
-  (depth, env, _sym, tree, _) <- get
-  put (depth, env, _sym, tree, current_id)
+  -- exit from child and return to parent
+  (depth, env, sym, tree, actual_id) <- get
+  -- putStrLn actual_id
+  let actualTree = findNodeById actual_id tree in
+    put (depth, env, DMap.empty, updateTree (setSymbolTable sym actualTree) tree, current_id)
+    -- put (depth, env, DMap.empty, tree, current_id)
   get
 
 typeCheckerBody' x = do

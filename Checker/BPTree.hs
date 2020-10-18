@@ -3,6 +3,8 @@ module Checker.BPTree where
 import Checker.SymbolTable
 import AbsChapel
 
+import qualified Data.Map as DMap
+
 data BPTree a = Void | Node {
     id :: String,
     val :: a,
@@ -12,7 +14,7 @@ data BPTree a = Void | Node {
 
 data BP = BP {
     symboltable :: SymbolTable,
-    statemets :: [Statement]
+    statements :: [Statement]
 } deriving (Show)
 
 findNodeById searchedId tree@(Node id val parentID children) = if searchedId == id 
@@ -21,6 +23,18 @@ findNodeById searchedId tree@(Node id val parentID children) = if searchedId == 
 
 getParentID (Node id val parentID children) = parentID
 
+setSymbolTable sym tree@(Node id (BP _ statements) parent children) = Checker.BPTree.Node {Checker.BPTree.id = id,
+                                                                   val = BP {symboltable = sym, statements = statements}, 
+                                                                   parentID = parent, 
+                                                                   children = children}
+
+updateTree _ Void = Void
+updateTree actualNode@(Node idActual val parentId childrenActualNode) entireTree@(Node idEntire _a _b children) = if idEntire == idActual
+    then actualNode
+    else Node idEntire _a _b (map (updateTree actualNode) children)
+
+
+
 addChild actualNode@(Node idActual val parentId childrenActualNode) childNodeToAdd Void = Void
 addChild actualNode@(Node idActual val parentId childrenActualNode) childNodeToAdd entireTree@(Node idEntire _a _b children)  = if idEntire == idActual
     then Node idActual val parentId (reverse (childNodeToAdd:childrenActualNode))
@@ -28,7 +42,7 @@ addChild actualNode@(Node idActual val parentId childrenActualNode) childNodeToA
 
 createChild identifier tree@(Node id val parent children) = Checker.BPTree.Node {Checker.BPTree.id = identifier, 
                                                                    parentID = Just id, 
-                                                                   val = "fun", 
+                                                                   val = BP {symboltable = DMap.empty, statements = []}, 
                                                                    children = []}
 
 gotoParent tree (Node id val parent children) = case parent of
