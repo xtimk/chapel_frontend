@@ -17,9 +17,29 @@ data BP = BP {
     statements :: [Statement]
 } deriving (Show)
 
-findNodeById searchedId tree@(Node id val parentID children) = if searchedId == id 
-    then tree
-    else head $ map (findNodeById searchedId) children
+
+--findNodeById searchedId tree@(Node id val parentID []) = if searchedId == id 
+--    then tree
+--    else Void
+--findNodeById searchedId tree@(Node id val parentID children) = if searchedId == id 
+--    then tree
+--    else foldr goodNode Void children
+
+--goodNode first second = case (first,second) of
+--    (Void,Void) -> Void
+--    (Void,y) -> y
+--    (x,Void) -> x
+--    (x,y) -> x
+
+findNodeById searchedId tree = findNode (bst2list tree)
+    where
+        findNode [] = Void
+        findNode (Void:xs) = findNode xs
+        findNode (actualNode@(Node idActual val parentId childrenActualNode):xs) = if searchedId == idActual
+            then actualNode
+            else findNode xs
+
+    
 
 getParentID (Node id val parentID children) = parentID
 
@@ -48,3 +68,11 @@ createChild identifier tree@(Node id val parent children) = Checker.BPTree.Node 
 gotoParent tree (Node id val parent children) = case parent of
     Nothing -> Void
     Just parentReal -> findNodeById parentReal tree
+
+
+
+bst2list = bsttolist []
+    where
+        bsttolist xs Void = xs
+        bsttolist xs x@(Node _ _ _ []) = x:xs
+        bsttolist xs x@(Node _ _ _ children) =  x : concatMap (bsttolist xs) children
