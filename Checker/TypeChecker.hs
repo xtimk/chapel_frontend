@@ -55,8 +55,13 @@ typeCheckerExt (x:xs) = case x of
 
 
 typeCheckerSignature signature = case signature of
-  SignNoRet identifier (FunParams _ params _) -> get
-  SignWRet identifier (FunParams _ params _) _ types -> get
+  SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' identifier params NotDeclared
+  SignWRet identifier (FunParams _ params _) _ types -> typeCheckerSignature' identifier params (convertTypeSpecToTypeInferred types)
+
+typeCheckerSignature' (PIdent ((line,column),identifier)) params types = do
+  (depth, env, symtable, tree, current_id) <- get
+  put (depth, DMap.insert depth (DMap.insert identifier (Variable (line,column) types) (getDepthMap (depth, env, symtable, tree))) env, DMap.insert (line,column) (identifier, Function (line,column) [] types) symtable, tree, current_id )
+  get
 
 typeIncreaseLevel _ = do
   (depth, env, _sym, _tree, _current_id) <- get
