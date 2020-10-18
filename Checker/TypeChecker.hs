@@ -7,6 +7,7 @@ import AbsChapel
 import Checker.SymbolTable
 import Checker.BPTree
 import Data.Maybe
+import Debug.Trace
 
 --type Env = DMap.Map PIdent EnvEntry
 
@@ -30,7 +31,11 @@ typeCheckerModule (Mod m) = typeCheckerExt m
 -- implementare stato che e' una coppia del tipo (Data.Map(quella di prima), abstract syntax arricchito con info di tipo)
 createId l c name = show l ++ "_" ++ show c ++ "_" ++ name
 
-typeCheckerExt [] = get
+typeCheckerExt [] = do 
+  (depth, env, sym, tree, actual_id) <- get
+  let actualTree = findNodeById actual_id tree in
+    put (depth, env, DMap.empty, updateTree (setSymbolTable sym actualTree) tree, actual_id)
+  get
 -- implementato solo il typechecker per le dichiarazioni globali, manca tutta la parte di fun
 -- alcuni dettagli sulle due map:
 -- 1) (map convertTypeSpecToTypeInferred types) fa semplicemente una traduzione dai tipi Tint.. messi dal parser in tipi Int.. del typechecker
@@ -72,9 +77,9 @@ typeCheckerBody identifier (BodyBlock  _ xs _  ) = do
   typeDecreaseLevel xs
   -- exit from child and return to parent
   (depth, env, sym, tree, actual_id) <- get
-  -- putStrLn actual_id
+  -- traceIO tree
   let actualTree = findNodeById actual_id tree in
-    put (depth, env, DMap.empty, updateTree (setSymbolTable sym actualTree) tree, current_id)
+    put (depth, env, _sym, updateTree (setSymbolTable sym actualTree) tree, current_id)
     -- put (depth, env, DMap.empty, tree, current_id)
   get
 
@@ -113,15 +118,15 @@ typeCheckerStatement statement = case statement of
         case typeCheckerExpression env (EAss e1 eqsym e2) of
           Error -> do 
             (d,e,sym, tree, current_id) <- get
-            put (d,e, DMap.insert (getVarPos e1) (getVarId e1, Variable (getVarPos e1) Error) sym, tree, current_id )
+            -- put (d,e, DMap.insert (getVarPos e1) (getVarId e1, Variable (getVarPos e1) Error) sym, tree, current_id )
             get
           otherwhise -> do
             (d,e,sym, tree, current_id) <- get
-            put (d,e, DMap.insert (getVarPos e1) (getVarId e1, Variable (getVarPos e1) otherwhise) sym, tree, current_id )
+            -- put (d,e, DMap.insert (getVarPos e1) (getVarId e1, Variable (getVarPos e1) otherwhise) sym, tree, current_id )
             get
       else do -- caso di lvalue non var
         (d,e,sym, tree, current_id) <- get
-        put (d,e, DMap.insert (getAssignOpPos eqsym) (getAssignOpTok eqsym, Assignm (getAssignOpPos eqsym) Error) sym, tree, current_id )
+        -- put (d,e, DMap.insert (getAssignOpPos eqsym) (getAssignOpTok eqsym, Assignm (getAssignOpPos eqsym) Error) sym, tree, current_id )
         get
   RetVal {} -> get
   RetVoid {} -> get
