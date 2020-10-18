@@ -17,20 +17,6 @@ data BP = BP {
     statements :: [Statement]
 } deriving (Show)
 
-
---findNodeById searchedId tree@(Node id val parentID []) = if searchedId == id 
---    then tree
---    else Void
---findNodeById searchedId tree@(Node id val parentID children) = if searchedId == id 
---    then tree
---    else foldr goodNode Void children
-
---goodNode first second = case (first,second) of
---    (Void,Void) -> Void
---    (Void,y) -> y
---    (x,Void) -> x
---    (x,y) -> x
-
 findNodeById searchedId tree = findNode (bst2list tree)
     where
         findNode [] = Void
