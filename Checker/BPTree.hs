@@ -15,20 +15,16 @@ data BP = BP {
     statemets :: [Statement]
 } deriving (Show)
 
-findNodeById searchedId tree@(Node id val parentID children) = 
---    case searchedId of 
---        Just anId -> 
-            case searchedId == id of
-                True -> tree
-                otherwhise -> head $ map (findNodeById searchedId) children
---        Nothing -> Void
+findNodeById searchedId tree@(Node id val parentID children) = if searchedId == id 
+    then tree
+    else head $ map (findNodeById searchedId) children
 
 getParentID (Node id val parentID children) = parentID
 
 addChild actualNode@(Node idActual val parentId childrenActualNode) childNodeToAdd Void = Void
-addChild actualNode@(Node idActual val parentId childrenActualNode) childNodeToAdd entireTree@(Node idEntire _a _b children)  = case idEntire == idActual of
-    True -> Node idActual val parentId (reverse (childNodeToAdd:childrenActualNode))
-    otherwise -> Node idEntire _a _b (map (addChild actualNode childNodeToAdd) children)
+addChild actualNode@(Node idActual val parentId childrenActualNode) childNodeToAdd entireTree@(Node idEntire _a _b children)  = if idEntire == idActual
+    then Node idActual val parentId (reverse (childNodeToAdd:childrenActualNode))
+    else Node idEntire _a _b (map (addChild actualNode childNodeToAdd) children)
 
 createChild identifier tree@(Node id val parent children) = Checker.BPTree.Node {Checker.BPTree.id = identifier, 
                                                                    parentID = Just id, 

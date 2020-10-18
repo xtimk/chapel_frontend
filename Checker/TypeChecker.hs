@@ -6,6 +6,7 @@ import qualified Data.Map as DMap
 import AbsChapel
 import Checker.SymbolTable
 import Checker.BPTree
+import Data.Maybe
 
 --type Env = DMap.Map PIdent EnvEntry
 
@@ -16,7 +17,7 @@ initVarError = ErrorInitExpr
 
 --type MonState = State EnvEntry 
 
-startState = (0, (DMap.insert 0 DMap.empty DMap.empty), DMap.empty, Checker.BPTree.Node {Checker.BPTree.id = "0", val = "tregt", parentID = Nothing, children = []}, "0")
+startState = (0, DMap.insert 0 DMap.empty DMap.empty, DMap.empty, Checker.BPTree.Node {Checker.BPTree.id = "0", val = "tregt", parentID = Nothing, children = []}, "0")
 
 
 typeChecker (Progr p) = typeCheckerModule p
@@ -64,7 +65,7 @@ typeCheckerBody identifier (FunBlock  _ xs _  ) = do
 
   (depth, env, _sym, tree, current_id) <- get
   let actualNode = findNodeById current_id tree in
-    put (depth, env, _sym, (addChild actualNode (createChild identifier actualNode) tree), identifier)
+    put (depth, env, _sym, addChild actualNode (createChild identifier actualNode) tree, identifier)
   typeIncreaseLevel xs
 
   mapM_ typeCheckerBody' xs
@@ -103,25 +104,25 @@ typeCheckerStatement statement = case statement of
     typeCheckerBody (createId lIf cIf nameIf) bodyIf
     typeCheckerBody (createId lElse cElse nameElse) bodyElse
     get
-  StExp exp@(EAss e1 eqsym e2) _semicolon -> do
-    case (isExpVar e1) of
-      True -> do
+  StExp exp@(EAss e1 eqsym e2) _semicolon ->
+    if isExpVar e1
+      then do
         env <- get
-        case (typeCheckerExpression env (EAss e1 eqsym e2)) of
+        case typeCheckerExpression env (EAss e1 eqsym e2) of
           Error -> do 
             (d,e,sym, tree, current_id) <- get
-            put (d,e, DMap.insert (getVarPos e1) (getVarId e1, (Variable (getVarPos e1) Error)) sym, tree, current_id )
+            put (d,e, DMap.insert (getVarPos e1) (getVarId e1, Variable (getVarPos e1) Error) sym, tree, current_id )
             get
           otherwhise -> do
             (d,e,sym, tree, current_id) <- get
-            put (d,e, DMap.insert (getVarPos e1) (getVarId e1, (Variable (getVarPos e1) otherwhise)) sym, tree, current_id )
+            put (d,e, DMap.insert (getVarPos e1) (getVarId e1, Variable (getVarPos e1) otherwhise) sym, tree, current_id )
             get
-      False -> do -- caso di lvalue non var
+      else do -- caso di lvalue non var
         (d,e,sym, tree, current_id) <- get
-        put (d,e, DMap.insert (getAssignOpPos eqsym) (getAssignOpTok eqsym, (Assignm (getAssignOpPos eqsym) Error)) sym, tree, current_id )
+        put (d,e, DMap.insert (getAssignOpPos eqsym) (getAssignOpTok eqsym, Assignm (getAssignOpPos eqsym) Error) sym, tree, current_id )
         get
-  RetVal _ _ _ -> get
-  RetVoid _ _ -> get
+  RetVal {} -> get
+  RetVoid {} -> get
 
       
 
@@ -144,7 +145,7 @@ getAssignOpTok op = case op of
 
 typeCheckerGuard (SGuard _ expression _) = do
   (depth, env, _sym, _tree, current_id) <- get
-  case (typeCheckerExpression (depth, env,_sym, _tree, current_id) expression) of
+  case typeCheckerExpression (depth, env,_sym, _tree, current_id) expression of
     Bool -> get -- questo dovrebbe essere l'unico caso accettato, se expression non e' bool devo segnalarlo come errore
     _ -> get
 
@@ -186,7 +187,7 @@ typeCheckerIdentifiersWithExpression identifiers types exp = do
 -- typechecking nel caso di dichiarazioni senza inizializzazione
 typeCheckerIdentifier types (PIdent ((line,column), identifier)) = do
   (depth, env, symtable, tree, current_id) <- get
-  put (depth, DMap.insert depth (DMap.insert identifier (Variable (line,column) types) (getDepthMap (depth, env, symtable, tree))) env, DMap.insert (line,column) (identifier, (Variable (line,column) types)) symtable, tree, current_id )
+  put (depth, DMap.insert depth (DMap.insert identifier (Variable (line,column) types) (getDepthMap (depth, env, symtable, tree))) env, DMap.insert (line,column) (identifier, Variable (line,column) types) symtable, tree, current_id )
   get
 
 typeCheckerExpression environment@(depth, env, _sym, _tree, current_id) expression = case expression of
@@ -209,9 +210,7 @@ typeCheckerExpression environment@(depth, env, _sym, _tree, current_id) expressi
 --    env <-get
 --    put (DMap.insert name (Variable (l,c) ((supdecl t (typeOf env expr)):[]) ) env)
 --    get
-getDepthMap (depth,env, _sym, _tree) = case DMap.lookup depth env of
-  Just envDepth -> envDepth
-  Nothing -> DMap.empty
+getDepthMap (depth,env, _sym, _tree) = Data.Maybe.fromMaybe DMap.empty (DMap.lookup depth env)
 
 getVarType var (0,env, _sym, _tree, current_id) = case DMap.lookup 0 env of
   Just variables -> case DMap.lookup var variables of
