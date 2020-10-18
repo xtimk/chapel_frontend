@@ -1427,7 +1427,7 @@ happyReduction_79 happy_x_3
 	case happyOut65 happy_x_2 of { (HappyWrap65 happy_var_2) -> 
 	case happyOut5 happy_x_3 of { (HappyWrap5 happy_var_3) -> 
 	happyIn64
-		 (AbsChapel.FunBlock happy_var_1 (reverse happy_var_2) happy_var_3
+		 (AbsChapel.BodyBlock happy_var_1 (reverse happy_var_2) happy_var_3
 	)}}}
 
 happyReduce_80 = happySpecReduce_0  61# happyReduction_80

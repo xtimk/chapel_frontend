@@ -182,7 +182,7 @@ data Param
     | ParWMode Mode [PIdent] PColon Type
   deriving (Eq, Ord, Show, Read)
 
-data Body = FunBlock POpenGraph [BodyStatement] PCloseGraph
+data Body = BodyBlock POpenGraph [BodyStatement] PCloseGraph
   deriving (Eq, Ord, Show, Read)
 
 data BodyStatement

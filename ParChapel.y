@@ -238,7 +238,7 @@ Param :: { Param }
 Param : ListPIdent PColon Type { AbsChapel.ParNoMode $1 $2 $3 }
       | Mode ListPIdent PColon Type { AbsChapel.ParWMode $1 $2 $3 $4 }
 Body :: { Body }
-Body : POpenGraph ListBodyStatement PCloseGraph { AbsChapel.FunBlock $1 (reverse $2) $3 }
+Body : POpenGraph ListBodyStatement PCloseGraph { AbsChapel.BodyBlock $1 (reverse $2) $3 }
 ListBodyStatement :: { [BodyStatement] }
 ListBodyStatement : {- empty -} { [] }
                   | ListBodyStatement BodyStatement { flip (:) $1 $2 }

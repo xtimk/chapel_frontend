@@ -306,7 +306,7 @@ instance Print AbsChapel.Param where
 
 instance Print AbsChapel.Body where
   prt i e = case e of
-    AbsChapel.FunBlock popengraph bodystatements pclosegraph -> prPrec i 0 (concatD [prt 0 popengraph, prt 0 bodystatements, prt 0 pclosegraph])
+    AbsChapel.BodyBlock popengraph bodystatements pclosegraph -> prPrec i 0 (concatD [prt 0 popengraph, prt 0 bodystatements, prt 0 pclosegraph])
 
 instance Print [AbsChapel.BodyStatement] where
   prt = prtList
