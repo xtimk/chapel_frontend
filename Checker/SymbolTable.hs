@@ -2,7 +2,7 @@ module Checker.SymbolTable where
 import Data.Map
 
 
-type SymbolTable = Map String EnvEntry
+type SymbolTable = Map (Int, Int) (String, EnvEntry)
 
 
 data EnvEntry = 
