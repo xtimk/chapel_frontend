@@ -19,7 +19,7 @@ data Parameter =
 data Mode = Ref | Out | Name | In
  deriving (Show)
 
-data Type = Int | Real | Bool | Void | NotDeclared | Error | ErrorFackocero
+data Type = Int | Real | Bool | Void | NotDeclared | Error | ErrorVarNotDeclared Loc String | ErrorIncompatibleTypes Type Type
   deriving (Show)
 
 data Type' = Int' | Real' | Error' ErrorType
