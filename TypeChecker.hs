@@ -16,7 +16,7 @@ initVarError = ErrorInitExpr
 
 --type MonState = State EnvEntry 
 
-startState = (0, (DMap.insert 0 DMap.empty DMap.empty), DMap.empty)
+startState = (0, (DMap.insert 0 DMap.empty DMap.empty), DMap.empty, Checker.BPTree.Node {Checker.BPTree.id = "0", val = "tregt", parentID = Nothing, children = []}, "0")
 
 
 typeChecker (Progr p) = typeCheckerModule p
@@ -27,71 +27,81 @@ typeCheckerModule (Mod m) = typeCheckerExt m
 -- usa la state monad per memorizzare info sui tipi di variabile
 -- da fare: al posto dello stato contenente solo la Data.Map var -> tipo
 -- implementare stato che e' una coppia del tipo (Data.Map(quella di prima), abstract syntax arricchito con info di tipo)
+createId l c name = show l ++ "_" ++ show c ++ "_" ++ name
+
 typeCheckerExt [] = get
 -- implementato solo il typechecker per le dichiarazioni globali, manca tutta la parte di fun
 -- alcuni dettagli sulle due map:
 -- 1) (map convertTypeSpecToTypeInferred types) fa semplicemente una traduzione dai tipi Tint.. messi dal parser in tipi Int.. del typechecker
 -- il campo declList e' una lista che contiene gli elem x,y,z=3 o x,y,z:int=5
 -- dato che questi sono tutti di tipo int posso iterare facilmente usando una mapM_ (non map perche' ci sono le monadi di mezzo)
+
+
 typeCheckerExt (x:xs) = case x of
     ExtDecl (Decl decMode declList _ ) -> do
         mapM_ typeCheckerDeclaration declList
         typeCheckerExt xs
-    ExtFun (FunDec _ signature (FunBlock _ statements _ )) -> do
+    ExtFun (FunDec (PProc ((l,c),funname)  ) signature body) -> do
         typeCheckerSignature signature
-        --typeIncreaseLevel statements
-        mapM_ typeCheckerBody' statements
-        --typeDecreaseLevel statements
+        typeCheckerBody (createId l c funname) body
         typeCheckerExt xs
+
+
 
 typeCheckerSignature signature = case signature of
   SignNoRet identifier (FunParams _ params _) -> get
   SignWRet identifier (FunParams _ params _) _ types -> get
 
 typeIncreaseLevel _ = do
-  (depth, env, _sym) <- get
-  put (depth + 1, env, _sym)
+  (depth, env, _sym, _tree, _current_id) <- get
+  put (depth + 1, env, _sym, _tree, _current_id)
 
 typeDecreaseLevel _ = do
-  (depth, env, _sym) <- get
-  put (depth - 1, env, _sym)  
+  (depth, env, _sym, _tree, _current_id) <- get
+  put (depth - 1, env, _sym, _tree, _current_id)  
 
-typeCheckerBody [] = get
-typeCheckerBody (x:xs) = do
-  typeCheckerBody' x
-  typeCheckerBody xs
+typeCheckerBody identifier (FunBlock  _ xs _  ) = do
+
+  (depth, env, _sym, tree, current_id) <- get
+  let actualNode = findNodeById current_id tree in
+    put (depth, env, _sym, (addChild actualNode (createChild identifier tree) tree), identifier)
+  typeIncreaseLevel xs
+
+  mapM_ typeCheckerBody' xs
+
+  typeDecreaseLevel xs
+  (depth, env, _sym, tree, _) <- get
+  put (depth, env, _sym, tree, current_id)
+
   get
 
-
 typeCheckerBody' x = do
-  typeIncreaseLevel x
   case x of
     Stm statement -> typeCheckerStatement statement
     Fun _ _ -> get
     DeclStm (Decl decMode declList _ ) -> do
       mapM_ typeCheckerDeclaration declList
       get
-    Block (FunBlock _ statements _ ) -> typeCheckerBody statements
-  typeDecreaseLevel x
+    Block body -> typeCheckerBody "a" body
   get
 
 typeCheckerStatement statement = case statement of
-  DoWhile _do _while (FunBlock _ bodyStatements _) guard -> do
-    mapM_ typeCheckerBody' bodyStatements
+  DoWhile _do _while body guard -> do
+    typeCheckerBody "a" body
     typeCheckerGuard guard
     get
-  While _while guard (FunBlock _ bodyStatements _) -> do
+  While _while guard body -> do
     typeCheckerGuard guard
-    mapM_ typeCheckerBody' bodyStatements
+    typeCheckerBody "a" body
     get
-  If _if guard _then (FunBlock _ bodyStatements _) -> do
+  If _if guard _then body -> do
     typeCheckerGuard guard
-    mapM_ typeCheckerBody' bodyStatements
+    typeCheckerBody "a" body
     get
-  IfElse _if guard _then (FunBlock _ bodyIfStatements _) _else (FunBlock _ bodyElseStatements _) -> do
+  IfElse _if guard _then bodyIf _else bodyElse -> do
     typeCheckerGuard guard
-    mapM_ typeCheckerBody' bodyIfStatements
-    mapM_ typeCheckerBody' bodyElseStatements
+    typeCheckerBody "a" bodyIf
+    typeCheckerBody "a" bodyElse
     get
   StExp exp@(EAss e1 eqsym e2) _semicolon -> do
     case (isExpVar e1) of
@@ -99,16 +109,16 @@ typeCheckerStatement statement = case statement of
         env <- get
         case (typeCheckerExpression env (EAss e1 eqsym e2)) of
           Error -> do 
-            (d,e,sym) <- get
-            put (d,e, DMap.insert (getVarPos e1) (getVarId e1, (Variable (getVarPos e1) Error)) sym )
+            (d,e,sym, tree, current_id) <- get
+            put (d,e, DMap.insert (getVarPos e1) (getVarId e1, (Variable (getVarPos e1) Error)) sym, tree, current_id )
             get
           otherwhise -> do
-            (d,e,sym) <- get
-            put (d,e, DMap.insert (getVarPos e1) (getVarId e1, (Variable (getVarPos e1) otherwhise)) sym )
+            (d,e,sym, tree, current_id) <- get
+            put (d,e, DMap.insert (getVarPos e1) (getVarId e1, (Variable (getVarPos e1) otherwhise)) sym, tree, current_id )
             get
       False -> do -- caso di lvalue non var
-        (d,e,sym) <- get
-        put (d,e, DMap.insert (getAssignOpPos eqsym) (getAssignOpTok eqsym, (Assignm (getAssignOpPos eqsym) Error)) sym )
+        (d,e,sym, tree, current_id) <- get
+        put (d,e, DMap.insert (getAssignOpPos eqsym) (getAssignOpTok eqsym, (Assignm (getAssignOpPos eqsym) Error)) sym, tree, current_id )
         get
   RetVal _ _ _ -> get
   RetVoid _ _ -> get
@@ -133,8 +143,8 @@ getAssignOpTok op = case op of
   (AssgnPlEq (PAssignmPlus ((l,c),t))) -> t
 
 typeCheckerGuard (SGuard _ expression _) = do
-  (depth, env, _sym) <- get
-  case (typeCheckerExpression (depth, env,_sym) expression) of
+  (depth, env, _sym, _tree, current_id) <- get
+  case (typeCheckerExpression (depth, env,_sym, _tree, current_id) expression) of
     Bool -> get -- questo dovrebbe essere l'unico caso accettato, se expression non e' bool devo segnalarlo come errore
     _ -> get
 
@@ -175,11 +185,11 @@ typeCheckerIdentifiersWithExpression identifiers types exp = do
 
 -- typechecking nel caso di dichiarazioni senza inizializzazione
 typeCheckerIdentifier types (PIdent ((line,column), identifier)) = do
-  (depth, env, symtable) <- get
-  put (depth, DMap.insert depth (DMap.insert identifier (Variable (line,column) types) (getDepthMap (depth, env, symtable))) env, DMap.insert (line,column) (identifier, (Variable (line,column) types)) symtable )
+  (depth, env, symtable, tree, current_id) <- get
+  put (depth, DMap.insert depth (DMap.insert identifier (Variable (line,column) types) (getDepthMap (depth, env, symtable, tree))) env, DMap.insert (line,column) (identifier, (Variable (line,column) types)) symtable, tree, current_id )
   get
 
-typeCheckerExpression environment@(depth, env, _sym) expression = case expression of
+typeCheckerExpression environment@(depth, env, _sym, _tree, current_id) expression = case expression of
   Eplus e1 plus e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
   Eminus e1 minus e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
   Ediv e1 div e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
@@ -199,22 +209,22 @@ typeCheckerExpression environment@(depth, env, _sym) expression = case expressio
 --    env <-get
 --    put (DMap.insert name (Variable (l,c) ((supdecl t (typeOf env expr)):[]) ) env)
 --    get
-getDepthMap (depth,env, _sym) = case DMap.lookup depth env of
+getDepthMap (depth,env, _sym, _tree) = case DMap.lookup depth env of
   Just envDepth -> envDepth
   Nothing -> DMap.empty
 
-getVarType var (0,env, _sym) = case DMap.lookup 0 env of
+getVarType var (0,env, _sym, _tree, current_id) = case DMap.lookup 0 env of
   Just variables -> case DMap.lookup var variables of
     Just (Variable _ t) -> t
     Nothing -> Error
   Nothing -> Error
-getVarType var (depth,env, _sym) = case DMap.lookup depth env of
+getVarType var (depth,env, _sym, _tree, _current_id) = case DMap.lookup depth env of
   Just variables -> case DMap.lookup var variables of
     Just (Variable _ t) -> t
     Nothing -> case depth of
       0 -> Error
-      _ -> getVarType var (depth - 1, env, _sym)
-  _ -> getVarType var (depth - 1, env, _sym)
+      _ -> getVarType var (depth - 1, env, _sym, _tree, _current_id)
+  _ -> getVarType var (depth - 1, env, _sym, _tree, _current_id)
 
 -- infer del tipo fra due tipi. Da capire meglio cosa fare in caso di errore.
 sup Int Int = Int
