@@ -1,4 +1,4 @@
-module TypeChecker where
+module Checker.TypeChecker where
 
 
 import Control.Monad.Trans.State
