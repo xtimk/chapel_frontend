@@ -2,7 +2,7 @@ module Checker.SymbolTable where
 import Data.Map
 
 
-type SymbolTable = Map (Int, Int) (String, EnvEntry)
+type SymbolTable = Map String (String, EnvEntry)
 
 
 data EnvEntry = 
@@ -19,7 +19,7 @@ data Parameter =
 data Mode = Ref | Out | Name | In
  deriving (Show)
 
-data Type = Int | Real | Bool | Void | NotDeclared | Error  
+data Type = Int | Real | Bool | Void | NotDeclared | Error | ErrorFackocero
   deriving (Show)
 
 data Type' = Int' | Real' | Error' ErrorType

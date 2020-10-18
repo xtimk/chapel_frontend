@@ -2,8 +2,10 @@ module Checker.BPTree where
 
 import Checker.SymbolTable
 import AbsChapel
-
+import Prelude hiding (id)
 import qualified Data.Map as DMap
+
+import Data.List
 
 data BPTree a = Void | Node {
     id :: String,
@@ -57,14 +59,20 @@ gotoParent tree (Node id val parent children) = case parent of
 
 
 
-getVarType (PIdent ((l,c), identifier)) (sym, tree, currentNode) = getVarType' (reverse (bpPathToList currentNode (updateTree(setSymbolTable sym tree) tree)))
-    where
-        getVarType' [] = Checker.SymbolTable.Error
-        getVarType' ((Node _ (BP actualSym _) _ _):xs) = case DMap.lookup (l,c) actualSym of
+-- getVarType (PIdent ((l,c), identifier)) (sym, tree, currentNode) = getVarType' (reverse (bpPathToList currentNode (updateTree(setSymbolTable sym (findNodeById currentNode tree)) tree) ) )
+--     where
+--         getVarType' [] = Checker.SymbolTable.Error
+--         getVarType' ((Node _ (BP actualSym _) _ _):xs) = case DMap.lookup (l,c) actualSym of
+--             Just (_,Variable _ t) -> t
+--             Just (_,Function _ _ t) -> t
+--             Nothing -> getVarType' xs
+
+getVarType (PIdent ((l,c), identifier)) (sym, tree, currentNode) = 
+    let symtable = uniteSymTables (bp2list tree) in
+        case DMap.lookup identifier symtable of
             Just (_,Variable _ t) -> t
             Just (_,Function _ _ t) -> t
-            Nothing -> getVarType' xs
-
+            Nothing -> Checker.SymbolTable.ErrorFackocero
 
 bpPathToList = bpPathToList' []     
     where
@@ -80,6 +88,8 @@ bpPathToList = bpPathToList' []
                         then bpTakeGoodPath xs
                         else x
 
+uniteSymTables [] = DMap.empty
+uniteSymTables ((Node _ (BP sym _) _ _):xs) = DMap.union sym (uniteSymTables xs)
 
 bp2list = bpttolist []
     where

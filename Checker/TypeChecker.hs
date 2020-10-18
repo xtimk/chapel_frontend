@@ -60,7 +60,9 @@ typeCheckerSignature signature = case signature of
 
 typeCheckerSignature' (PIdent ((line,column),identifier)) params types = do
   (symtable, tree, current_id) <- get
-  put (DMap.insert (line,column) (identifier, Function (line,column) [] types) symtable, tree, current_id )
+  put (DMap.insert identifier (identifier, Function (line,column) [] types) symtable, tree, current_id )
+  (symtable, tree, current_id) <- get
+  put (symtable, (updateTree(setSymbolTable symtable (findNodeById current_id tree)) tree), current_id)
   get 
 
 typeCheckerBody identifier (BodyBlock  _ xs _  ) = do
@@ -186,8 +188,12 @@ typeCheckerIdentifiersWithExpression identifiers types exp = do
 -- typechecking nel caso di dichiarazioni senza inizializzazione
 typeCheckerIdentifier types (PIdent ((line,column), identifier)) = do
   (symtable, tree, current_id) <- get
-  put (DMap.insert (line,column) (identifier, Variable (line,column) types) symtable, tree, current_id )
+  put (DMap.insert identifier (identifier, Variable (line,column) types) symtable, tree, current_id )
+  (symtable, tree, current_id) <- get
+  put (symtable, (updateTree(setSymbolTable symtable (findNodeById current_id tree)) tree), current_id)
   get
+
+--(updateTree(setSymbolTable sym tree) tree)
 
 typeCheckerExpression environment@(_sym, _tree, current_id) expression = case expression of
   Eplus e1 plus e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)

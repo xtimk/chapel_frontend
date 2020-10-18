@@ -1,0 +1,5 @@
+var x = 6;
+proc main () : int
+{
+    var x = 8;
+}
