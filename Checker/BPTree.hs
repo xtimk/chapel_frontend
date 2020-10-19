@@ -57,8 +57,6 @@ gotoParent tree (Node id val parent children) = case parent of
     Nothing -> Checker.BPTree.Void
     Just parentReal -> findNodeById parentReal tree
 
-
-
 --getVarType (PIdent ((l,c), identifier)) (sym, tree, currentNode) = getVarType'  (bpPathToList currentNode (updateTree(setSymbolTable sym (findNodeById currentNode tree)) tree) ) 
 --     where
 --         getVarType' [] = Checker.SymbolTable.ErrorVarNotDeclared (l,c) identifier
@@ -68,11 +66,13 @@ gotoParent tree (Node id val parent children) = case parent of
 --             Nothing -> getVarType' xs
 
 getVarType (PIdent ((l,c), identifier)) (sym, tree, currentNode) = 
-    let symtable = uniteSymTables $ reverse (bpPathToList currentNode tree) in
+    let symtable = uniteSymTables $ bpPathToList currentNode tree in
         case DMap.lookup identifier symtable of
             Just (_,Variable _ t) -> t
             Just (_,Function _ _ t) -> t
-            Nothing -> Checker.SymbolTable.ErrorVarNotDeclared (l,c) identifier
+            Nothing -> Checker.SymbolTable.ErrorVarNotDeclared (l,c) identifier            
+
+uniteSymTables = foldr (\y@(Node _ (BP sym _) _ _) x -> DMap.union sym x ) DMap.empty
 
 bpPathToList = bpPathToList' []     
     where
@@ -87,9 +87,6 @@ bpPathToList = bpPathToList' []
                     bpTakeGoodPath (x:xs) = if null x
                         then bpTakeGoodPath xs
                         else x
-
-uniteSymTables [] = DMap.empty
-uniteSymTables ((Node _ (BP sym _) _ _):xs) = DMap.union sym (uniteSymTables xs)
 
 bp2list = bpttolist []
     where

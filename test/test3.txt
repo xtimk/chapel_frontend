@@ -8,7 +8,6 @@ proc pluto (ref x : int, y, z: real) : int {
     }  (x < 5)
 
 
-        var j : real;
 
     {
         var maledetto = 10;
@@ -17,7 +16,7 @@ proc pluto (ref x : int, y, z: real) : int {
 
     do while
     {
-      
+       var j : real;
         var z : int = j ;
         j = 33.7;
     }  (x < 5)
