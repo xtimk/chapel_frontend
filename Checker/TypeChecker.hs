@@ -60,7 +60,7 @@ typeCheckerSignature' (PIdent ((line,column),identifier)) params types = do
   (symtable, tree, current_id) <- get
   put (DMap.insert identifier (identifier, Function (line,column) [] types) symtable, tree, current_id )
   (symtable, tree, current_id) <- get
-  put (symtable, (updateTree(setSymbolTable symtable (findNodeById current_id tree)) tree), current_id)
+  put (symtable, updateTree(setSymbolTable symtable (findNodeById current_id tree)) tree, current_id)
   get 
 
 typeCheckerBody identifier (BodyBlock  _ xs _  ) = do
@@ -183,13 +183,17 @@ typeCheckerIdentifiersWithExpression identifiers types exp = do
     Infered -> mapM_ (typeCheckerIdentifier (typeCheckerExpression environment exp)) identifiers
     _ -> mapM_ (typeCheckerIdentifier (supdecl types (typeCheckerExpression environment exp))) identifiers
 
--- typechecking nel caso di dichiarazioni senza inizializzazione
-typeCheckerIdentifier types (PIdent ((line,column), identifier)) = do
+typeCheckerIdentifier types id = do
   (symtable, tree, current_id) <- get
-  put (DMap.insert identifier (identifier, Variable (line,column) types) symtable, tree, current_id )
+  put (typeCheckerVariable id symtable types, tree, current_id )
   (symtable, tree, current_id) <- get
-  put (symtable, (updateTree(setSymbolTable symtable (findNodeById current_id tree)) tree), current_id)
+  put (symtable, updateTree(setSymbolTable symtable (findNodeById current_id tree)) tree, current_id)
   get
+
+typeCheckerVariable (PIdent ((l,c), identifier)) symtable types = 
+  case DMap.lookup identifier symtable of
+    Just _ -> DMap.insert identifier (identifier, Variable (l,c) (Error (ErrorVarAlreadyDeclared (l,c) identifier ))) symtable
+    Nothing -> DMap.insert identifier (identifier, Variable (l,c) types) symtable
 
 --(updateTree(setSymbolTable sym tree) tree)
 
