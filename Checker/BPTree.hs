@@ -16,7 +16,8 @@ data BPTree a = Void | Node {
 
 data BP = BP {
     symboltable :: SymbolTable,
-    statements :: [Statement]
+    statements :: [Statement],
+    errors :: [ErrorChecker]
 } deriving (Show)
 
 findNodeById searchedId tree = findNode (bp2list tree)
@@ -31,8 +32,8 @@ findNodeById searchedId tree = findNode (bp2list tree)
 
 getParentID (Node id val parentID children) = parentID
 
-setSymbolTable sym tree@(Node id (BP _ statements) parent children) = Checker.BPTree.Node {Checker.BPTree.id = id,
-                                                                   val = BP {symboltable = sym, statements = statements}, 
+setSymbolTable sym tree@(Node id (BP _ statements errors) parent children) = Checker.BPTree.Node {Checker.BPTree.id = id,
+                                                                   val = BP {symboltable = sym, statements = statements, errors = errors}, 
                                                                    parentID = parent, 
                                                                    children = children}
 
@@ -50,7 +51,7 @@ addChild actualNode@(Node idActual val parentId childrenActualNode) childNodeToA
 
 createChild identifier tree@(Node id val parent children) = Checker.BPTree.Node {Checker.BPTree.id = identifier, 
                                                                    parentID = Just id, 
-                                                                   val = BP {symboltable = DMap.empty, statements = []}, 
+                                                                   val = BP {symboltable = DMap.empty, statements = [], errors = []}, 
                                                                    children = []}
 
 gotoParent tree (Node id val parent children) = case parent of
@@ -72,7 +73,7 @@ getVarType (PIdent ((l,c), identifier)) (sym, tree, currentNode) =
             Just (_,Function _ _ t) -> t
             Nothing -> Checker.SymbolTable.Error (Checker.SymbolTable.ErrorVarNotDeclared (l,c) identifier)       
 
-uniteSymTables = foldr (\y@(Node _ (BP sym _) _ _) x -> DMap.union sym x ) DMap.empty
+uniteSymTables = foldr (\y@(Node _ (BP sym _ _errors) _ _) x -> DMap.union sym x ) DMap.empty
 
 bpPathToList = bpPathToList' []     
     where

@@ -25,10 +25,10 @@ data Type = Int | Real | Bool | Void | Infered | Error ErrorChecker
 data ErrorChecker = ErrorVarNotDeclared Loc String | ErrorIncompatibleTypes Type Type | ErrorVarAlreadyDeclared Loc String
   deriving (Show)
 
-data Type' = Int' | Real' | Error' ErrorType
-  deriving (Show)
+-- data Type' = Int' | Real' | Error' ErrorType
+--   deriving (Show)
 
-data ErrorType = ErrorInitExpr String Loc Type' Type' | ErrorNotInitVar 
-  deriving(Show) 
+-- data ErrorType = ErrorInitExpr String Loc Type' Type' | ErrorNotInitVar 
+--   deriving(Show) 
 
 type Loc = (Int,Int)

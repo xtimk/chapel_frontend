@@ -13,12 +13,12 @@ import Debug.Trace
 
 
 
-initVarError = ErrorInitExpr
+-- initVarError = ErrorInitExpr
 
 
 --type MonState = State EnvEntry 
 
-startState = (DMap.empty, Checker.BPTree.Node {Checker.BPTree.id = "0", val = BP {symboltable = DMap.empty, statements = []}, parentID = Nothing, children = []}, "0")
+startState = (DMap.empty, Checker.BPTree.Node {Checker.BPTree.id = "0", val = BP {symboltable = DMap.empty, statements = [], errors = []}, parentID = Nothing, children = []}, "0")
 
 
 typeChecker (Progr p) = typeCheckerModule p
@@ -192,7 +192,7 @@ typeCheckerIdentifier types id = do
 
 typeCheckerVariable (PIdent ((l,c), identifier)) symtable types = 
   case DMap.lookup identifier symtable of
-    Just _ -> DMap.insert identifier (identifier, Variable (l,c) (Error (ErrorVarAlreadyDeclared (l,c) identifier ))) symtable
+    Just (varAlreadyDeclName, Variable (varAlreadyDecLine,varAlreadyDecColumn) varAlreadyDecTypes) -> DMap.insert (identifier ++ "@@err")(identifier, Variable (l,c) (Error (ErrorVarAlreadyDeclared (varAlreadyDecLine,varAlreadyDecColumn) identifier ))) symtable
     Nothing -> DMap.insert identifier (identifier, Variable (l,c) types) symtable
 
 --(updateTree(setSymbolTable sym tree) tree)
@@ -228,7 +228,7 @@ supBool _ _ = Bool
 
 -- infer del tipo nel caso di dichiarazioni con inizializzazione della variabile
 -- e' leggermente diversa dalla sup definita sopra, sotto un commento al riguardo.
---supdecl Int Int = Int
+-- supdecl Int Int = Int
 -- errore perche' questo corrisponde a codice del tipo: int x = 1.3; che deve ovviamente dare errore di tipo
 supdecl Int Int = Int
 supdecl Int Real = Error (ErrorIncompatibleTypes Int Real)
