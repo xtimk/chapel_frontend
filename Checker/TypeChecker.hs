@@ -52,10 +52,8 @@ typeCheckerExt (x:xs) = case x of
         typeCheckerBody (createId l c funname) body
         typeCheckerExt xs
 
-
-
 typeCheckerSignature signature = case signature of
-  SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' identifier params NotDeclared
+  SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' identifier params Infered
   SignWRet identifier (FunParams _ params _) _ types -> typeCheckerSignature' identifier params (convertTypeSpecToTypeInferred types)
 
 typeCheckerSignature' (PIdent ((line,column),identifier)) params types = do
@@ -112,7 +110,7 @@ typeCheckerStatement statement = case statement of
       then do
         env <- get
         case typeCheckerExpression env (EAss e1 eqsym e2) of
-          Error -> do 
+          Error _ -> do 
             (sym, tree, current_id) <- get
             get
           otherwhise -> do
@@ -152,13 +150,13 @@ typeCheckerGuard (SGuard _ expression _) = do
 
 
 typeCheckerDeclaration x = case x of
-    NoAssgmDec identifiers colon types -> typeCheckerIdentifiers identifiers types
-    NoAssgmArrayFixDec identifiers colon array -> typeCheckerIdentifiersArray identifiers array Nothing
-    NoAssgmArrayDec identifiers colon array types -> typeCheckerIdentifiersArray identifiers array (Just types)
-    AssgmTypeDec identifiers colon types assignment exp -> typeCheckerIdentifiersWithExpression identifiers (Just types) exp
-    AssgmArrayTypeDec identifiers colon array types assignment exp -> typeCheckerIdentifiersArrayWithExpression identifiers array (Just types) exp
-    AssgmArrayDec identifiers colon array assignment exp -> typeCheckerIdentifiersArrayWithExpression identifiers array Nothing exp
-    AssgmDec identifiers assigment exp -> typeCheckerIdentifiersWithExpression identifiers Nothing exp
+    NoAssgmDec identifiers colon types -> typeCheckerIdentifiers identifiers (convertTypeSpecToTypeInferred types)
+    NoAssgmArrayFixDec identifiers colon array -> typeCheckerIdentifiersArray identifiers array Infered
+    NoAssgmArrayDec identifiers colon array types -> typeCheckerIdentifiersArray identifiers array (convertTypeSpecToTypeInferred types)
+    AssgmTypeDec identifiers colon types assignment exp -> typeCheckerIdentifiersWithExpression identifiers (convertTypeSpecToTypeInferred types) exp
+    AssgmArrayTypeDec identifiers colon array types assignment exp -> typeCheckerIdentifiersArrayWithExpression identifiers array (convertTypeSpecToTypeInferred types) exp
+    AssgmArrayDec identifiers colon array assignment exp -> typeCheckerIdentifiersArrayWithExpression identifiers array Infered exp
+    AssgmDec identifiers assigment exp -> typeCheckerIdentifiersWithExpression identifiers Infered exp
     
 
 typeCheckerIdentifiersArray identifiers array types = 
@@ -167,23 +165,23 @@ typeCheckerIdentifiersArray identifiers array types =
 typeCheckerIdentifiersArrayWithExpression identifiers array types exp = do
   environment <- get
   case types of
-    Nothing -> mapM_ (typeCheckerIdentifier (typeCheckerExpression environment exp)) identifiers
-    Just defineType -> mapM_ (typeCheckerIdentifier (supdecl (typeCheckerArray array types) (typeCheckerExpression environment exp))) identifiers 
+    Infered -> mapM_ (typeCheckerIdentifier (typeCheckerExpression environment exp)) identifiers
+    _ -> mapM_ (typeCheckerIdentifier (supdecl (typeCheckerArray array types) (typeCheckerExpression environment exp))) identifiers 
 
 
 typeCheckerArray array types = case types of
-  Nothing -> Int
-  Just definedType -> Int
+  Infered -> Int
+  definedType -> Int
 
 
 typeCheckerIdentifiers identifiers types = 
-   mapM_ (typeCheckerIdentifier (convertTypeSpecToTypeInferred types)) identifiers
+   mapM_ (typeCheckerIdentifier types) identifiers
     
 typeCheckerIdentifiersWithExpression identifiers types exp = do
   environment <- get
   case types of
-    Nothing -> mapM_ (typeCheckerIdentifier (typeCheckerExpression environment exp)) identifiers
-    Just defineType -> mapM_ (typeCheckerIdentifier (supdecl (convertTypeSpecToTypeInferred defineType) (typeCheckerExpression environment exp))) identifiers
+    Infered -> mapM_ (typeCheckerIdentifier (typeCheckerExpression environment exp)) identifiers
+    _ -> mapM_ (typeCheckerIdentifier (supdecl types (typeCheckerExpression environment exp))) identifiers
 
 -- typechecking nel caso di dichiarazioni senza inizializzazione
 typeCheckerIdentifier types (PIdent ((line,column), identifier)) = do
@@ -214,12 +212,12 @@ sup Int Int = Int
 sup Int Real = Real
 sup Real Int = Real
 sup Real Real = Real
-sup Error _ = Error
-sup _ Error = Error
+sup  error@(Error _) _ = error
+sup _  error@(Error _) = error
 
 -- infer del tipo tra due expr messe in relazione tramite un operatore booleano binario
-supBool Error _ = Error
-supBool _ Error = Error
+supBool error@(Error _) _ = error
+supBool _ error@(Error _) = error
 supBool Int Int = Bool
 supBool Real Real = Bool
 supBool _ _ = Bool
@@ -229,11 +227,11 @@ supBool _ _ = Bool
 --supdecl Int Int = Int
 -- errore perche' questo corrisponde a codice del tipo: int x = 1.3; che deve ovviamente dare errore di tipo
 supdecl Int Int = Int
-supdecl Int Real = ErrorIncompatibleTypes Int Real
+supdecl Int Real = Error (ErrorIncompatibleTypes Int Real)
 supdecl Real Int = Real
 supdecl Real Real = Real
-supdecl Error _ = Error
-supdecl _ Error = Error
+supdecl error@(Error _) _ = error
+supdecl _ error@(Error _) = error
 
 
 convertTypeSpecToTypeInferred (Tint _) = Int

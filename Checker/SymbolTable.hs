@@ -19,7 +19,10 @@ data Parameter =
 data Mode = Ref | Out | Name | In
  deriving (Show)
 
-data Type = Int | Real | Bool | Void | NotDeclared | Error | ErrorVarNotDeclared Loc String | ErrorIncompatibleTypes Type Type
+data Type = Int | Real | Bool | Void | Infered | Error ErrorChecker
+  deriving (Show)
+
+data ErrorChecker = ErrorVarNotDeclared Loc String | ErrorIncompatibleTypes Type Type | ErrorVarAlreadyDeclared Loc String
   deriving (Show)
 
 data Type' = Int' | Real' | Error' ErrorType
