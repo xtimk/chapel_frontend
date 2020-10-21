@@ -201,15 +201,15 @@ typeCheckerIdentifier typess id = do
     Left types -> do
       modify (\(symtable,tree,current_id) -> (symtable, typeCheckerVariable id tree types current_id, current_id ))
       get
-    Right err -> do
+    Right err@(Error error) -> do
       let node = findNodeById current_id tree in
-        modify (\(symtable,tree,current_id) -> (symtable, updateTree (addErrorNode err node) tree , current_id )) 
+        modify (\(symtable,tree,current_id) -> (symtable, updateTree (addErrorNode error node) tree , current_id )) 
       get
 
 typeCheckerVariable (PIdent ((l,c), identifier)) tree types currentIdNode = 
   let node = findNodeById currentIdNode tree in case DMap.lookup identifier (getSymbolTable node) of
       Just (varAlreadyDeclName, Variable _ (varAlreadyDecLine,varAlreadyDecColumn) varAlreadyDecTypes) -> 
-        updateTree (addErrorNode (Error (ErrorVarAlreadyDeclared (varAlreadyDecLine,varAlreadyDecColumn) (l,c) identifier )) node) tree
+        updateTree (addErrorNode (ErrorVarAlreadyDeclared (varAlreadyDecLine,varAlreadyDecColumn) (l,c) identifier ) node) tree
       Nothing -> updateTree (addEntryNode identifier (Variable Normal (l,c) types) node) tree
 
 typeCheckerExpression environment@(_sym, _tree, current_id) expression = case expression of
