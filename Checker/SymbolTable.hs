@@ -16,13 +16,13 @@ data Parameter =
    FunVariable Loc Mode Type
  deriving (Show)
 
-data Mode = Ref | Out | Name | In
+data Mode = Normal | Ref | Out | Name | In 
  deriving (Show)
 
 data Type = Int | Real | Bool | Void | Infered | Error ErrorChecker
   deriving (Show)
 
-data ErrorChecker = ErrorVarNotDeclared Loc String | ErrorIncompatibleTypes Type Type | ErrorVarAlreadyDeclared Loc String
+data ErrorChecker = ErrorVarNotDeclared Loc String | ErrorIncompatibleTypes Type Type | ErrorVarAlreadyDeclared Loc Loc String
   deriving (Show)
 
 -- data Type' = Int' | Real' | Error' ErrorType

@@ -56,6 +56,20 @@ typeCheckerSignature signature = case signature of
   SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' identifier params Infered
   SignWRet identifier (FunParams _ params _) _ types -> typeCheckerSignature' identifier params (convertTypeSpecToTypeInferred types)
 
+typeCheckerParams xs = do
+   mapM_ typeCheckerParam xs
+   get
+
+typeCheckerParam x = case x of
+  ParNoMode identifiers _ types ->  do
+    mapM_ (typeCheckerParam' Normal types) identifiers
+    get
+  ParWMode (RefMode mode) identifiers  _ types ->  do
+    mapM_ (typeCheckerParam' (convertMode mode) types) identifiers
+    get
+
+typeCheckerParam' mode types identifier = get
+
 typeCheckerSignature' (PIdent ((line,column),identifier)) params types = do
   (symtable, tree, current_id) <- get
   put (DMap.insert identifier (identifier, Function (line,column) [] types) symtable, tree, current_id )
@@ -63,6 +77,8 @@ typeCheckerSignature' (PIdent ((line,column),identifier)) params types = do
   put (symtable, updateTree(setSymbolTable symtable (findNodeById current_id tree)) tree, current_id)
   get 
 
+
+  
 typeCheckerBody identifier (BodyBlock  _ xs _  ) = do
   -- create new child for the blk and enter in it
   (_sym, tree, current_id) <- get
@@ -123,8 +139,6 @@ typeCheckerStatement statement = case statement of
   RetVal {} -> get
   RetVoid {} -> get
 
-      
-
 isExpVar e = case e of
   (Evar (PIdent ((l,c),indentifier))) -> True
   _otherwhise -> False
@@ -136,7 +150,6 @@ getVarId (Evar (PIdent ((l,c),indentifier))) = indentifier
 getAssignOpPos op = case op of
   (AssgnEq (PAssignmEq ((l,c),_))) -> (l,c)
   (AssgnPlEq (PAssignmPlus ((l,c),_))) -> (l,c)
-
 
 getAssignOpTok op = case op of
   (AssgnEq (PAssignmEq ((l,c),t))) -> t
@@ -168,11 +181,9 @@ typeCheckerIdentifiersArrayWithExpression identifiers array types exp = do
     Infered -> mapM_ (typeCheckerIdentifier (typeCheckerExpression environment exp)) identifiers
     _ -> mapM_ (typeCheckerIdentifier (supdecl (typeCheckerArray array types) (typeCheckerExpression environment exp))) identifiers 
 
-
 typeCheckerArray array types = case types of
   Infered -> Int
   definedType -> Int
-
 
 typeCheckerIdentifiers identifiers types = 
    mapM_ (typeCheckerIdentifier types) identifiers
@@ -185,17 +196,17 @@ typeCheckerIdentifiersWithExpression identifiers types exp = do
 
 typeCheckerIdentifier types id = do
   (symtable, tree, current_id) <- get
-  put (typeCheckerVariable id symtable types, tree, current_id )
+  let (symChecked, treeChecked) = typeCheckerVariable id symtable tree types current_id in 
+    put (symChecked, treeChecked, current_id )
   (symtable, tree, current_id) <- get
   put (symtable, updateTree(setSymbolTable symtable (findNodeById current_id tree)) tree, current_id)
   get
 
-typeCheckerVariable (PIdent ((l,c), identifier)) symtable types = 
+typeCheckerVariable (PIdent ((l,c), identifier)) symtable tree types currentIdNode= 
   case DMap.lookup identifier symtable of
-    Just (varAlreadyDeclName, Variable (varAlreadyDecLine,varAlreadyDecColumn) varAlreadyDecTypes) -> DMap.insert (identifier ++ "@@err")(identifier, Variable (l,c) (Error (ErrorVarAlreadyDeclared (varAlreadyDecLine,varAlreadyDecColumn) identifier ))) symtable
-    Nothing -> DMap.insert identifier (identifier, Variable (l,c) types) symtable
-
---(updateTree(setSymbolTable sym tree) tree)
+    Just (varAlreadyDeclName, Variable (varAlreadyDecLine,varAlreadyDecColumn) varAlreadyDecTypes) -> 
+      (symtable, addErrorTree (ErrorVarAlreadyDeclared (varAlreadyDecLine,varAlreadyDecColumn) (l,c) identifier ) currentIdNode tree)
+    Nothing -> (DMap.insert identifier (identifier, Variable (l,c) types) symtable, tree)
 
 typeCheckerExpression environment@(_sym, _tree, current_id) expression = case expression of
   Eplus e1 plus e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
@@ -238,6 +249,8 @@ supdecl error@(Error _) _ = error
 supdecl _ error@(Error _) = error
 
 
-convertTypeSpecToTypeInferred (Tint _) = Int
-convertTypeSpecToTypeInferred (Treal _) = Real
+convertTypeSpecToTypeInferred Tint {} = Int
+convertTypeSpecToTypeInferred Treal {} = Real
 --convertTypeSpecToTypeInferred (Type Tchar) = Char
+
+convertMode PRef {} = Ref
