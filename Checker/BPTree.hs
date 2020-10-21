@@ -47,9 +47,9 @@ addEntryNode identifier entry tree@(Node id (BP symboltable statements errors) p
     children = children}
 
 --addErrorTree error identifierNode tree = updateTree (addErrorNode error (findNodeById identifierNode tree)) tree
-addErrorNode error tree@(Node id (BP symboltable statements errors) parent children) = 
+addErrorNode (Error errorChecker) tree@(Node id (BP symboltable statements errors) parent children) = 
     Checker.BPTree.Node {Checker.BPTree.id = id,
-    val = BP {symboltable = symboltable, statements = statements, errors = error:errors}, 
+    val = BP {symboltable = symboltable, statements = statements, errors = errorChecker:errors}, 
     parentID = parent, 
     children = children}
 
@@ -57,8 +57,6 @@ updateTree _ Checker.BPTree.Void = Checker.BPTree.Void
 updateTree actualNode@(Node idActual val parentId childrenActualNode) entireTree@(Node idEntire _a _b children) = if idEntire == idActual
     then actualNode
     else Node idEntire _a _b (map (updateTree actualNode) children)
-
-
 
 addChild actualNode@(Node idActual val parentId childrenActualNode) childNodeToAdd Checker.BPTree.Void = Checker.BPTree.Void
 addChild actualNode@(Node idActual val parentId childrenActualNode) childNodeToAdd entireTree@(Node idEntire _a _b children)  = if idEntire == idActual
