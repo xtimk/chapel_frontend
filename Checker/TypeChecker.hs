@@ -56,6 +56,15 @@ typeCheckerSignature signature = case signature of
   SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' identifier params Infered
   SignWRet identifier (FunParams _ params _) _ types -> typeCheckerSignature' identifier params (convertTypeSpecToTypeInferred types)
 
+typeCheckerSignature' (PIdent ((line,column),identifier)) params types = do
+  typeCheckerParams params
+  (symtable, tree, currentIdNode) <- get
+  let node = findNodeById currentIdNode tree in
+    put (symtable,  updateTree (addEntryNode identifier (Function (line,column) [] types) node) tree, currentIdNode )
+  get 
+
+typeCheckerSignatureParams identifier = get
+  
 typeCheckerParams xs = do
    mapM_ typeCheckerParam xs
    get
@@ -68,29 +77,17 @@ typeCheckerParam x = case x of
     mapM_ (typeCheckerParam' (convertMode mode) types) identifiers
     get
 
-typeCheckerParam' mode types identifier = get
-
-typeCheckerSignature' (PIdent ((line,column),identifier)) params types = do
-  (symtable, tree, current_id) <- get
-  put (DMap.insert identifier (identifier, Function (line,column) [] types) symtable, tree, current_id )
-  (symtable, tree, current_id) <- get
-  put (symtable, updateTree(setSymbolTable symtable (findNodeById current_id tree)) tree, current_id)
-  get 
-
-
+typeCheckerParam' mode types (PIdent ((line,column),identifier)) = 
+  modify(\(sym,_tree,_id) -> (DMap.insert identifier (identifier, Variable mode (line,column) (convertTypeSpecToTypeInferred types)) sym, _tree, _id))
   
 typeCheckerBody identifier (BodyBlock  _ xs _  ) = do
   -- create new child for the blk and enter in it
-  (_sym, tree, current_id) <- get
+  (_, tree, current_id) <- get
   let actualNode = findNodeById current_id tree in
     put (DMap.empty, addChild actualNode (createChild identifier actualNode) tree, identifier)
   -- process body
   mapM_ typeCheckerBody' xs
-  -- exit from child and return to parent
-  (sym, tree, actual_id) <- get
-  let actualTree = findNodeById actual_id tree in
-    put (_sym, updateTree (setSymbolTable sym actualTree) tree, current_id)
-    -- put (depth, env, DMap.empty, tree, current_id)
+  modify(\(sym,_tree,_id) -> (sym,_tree,current_id))
   get
 
 typeCheckerBody' x = do
@@ -171,7 +168,6 @@ typeCheckerDeclaration x = case x of
     AssgmArrayDec identifiers colon array assignment exp -> typeCheckerIdentifiersArrayWithExpression identifiers array Infered exp
     AssgmDec identifiers assigment exp -> typeCheckerIdentifiersWithExpression identifiers Infered exp
     
-
 typeCheckerIdentifiersArray identifiers array types = 
    mapM_ (typeCheckerIdentifier (typeCheckerArray array types)) identifiers    
 
@@ -194,19 +190,14 @@ typeCheckerIdentifiersWithExpression identifiers types exp = do
     Infered -> mapM_ (typeCheckerIdentifier (typeCheckerExpression environment exp)) identifiers
     _ -> mapM_ (typeCheckerIdentifier (supdecl types (typeCheckerExpression environment exp))) identifiers
 
-typeCheckerIdentifier types id = do
-  (symtable, tree, current_id) <- get
-  let (symChecked, treeChecked) = typeCheckerVariable id symtable tree types current_id in 
-    put (symChecked, treeChecked, current_id )
-  (symtable, tree, current_id) <- get
-  put (symtable, updateTree(setSymbolTable symtable (findNodeById current_id tree)) tree, current_id)
-  get
+typeCheckerIdentifier types id = 
+  modify (\(symtable,tree,current_id) -> (symtable, typeCheckerVariable id tree types current_id, current_id ))
 
-typeCheckerVariable (PIdent ((l,c), identifier)) symtable tree types currentIdNode= 
-  case DMap.lookup identifier symtable of
-    Just (varAlreadyDeclName, Variable (varAlreadyDecLine,varAlreadyDecColumn) varAlreadyDecTypes) -> 
-      (symtable, addErrorTree (ErrorVarAlreadyDeclared (varAlreadyDecLine,varAlreadyDecColumn) (l,c) identifier ) currentIdNode tree)
-    Nothing -> (DMap.insert identifier (identifier, Variable (l,c) types) symtable, tree)
+typeCheckerVariable (PIdent ((l,c), identifier)) tree types currentIdNode = 
+  let node = findNodeById currentIdNode tree in case DMap.lookup identifier (getSymbolTable node) of
+      Just (varAlreadyDeclName, Variable _ (varAlreadyDecLine,varAlreadyDecColumn) varAlreadyDecTypes) -> 
+        updateTree (addErrorNode (ErrorVarAlreadyDeclared (varAlreadyDecLine,varAlreadyDecColumn) (l,c) identifier ) node) tree
+      Nothing -> updateTree (addEntryNode identifier (Variable Normal (l,c) types) node) tree
 
 typeCheckerExpression environment@(_sym, _tree, current_id) expression = case expression of
   Eplus e1 plus e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
@@ -249,8 +240,8 @@ supdecl error@(Error _) _ = error
 supdecl _ error@(Error _) = error
 
 
-convertTypeSpecToTypeInferred Tint {} = Int
-convertTypeSpecToTypeInferred Treal {} = Real
+convertTypeSpecToTypeInferred (Tint _) = Int
+convertTypeSpecToTypeInferred (Treal  _) = Real
 --convertTypeSpecToTypeInferred (Type Tchar) = Char
 
 convertMode PRef {} = Ref
