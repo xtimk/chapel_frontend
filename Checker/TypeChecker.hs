@@ -31,11 +31,7 @@ typeCheckerModule (Mod m) = typeCheckerExt m
 -- implementare stato che e' una coppia del tipo (Data.Map(quella di prima), abstract syntax arricchito con info di tipo)
 createId l c name = show l ++ "_" ++ show c ++ "_" ++ name
 
-typeCheckerExt [] = do 
-  (sym, tree, actual_id) <- get
-  let actualTree = findNodeById actual_id tree in
-    put (DMap.empty, updateTree (setSymbolTable sym actualTree) tree, actual_id)
-  get
+typeCheckerExt [] = get
 -- implementato solo il typechecker per le dichiarazioni globali, manca tutta la parte di fun
 -- alcuni dettagli sulle due map:
 -- 1) (map convertTypeSpecToTypeInferred types) fa semplicemente una traduzione dai tipi Tint.. messi dal parser in tipi Int.. del typechecker
@@ -61,10 +57,9 @@ typeCheckerSignature' (PIdent ((line,column),identifier)) params typess =
     Left types -> do
       typeCheckerParams params
       (symtable, tree, currentIdNode) <- get
-      let node = findNodeById currentIdNode tree in
-        put (symtable,  updateTree (addEntryNode identifier (Function (line,column) [] types) node) tree, currentIdNode )
+      let node = findNodeById currentIdNode tree; variables = map (snd.snd) (DMap.toAscList symtable)  in
+        put (symtable,  updateTree (addEntryNode identifier (Function (line,column) variables types) node) tree, currentIdNode )
       get 
-  
 
 typeCheckerSignatureParams identifier = get
   
@@ -87,9 +82,9 @@ typeCheckerParam' mode types (PIdent ((line,column),identifier)) =
   
 typeCheckerBody identifier (BodyBlock  _ xs _  ) = do
   -- create new child for the blk and enter in it
-  (_, tree, current_id) <- get
-  let actualNode = findNodeById current_id tree in
-    put (DMap.empty, addChild actualNode (createChild identifier actualNode) tree, identifier)
+  (sym, tree, current_id) <- get
+  let actualNode = findNodeById current_id tree; child = createChild identifier actualNode in
+     put (DMap.empty, addChild actualNode (setSymbolTable sym child) tree, identifier)
   -- process body
   mapM_ typeCheckerBody' xs
   modify(\(sym,_tree,_id) -> (sym,_tree,current_id))
