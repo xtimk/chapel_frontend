@@ -47,7 +47,7 @@ addEntryNode identifier entry tree@(Node id (BP symboltable statements errors) p
     children = children}
 
 --addErrorTree error identifierNode tree = updateTree (addErrorNode error (findNodeById identifierNode tree)) tree
-addErrorNode (Error errorChecker) tree@(Node id (BP symboltable statements errors) parent children) = 
+addErrorNode errorChecker tree@(Node id (BP symboltable statements errors) parent children) = 
     Checker.BPTree.Node {Checker.BPTree.id = id,
     val = BP {symboltable = symboltable, statements = statements, errors = errorChecker:errors}, 
     parentID = parent, 
