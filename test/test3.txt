@@ -1,4 +1,6 @@
 
+
+var k :int;
 proc pluto (ref x : int, y, z: real) : int {
     var pippo = 3;
 
