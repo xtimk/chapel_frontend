@@ -6,14 +6,10 @@ type SymbolTable = Map String (String, EnvEntry)
 
 
 data EnvEntry = 
-  Variable Loc Type
+  Variable Mode Loc Type
   | Assignm Loc Type
-  | Function Loc [Parameter] Type 
+  | Function Loc [EnvEntry] Type 
 --  | Constant Literal
- deriving (Show)
-
-data Parameter = 
-   FunVariable Loc Mode Type
  deriving (Show)
 
 data Mode = Normal | Ref | Out | Name | In 
