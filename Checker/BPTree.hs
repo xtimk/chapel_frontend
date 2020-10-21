@@ -36,6 +36,14 @@ setSymbolTable sym tree@(Node id (BP _ statements errors) parent children) = Che
                                                                    val = BP {symboltable = sym, statements = statements, errors = errors}, 
                                                                    parentID = parent, 
                                                                    children = children}
+              
+
+
+addErrorTree error identifierNode tree = updateTree (addErrorNode error (findNodeById identifierNode tree)) tree
+addErrorNode error tree@(Node id (BP symboltable statements errors) parent children) = Checker.BPTree.Node {Checker.BPTree.id = id,
+                                                                   val = BP {symboltable = symboltable, statements = statements, errors = error:errors}, 
+                                                                   parentID = parent, 
+                                                                   children = children}
 
 updateTree _ Checker.BPTree.Void = Checker.BPTree.Void
 updateTree actualNode@(Node idActual val parentId childrenActualNode) entireTree@(Node idEntire _a _b children) = if idEntire == idActual

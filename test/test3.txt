@@ -18,8 +18,9 @@ proc pluto (ref x : int, y, z: real) : int {
     {
        var j : real;
         var z : int = j ;
-        var y : int = 9;
-        var y : real = 5;
+        var y : real = 9;
+        var y : int = 5;
+        var m : int = y;
         j = 33.7;
     }  (x < 5)
 
