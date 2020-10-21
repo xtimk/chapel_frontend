@@ -53,15 +53,18 @@ typeCheckerExt (x:xs) = case x of
         typeCheckerExt xs
 
 typeCheckerSignature signature = case signature of
-  SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' identifier params Infered
+  SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' identifier params (Left Infered)
   SignWRet identifier (FunParams _ params _) _ types -> typeCheckerSignature' identifier params (convertTypeSpecToTypeInferred types)
 
-typeCheckerSignature' (PIdent ((line,column),identifier)) params types = do
-  typeCheckerParams params
-  (symtable, tree, currentIdNode) <- get
-  let node = findNodeById currentIdNode tree in
-    put (symtable,  updateTree (addEntryNode identifier (Function (line,column) [] types) node) tree, currentIdNode )
-  get 
+typeCheckerSignature' (PIdent ((line,column),identifier)) params typess = 
+  case typess of
+    Left types -> do
+      typeCheckerParams params
+      (symtable, tree, currentIdNode) <- get
+      let node = findNodeById currentIdNode tree in
+        put (symtable,  updateTree (addEntryNode identifier (Function (line,column) [] types) node) tree, currentIdNode )
+      get 
+  
 
 typeCheckerSignatureParams identifier = get
   
@@ -78,7 +81,9 @@ typeCheckerParam x = case x of
     get
 
 typeCheckerParam' mode types (PIdent ((line,column),identifier)) = 
-  modify(\(sym,_tree,_id) -> (DMap.insert identifier (identifier, Variable mode (line,column) (convertTypeSpecToTypeInferred types)) sym, _tree, _id))
+  let Left typefound = convertTypeSpecToTypeInferred types in 
+    modify(\(sym,_tree,_id) -> (DMap.insert identifier (identifier, Variable mode (line,column) typefound) sym, _tree, _id))
+
   
 typeCheckerBody identifier (BodyBlock  _ xs _  ) = do
   -- create new child for the blk and enter in it
@@ -123,10 +128,10 @@ typeCheckerStatement statement = case statement of
       then do
         env <- get
         case typeCheckerExpression env (EAss e1 eqsym e2) of
-          Error _ -> do 
+          Right (Error _) -> do 
             (sym, tree, current_id) <- get
             get
-          otherwhise -> do
+          (Left otherwhise) -> do
             (sym, tree, current_id) <- get
             get
       else do -- caso di lvalue non var
@@ -155,18 +160,18 @@ getAssignOpTok op = case op of
 typeCheckerGuard (SGuard _ expression _) = do
   (_sym, _tree, current_id) <- get
   case typeCheckerExpression (_sym, _tree, current_id) expression of
-    Bool -> get -- questo dovrebbe essere l'unico caso accettato, se expression non e' bool devo segnalarlo come errore
-    _ -> get
+    (Left Bool) -> get -- questo dovrebbe essere l'unico caso accettato, se expression non e' bool devo segnalarlo come errore
+    (Left _) -> get
 
 
 typeCheckerDeclaration x = case x of
     NoAssgmDec identifiers colon types -> typeCheckerIdentifiers identifiers (convertTypeSpecToTypeInferred types)
-    NoAssgmArrayFixDec identifiers colon array -> typeCheckerIdentifiersArray identifiers array Infered
+    NoAssgmArrayFixDec identifiers colon array -> typeCheckerIdentifiersArray identifiers array (Left Infered)
     NoAssgmArrayDec identifiers colon array types -> typeCheckerIdentifiersArray identifiers array (convertTypeSpecToTypeInferred types)
     AssgmTypeDec identifiers colon types assignment exp -> typeCheckerIdentifiersWithExpression identifiers (convertTypeSpecToTypeInferred types) exp
     AssgmArrayTypeDec identifiers colon array types assignment exp -> typeCheckerIdentifiersArrayWithExpression identifiers array (convertTypeSpecToTypeInferred types) exp
-    AssgmArrayDec identifiers colon array assignment exp -> typeCheckerIdentifiersArrayWithExpression identifiers array Infered exp
-    AssgmDec identifiers assigment exp -> typeCheckerIdentifiersWithExpression identifiers Infered exp
+    AssgmArrayDec identifiers colon array assignment exp -> typeCheckerIdentifiersArrayWithExpression identifiers array (Left Infered) exp
+    AssgmDec identifiers assigment exp -> typeCheckerIdentifiersWithExpression identifiers (Left Infered) exp
     
 typeCheckerIdentifiersArray identifiers array types = 
    mapM_ (typeCheckerIdentifier (typeCheckerArray array types)) identifiers    
@@ -174,12 +179,12 @@ typeCheckerIdentifiersArray identifiers array types =
 typeCheckerIdentifiersArrayWithExpression identifiers array types exp = do
   environment <- get
   case types of
-    Infered -> mapM_ (typeCheckerIdentifier (typeCheckerExpression environment exp)) identifiers
-    _ -> mapM_ (typeCheckerIdentifier (supdecl (typeCheckerArray array types) (typeCheckerExpression environment exp))) identifiers 
+    (Left Infered) -> mapM_ (typeCheckerIdentifier (typeCheckerExpression environment exp)) identifiers
+    (Left _) -> mapM_ (typeCheckerIdentifier (supdecl (typeCheckerArray array types) (typeCheckerExpression environment exp))) identifiers 
 
 typeCheckerArray array types = case types of
-  Infered -> Int
-  definedType -> Int
+  (Left Infered) -> Left Int
+  (Left definedType) -> Left Int
 
 typeCheckerIdentifiers identifiers types = 
    mapM_ (typeCheckerIdentifier types) identifiers
@@ -187,11 +192,16 @@ typeCheckerIdentifiers identifiers types =
 typeCheckerIdentifiersWithExpression identifiers types exp = do
   environment <- get
   case types of
-    Infered -> mapM_ (typeCheckerIdentifier (typeCheckerExpression environment exp)) identifiers
-    _ -> mapM_ (typeCheckerIdentifier (supdecl types (typeCheckerExpression environment exp))) identifiers
+    (Left Infered) -> mapM_ (typeCheckerIdentifier (typeCheckerExpression environment exp)) identifiers
+    (Left _) -> mapM_ (typeCheckerIdentifier (supdecl types (typeCheckerExpression environment exp))) identifiers
 
-typeCheckerIdentifier types id = 
-  modify (\(symtable,tree,current_id) -> (symtable, typeCheckerVariable id tree types current_id, current_id ))
+typeCheckerIdentifier typess id = do
+  (symtable, tree, current_id) <- get
+  case typess of
+    Left types -> do
+      modify (\(symtable,tree,current_id) -> (symtable, typeCheckerVariable id tree types current_id, current_id ))
+      get
+    Right err -> get
 
 typeCheckerVariable (PIdent ((l,c), identifier)) tree types currentIdNode = 
   let node = findNodeById currentIdNode tree in case DMap.lookup identifier (getSymbolTable node) of
@@ -206,42 +216,53 @@ typeCheckerExpression environment@(_sym, _tree, current_id) expression = case ex
   Etimes e1 div e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
   InnerExp _ e _ -> typeCheckerExpression environment e
   Elthen e1 pElthen e2 -> supBool (typeCheckerExpression environment e1) (typeCheckerExpression environment e2) 
-  Evar identifier -> getVarType identifier environment
+  Evar identifier -> Left $ getVarType identifier environment
   EAss e1 _eqsym e2 -> supdecl (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
-  Econst (Eint _) -> Int
-  Econst (Efloat _) -> Real
+  Econst (Eint _) -> Left Int
+  Econst (Efloat _) -> Left Real
   -- todo: aggiungere tutti i casi degli operatori esistenti
 
 
 -- infer del tipo fra due tipi. Da capire meglio cosa fare in caso di errore.
-sup Int Int = Int
-sup Int Real = Real
-sup Real Int = Real
-sup Real Real = Real
-sup  error@(Error _) _ = error
-sup _  error@(Error _) = error
+
+sup (Left e1) (Left e2) = sup' e1 e2
+
+sup' Int Int = Left Int
+sup' Int Real = Left Real
+sup' Real Int = Left Real
+sup' Real Real = Left  Real
+sup' e1@(Error _) _ = Right e1
+sup' _ e1@(Error _) = Right e1
 
 -- infer del tipo tra due expr messe in relazione tramite un operatore booleano binario
-supBool error@(Error _) _ = error
-supBool _ error@(Error _) = error
-supBool Int Int = Bool
-supBool Real Real = Bool
-supBool _ _ = Bool
+supBool (Left e1) (Left e2) = supBool' e1 e2
+supBool (Right e1) _ = Right e1
+supBool _ (Right e1) = Right e1
+
+
+supBool' error@(Error _) _ = Left error
+supBool' _ error@(Error _) = Left error
+supBool' Int Int = Left Bool
+supBool' Real Real = Left Bool
+supBool' _ _ = Left Bool
 
 -- infer del tipo nel caso di dichiarazioni con inizializzazione della variabile
 -- e' leggermente diversa dalla sup definita sopra, sotto un commento al riguardo.
 -- supdecl Int Int = Int
 -- errore perche' questo corrisponde a codice del tipo: int x = 1.3; che deve ovviamente dare errore di tipo
-supdecl Int Int = Int
-supdecl Int Real = Error (ErrorIncompatibleTypes Int Real)
-supdecl Real Int = Real
-supdecl Real Real = Real
-supdecl error@(Error _) _ = error
-supdecl _ error@(Error _) = error
+
+supdecl (Left a) (Left b) = supdecl' a b
+
+supdecl' Int Int = Left Int
+supdecl' Int Real = Right $ Error (ErrorIncompatibleTypes Int Real)
+supdecl' Real Int = Left Real
+supdecl' Real Real = Left Real
+supdecl' error@(Error _) _ = Right error
+supdecl' _ error@(Error _) = Right error
 
 
-convertTypeSpecToTypeInferred (Tint _) = Int
-convertTypeSpecToTypeInferred (Treal  _) = Real
+convertTypeSpecToTypeInferred Tint {} = Left Int
+convertTypeSpecToTypeInferred Treal {} = Left Real
 --convertTypeSpecToTypeInferred (Type Tchar) = Char
 
 convertMode PRef {} = Ref
