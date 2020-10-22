@@ -153,10 +153,17 @@ transDeclList x = case x of
   NoAssgmDec pidents pcolon type_ -> failure x
   NoAssgmArrayFixDec pidents pcolon ardecl -> failure x
   NoAssgmArrayDec pidents pcolon ardecl type_ -> failure x
-  AssgmTypeDec pidents pcolon type_ passignmeq exp -> failure x
-  AssgmArrayTypeDec pidents pcolon ardecl type_ passignmeq exp -> failure x
-  AssgmArrayDec pidents pcolon ardecl passignmeq exp -> failure x
-  AssgmDec pidents passignmeq exp -> failure x
+  AssgmTypeDec pidents pcolon type_ passignmeq exprdecl -> failure x
+  AssgmArrayTypeDec pidents pcolon ardecl type_ passignmeq exprdecl -> failure x
+  AssgmArrayDec pidents pcolon ardecl passignmeq exprdecl -> failure x
+  AssgmDec pidents passignmeq exprdecl -> failure x
+transExprDecl :: ExprDecl -> Result
+transExprDecl x = case x of
+  ExprDecArray arinit -> failure x
+  ExprDec exp -> failure x
+transArInit :: ArInit -> Result
+transArInit x = case x of
+  ArrayInit popenbracket exprdecls pclosebracket -> failure x
 transArDecl :: ArDecl -> Result
 transArDecl x = case x of
   ArrayDeclIndex popenbracket ardims pclosebracket -> failure x
@@ -235,10 +242,16 @@ transExp x = case x of
   Etimes exp1 petimes exp2 -> failure x
   Ediv exp1 pediv exp2 -> failure x
   Emod exp1 pemod exp2 -> failure x
+  Epreop unaryoperator exp -> failure x
+  Earray exp arinit -> failure x
   InnerExp popenparenthesis exp pcloseparenthesis -> failure x
   Evar pident -> failure x
   Econst constant -> failure x
   Estring pstring -> failure x
+transUnaryOperator :: UnaryOperator -> Result
+transUnaryOperator x = case x of
+  Address pdef -> failure x
+  Indirection petimes -> failure x
 transConstant :: Constant -> Result
 transConstant x = case x of
   Efloat pdouble -> failure x

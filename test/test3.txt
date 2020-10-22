@@ -1,18 +1,20 @@
 
 
-var k :int;
+var k :int = [[4.4,5],4,[[5,6],[6,6]],r];
+var j :int = m;
+var m :int = k;
 proc pluto (ref x : int, y, z: real) : int {
     var pippo = 3;
 
     do while
     {
-        var z : real = 1;
+        var z : real = pippo[pippo, po];
     }  (x < 5)
 
 
 
     {
-        var maledetto = 10;
+        var maledetto = *&*10;
     }
     
 

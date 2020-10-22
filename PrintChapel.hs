@@ -246,12 +246,26 @@ instance Print AbsChapel.DeclList where
     AbsChapel.NoAssgmDec pidents pcolon type_ -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 type_])
     AbsChapel.NoAssgmArrayFixDec pidents pcolon ardecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl])
     AbsChapel.NoAssgmArrayDec pidents pcolon ardecl type_ -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl, prt 0 type_])
-    AbsChapel.AssgmTypeDec pidents pcolon type_ passignmeq exp -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 type_, prt 0 passignmeq, prt 0 exp])
-    AbsChapel.AssgmArrayTypeDec pidents pcolon ardecl type_ passignmeq exp -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl, prt 0 type_, prt 0 passignmeq, prt 0 exp])
-    AbsChapel.AssgmArrayDec pidents pcolon ardecl passignmeq exp -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl, prt 0 passignmeq, prt 0 exp])
-    AbsChapel.AssgmDec pidents passignmeq exp -> prPrec i 0 (concatD [prt 0 pidents, prt 0 passignmeq, prt 0 exp])
+    AbsChapel.AssgmTypeDec pidents pcolon type_ passignmeq exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 type_, prt 0 passignmeq, prt 0 exprdecl])
+    AbsChapel.AssgmArrayTypeDec pidents pcolon ardecl type_ passignmeq exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl, prt 0 type_, prt 0 passignmeq, prt 0 exprdecl])
+    AbsChapel.AssgmArrayDec pidents pcolon ardecl passignmeq exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl, prt 0 passignmeq, prt 0 exprdecl])
+    AbsChapel.AssgmDec pidents passignmeq exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 passignmeq, prt 0 exprdecl])
   prtList _ [x] = concatD [prt 0 x]
   prtList _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
+
+instance Print AbsChapel.ExprDecl where
+  prt i e = case e of
+    AbsChapel.ExprDecArray arinit -> prPrec i 0 (concatD [prt 0 arinit])
+    AbsChapel.ExprDec exp -> prPrec i 0 (concatD [prt 0 exp])
+  prtList _ [x] = concatD [prt 0 x]
+  prtList _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
+
+instance Print AbsChapel.ArInit where
+  prt i e = case e of
+    AbsChapel.ArrayInit popenbracket exprdecls pclosebracket -> prPrec i 0 (concatD [prt 0 popenbracket, prt 0 exprdecls, prt 0 pclosebracket])
+
+instance Print [AbsChapel.ExprDecl] where
+  prt = prtList
 
 instance Print AbsChapel.ArDecl where
   prt i e = case e of
@@ -365,10 +379,17 @@ instance Print AbsChapel.Exp where
     AbsChapel.Etimes exp1 petimes exp2 -> prPrec i 13 (concatD [prt 13 exp1, prt 0 petimes, prt 14 exp2])
     AbsChapel.Ediv exp1 pediv exp2 -> prPrec i 13 (concatD [prt 13 exp1, prt 0 pediv, prt 14 exp2])
     AbsChapel.Emod exp1 pemod exp2 -> prPrec i 13 (concatD [prt 13 exp1, prt 0 pemod, prt 14 exp2])
-    AbsChapel.InnerExp popenparenthesis exp pcloseparenthesis -> prPrec i 14 (concatD [prt 0 popenparenthesis, prt 0 exp, prt 0 pcloseparenthesis])
-    AbsChapel.Evar pident -> prPrec i 14 (concatD [prt 0 pident])
-    AbsChapel.Econst constant -> prPrec i 14 (concatD [prt 0 constant])
-    AbsChapel.Estring pstring -> prPrec i 14 (concatD [prt 0 pstring])
+    AbsChapel.Epreop unaryoperator exp -> prPrec i 14 (concatD [prt 0 unaryoperator, prt 14 exp])
+    AbsChapel.Earray exp arinit -> prPrec i 15 (concatD [prt 15 exp, prt 0 arinit])
+    AbsChapel.InnerExp popenparenthesis exp pcloseparenthesis -> prPrec i 16 (concatD [prt 0 popenparenthesis, prt 0 exp, prt 0 pcloseparenthesis])
+    AbsChapel.Evar pident -> prPrec i 16 (concatD [prt 0 pident])
+    AbsChapel.Econst constant -> prPrec i 16 (concatD [prt 0 constant])
+    AbsChapel.Estring pstring -> prPrec i 16 (concatD [prt 0 pstring])
+
+instance Print AbsChapel.UnaryOperator where
+  prt i e = case e of
+    AbsChapel.Address pdef -> prPrec i 0 (concatD [prt 0 pdef])
+    AbsChapel.Indirection petimes -> prPrec i 0 (concatD [prt 0 petimes])
 
 instance Print AbsChapel.Constant where
   prt i e = case e of

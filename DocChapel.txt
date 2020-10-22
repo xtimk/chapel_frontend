@@ -213,10 +213,15 @@ All other symbols are terminals.
   | //DeclList// | -> | //[PIdent]// //PColon// //Type//
   |  |  **|**  | //[PIdent]// //PColon// //ArDecl//
   |  |  **|**  | //[PIdent]// //PColon// //ArDecl// //Type//
-  |  |  **|**  | //[PIdent]// //PColon// //Type// //PAssignmEq// //Exp//
-  |  |  **|**  | //[PIdent]// //PColon// //ArDecl// //Type// //PAssignmEq// //Exp//
-  |  |  **|**  | //[PIdent]// //PColon// //ArDecl// //PAssignmEq// //Exp//
-  |  |  **|**  | //[PIdent]// //PAssignmEq// //Exp//
+  |  |  **|**  | //[PIdent]// //PColon// //Type// //PAssignmEq// //ExprDecl//
+  |  |  **|**  | //[PIdent]// //PColon// //ArDecl// //Type// //PAssignmEq// //ExprDecl//
+  |  |  **|**  | //[PIdent]// //PColon// //ArDecl// //PAssignmEq// //ExprDecl//
+  |  |  **|**  | //[PIdent]// //PAssignmEq// //ExprDecl//
+  | //ExprDecl// | -> | //ArInit//
+  |  |  **|**  | //Exp//
+  | //ArInit// | -> | //POpenBracket// //[ExprDecl]// //PCloseBracket//
+  | //[ExprDecl]// | -> | //ExprDecl//
+  |  |  **|**  | //ExprDecl// ``,`` //[ExprDecl]//
   | //ArDecl// | -> | //POpenBracket// //[ArDim]// //PCloseBracket//
   |  |  **|**  | //POpenBracket// //ArBound// //PCloseBracket//
   | //ArDim// | -> | //ArBound// //PPoint// //PPoint// //ArBound//
@@ -280,13 +285,19 @@ All other symbols are terminals.
   |  |  **|**  | //Exp13// //PEdiv// //Exp14//
   |  |  **|**  | //Exp13// //PEmod// //Exp14//
   |  |  **|**  | //Exp14//
+  | //Exp14// | -> | //UnaryOperator// //Exp14//
+  |  |  **|**  | //Exp15//
+  | //Exp15// | -> | //Exp15// //ArInit//
+  |  |  **|**  | //Exp16//
   | //Exp6// | -> | //Exp7//
   | //Exp7// | -> | //Exp8//
   | //Exp11// | -> | //Exp12//
-  | //Exp14// | -> | //POpenParenthesis// //Exp// //PCloseParenthesis//
+  | //Exp16// | -> | //POpenParenthesis// //Exp// //PCloseParenthesis//
   |  |  **|**  | //PIdent//
   |  |  **|**  | //Constant//
   |  |  **|**  | //PString//
+  | //UnaryOperator// | -> | //PDef//
+  |  |  **|**  | //PEtimes//
   | //Constant// | -> | //PDouble//
   |  |  **|**  | //PChar//
   |  |  **|**  | //PInteger//

@@ -82,11 +82,18 @@ Decl.     Declaration ::= DecMode [DeclList] PSemicolon;
 NoAssgmDec.          DeclList ::= [PIdent] PColon Type ;
 NoAssgmArrayFixDec.  DeclList ::= [PIdent] PColon ArDecl ;
 NoAssgmArrayDec.     DeclList ::= [PIdent] PColon ArDecl Type ;
-AssgmTypeDec.        DeclList ::= [PIdent] PColon Type PAssignmEq Exp ;
-AssgmArrayTypeDec.   DeclList ::= [PIdent] PColon ArDecl Type PAssignmEq Exp ;
-AssgmArrayDec.       DeclList ::= [PIdent] PColon ArDecl PAssignmEq Exp ;
-AssgmDec.            DeclList ::= [PIdent] PAssignmEq Exp ;
+AssgmTypeDec.        DeclList ::= [PIdent] PColon Type PAssignmEq ExprDecl ;
+AssgmArrayTypeDec.   DeclList ::= [PIdent] PColon ArDecl Type PAssignmEq ExprDecl ;
+AssgmArrayDec.       DeclList ::= [PIdent] PColon ArDecl PAssignmEq ExprDecl ;
+AssgmDec.            DeclList ::= [PIdent] PAssignmEq ExprDecl ;
 
+ExprDecArray.        ExprDecl ::= ArInit;
+ExprDec.             ExprDecl ::= Exp;
+
+ArrayInit.           ArInit ::= POpenBracket [ExprDecl] PCloseBracket;
+
+(:[]).    [ExprDecl] ::= ExprDecl;
+(:).      [ExprDecl] ::= ExprDecl "," [ExprDecl];
 
 ArrayDeclIndex.      ArDecl ::= POpenBracket [ArDim] PCloseBracket ;
 ArrayDeclFixed.      ArDecl ::= POpenBracket ArBound PCloseBracket ;
@@ -175,6 +182,8 @@ Eminus.      Exp12 ::= Exp12 PEminus Exp13;
 Etimes.      Exp13 ::= Exp13 PEtimes Exp14;
 Ediv.        Exp13 ::= Exp13 PEdiv Exp14;
 Emod.        Exp13 ::= Exp13 PEmod Exp14;
+Epreop.      Exp14 ::= UnaryOperator Exp14;
+Earray.      Exp15 ::= Exp15 ArInit ;
 
 _. Exp  ::= Exp4 ;
 _. Exp4  ::= Exp5 ;
@@ -187,12 +196,17 @@ _. Exp10 ::= Exp11 ;
 _. Exp11 ::= Exp12 ;
 _. Exp12 ::= Exp13 ;
 _. Exp13 ::= Exp14 ;
-InnerExp. Exp14 ::= POpenParenthesis Exp PCloseParenthesis ;
+_. Exp14 ::= Exp15 ;
+_. Exp15 ::= Exp16 ;
+InnerExp. Exp16 ::= POpenParenthesis Exp PCloseParenthesis ;
+
+Address.      UnaryOperator ::= PDef ;
+Indirection.  UnaryOperator ::= PEtimes ;
 
 
-Evar.        Exp14 ::= PIdent;
-Econst.      Exp14 ::= Constant;
-Estring.     Exp14 ::= PString;
+Evar.        Exp16 ::= PIdent;
+Econst.      Exp16 ::= Constant;
+Estring.     Exp16 ::= PString;
 
 Efloat.        Constant ::= PDouble;
 Echar.         Constant ::= PChar;
