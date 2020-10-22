@@ -15,8 +15,10 @@ data EnvEntry =
 data Mode = Normal | Ref | Out | Name | In 
  deriving (Show)
 
-data Type = Int | Real | Bool | Void | Infered | Error ErrorChecker
+data Type = Int | Real | Bool | Void | Infered | Array Type Dimension | Error ErrorChecker
   deriving (Show)
+
+
 
 data ErrorChecker = ErrorVarNotDeclared Loc String | ErrorIncompatibleTypes Type Type | ErrorVarAlreadyDeclared Loc Loc String
   deriving (Show)
@@ -28,3 +30,5 @@ data ErrorChecker = ErrorVarNotDeclared Loc String | ErrorIncompatibleTypes Type
 --   deriving(Show) 
 
 type Loc = (Int,Int)
+type Dimension = [Lenght]
+type Lenght = Int 

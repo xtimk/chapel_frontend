@@ -133,6 +133,7 @@ typeCheckerStatement statement = case statement of
         (sym, tree, current_id) <- get
         -- put (DMap.insert (getAssignOpPos eqsym) (getAssignOpTok eqsym, Assignm (getAssignOpPos eqsym) Error) sym, tree, current_id )
         get
+  StExp _ _-> get
   RetVal {} -> get
   RetVoid {} -> get
 
@@ -159,36 +160,36 @@ typeCheckerGuard (SGuard _ expression _) = do
     (Left _) -> get
 
 
-typeCheckerDeclaration x = case x of
-    NoAssgmDec identifiers colon types -> typeCheckerIdentifiers identifiers (convertTypeSpecToTypeInferred types)
-    NoAssgmArrayFixDec identifiers colon array -> typeCheckerIdentifiersArray identifiers array (Left Infered)
-    NoAssgmArrayDec identifiers colon array types -> typeCheckerIdentifiersArray identifiers array (convertTypeSpecToTypeInferred types)
-    AssgmTypeDec identifiers colon types assignment exp -> typeCheckerIdentifiersWithExpression identifiers (convertTypeSpecToTypeInferred types) exp
-    AssgmArrayTypeDec identifiers colon array types assignment exp -> typeCheckerIdentifiersArrayWithExpression identifiers array (convertTypeSpecToTypeInferred types) exp
-    AssgmArrayDec identifiers colon array assignment exp -> typeCheckerIdentifiersArrayWithExpression identifiers array (Left Infered) exp
-    AssgmDec identifiers assigment exp -> typeCheckerIdentifiersWithExpression identifiers (Left Infered) exp
-    
+typeCheckerDeclaration x = do
+  environment <- get
+  case x of
+    NoAssgmDec identifiers colon types -> typeCheckerIdentifiers identifiers (convertTypeSpecToTypeInferred types) (Left Infered)
+    NoAssgmArrayFixDec identifiers colon array -> typeCheckerIdentifiers identifiers (typeCheckerBuildArrayType array (Left Infered)) (Left Infered)
+    NoAssgmArrayDec identifiers colon array types -> typeCheckerIdentifiers identifiers (typeCheckerBuildArrayType array (Left Infered)) (convertTypeSpecToTypeInferred types)
+    AssgmTypeDec identifiers colon types assignment exp -> typeCheckerIdentifiers identifiers (convertTypeSpecToTypeInferred types) (typeCheckerDeclExpression environment exp)
+    AssgmArrayTypeDec identifiers colon array types assignment exp -> typeCheckerIdentifiers identifiers  (typeCheckerBuildArrayType array (convertTypeSpecToTypeInferred types)) (typeCheckerDeclExpression environment exp)
+    AssgmArrayDec identifiers colon array assignment exp -> typeCheckerIdentifiers identifiers (typeCheckerBuildArrayType array (Left Infered)) (typeCheckerDeclExpression environment exp)
+    AssgmDec identifiers assigment exp -> typeCheckerIdentifiers identifiers (typeCheckerDeclExpression environment exp) (Left Infered)
+
+typeCheckerBuildArrayType array types = Left $ Array Int []
+
 typeCheckerIdentifiersArray identifiers array types = 
    mapM_ (typeCheckerIdentifier (typeCheckerArray array types)) identifiers    
 
-typeCheckerIdentifiersArrayWithExpression identifiers array types (ExprDec exp) = do
+typeCheckerIdentifiersArrayWithExpression identifiers array types exp = do
   environment <- get
   case types of
-    (Left Infered) -> mapM_ (typeCheckerIdentifier (typeCheckerExpression environment exp)) identifiers
-    (Left _) -> mapM_ (typeCheckerIdentifier (supdecl (typeCheckerArray array types) (typeCheckerExpression environment exp))) identifiers 
+    (Left Infered) -> mapM_ (typeCheckerIdentifier (typeCheckerDeclExpression environment exp)) identifiers
+    (Left _) -> mapM_ (typeCheckerIdentifier (supdecl (typeCheckerArray array types) (typeCheckerDeclExpression environment exp))) identifiers 
 
 typeCheckerArray array types = case types of
   (Left Infered) -> Left Int
   (Left definedType) -> Left Int
 
-typeCheckerIdentifiers identifiers types = 
-   mapM_ (typeCheckerIdentifier types) identifiers
-    
-typeCheckerIdentifiersWithExpression identifiers types (ExprDec exp) = do
-  environment <- get
-  case types of
-    (Left Infered) -> mapM_ (typeCheckerIdentifier (typeCheckerExpression environment exp)) identifiers
-    (Left _) -> mapM_ (typeCheckerIdentifier (supdecl types (typeCheckerExpression environment exp))) identifiers
+typeCheckerIdentifiers identifiers typeLeft typeRight = case (typeLeft, typeRight) of
+   (Left Infered, _) ->  mapM_ (typeCheckerIdentifier typeRight) identifiers
+   (_,Left Infered) ->  mapM_ (typeCheckerIdentifier typeLeft) identifiers
+   (_,_) ->  mapM_ (typeCheckerIdentifier (supdecl typeLeft typeRight)) identifiers
 
 typeCheckerIdentifier typess id = do
   (symtable, tree, current_id) <- get
@@ -207,17 +208,23 @@ typeCheckerVariable (PIdent ((l,c), identifier)) tree types currentIdNode =
         updateTree (addErrorNode (ErrorVarAlreadyDeclared (varAlreadyDecLine,varAlreadyDecColumn) (l,c) identifier ) node) tree
       Nothing -> updateTree (addEntryNode identifier (Variable Normal (l,c) types) node) tree
 
-typeCheckerExpression environment@(_sym, _tree, current_id) expression = case expression of
-  Eplus e1 plus e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
-  Eminus e1 minus e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
-  Ediv e1 div e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
-  Etimes e1 div e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
-  InnerExp _ e _ -> typeCheckerExpression environment e
-  Elthen e1 pElthen e2 -> supBool (typeCheckerExpression environment e1) (typeCheckerExpression environment e2) 
-  Evar identifier -> Left $ getVarType identifier environment
-  EAss e1 _eqsym e2 -> supdecl (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
-  Econst (Eint _) -> Left Int
-  Econst (Efloat _) -> Left Real
+typeCheckerDeclExpression environment decExp = case decExp of
+  ExprDecArray arrays -> Left Int
+  ExprDec exp -> typeCheckerExpression environment exp
+
+typeCheckerExpression environment@(_sym, _tree, current_id) exp = case exp of
+    EAss e1 _eqsym e2 -> supdecl (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
+    Eplus e1 plus e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
+    Eminus e1 minus e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
+    Ediv e1 div e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
+    Etimes e1 div e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
+    InnerExp _ e _ -> typeCheckerExpression environment e
+    Elthen e1 pElthen e2 -> supBool (typeCheckerExpression environment e1) (typeCheckerExpression environment e2) 
+    --Da fare ar declaration
+    Earray expIdentifier arDeclaration -> typeCheckerExpression environment expIdentifier
+    Evar identifier -> Left $ getVarType identifier environment
+    Econst (Eint _) -> Left Int
+    Econst (Efloat _) -> Left Real
   -- todo: aggiungere tutti i casi degli operatori esistenti
 
 
