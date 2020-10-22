@@ -145,10 +145,16 @@ data DeclList
     = NoAssgmDec [PIdent] PColon Type
     | NoAssgmArrayFixDec [PIdent] PColon ArDecl
     | NoAssgmArrayDec [PIdent] PColon ArDecl Type
-    | AssgmTypeDec [PIdent] PColon Type PAssignmEq Exp
-    | AssgmArrayTypeDec [PIdent] PColon ArDecl Type PAssignmEq Exp
-    | AssgmArrayDec [PIdent] PColon ArDecl PAssignmEq Exp
-    | AssgmDec [PIdent] PAssignmEq Exp
+    | AssgmTypeDec [PIdent] PColon Type PAssignmEq ExprDecl
+    | AssgmArrayTypeDec [PIdent] PColon ArDecl Type PAssignmEq ExprDecl
+    | AssgmArrayDec [PIdent] PColon ArDecl PAssignmEq ExprDecl
+    | AssgmDec [PIdent] PAssignmEq ExprDecl
+  deriving (Eq, Ord, Show, Read)
+
+data ExprDecl = ExprDecArray ArInit | ExprDec Exp
+  deriving (Eq, Ord, Show, Read)
+
+data ArInit = ArrayInit POpenBracket [ExprDecl] PCloseBracket
   deriving (Eq, Ord, Show, Read)
 
 data ArDecl
@@ -230,10 +236,15 @@ data Exp
     | Etimes Exp PEtimes Exp
     | Ediv Exp PEdiv Exp
     | Emod Exp PEmod Exp
+    | Epreop UnaryOperator Exp
+    | Earray Exp ArInit
     | InnerExp POpenParenthesis Exp PCloseParenthesis
     | Evar PIdent
     | Econst Constant
     | Estring PString
+  deriving (Eq, Ord, Show, Read)
+
+data UnaryOperator = Address PDef | Indirection PEtimes
   deriving (Eq, Ord, Show, Read)
 
 data Constant = Efloat PDouble | Echar PChar | Eint PInteger

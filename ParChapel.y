@@ -203,10 +203,18 @@ DeclList :: { DeclList }
 DeclList : ListPIdent PColon Type { AbsChapel.NoAssgmDec $1 $2 $3 }
          | ListPIdent PColon ArDecl { AbsChapel.NoAssgmArrayFixDec $1 $2 $3 }
          | ListPIdent PColon ArDecl Type { AbsChapel.NoAssgmArrayDec $1 $2 $3 $4 }
-         | ListPIdent PColon Type PAssignmEq Exp { AbsChapel.AssgmTypeDec $1 $2 $3 $4 $5 }
-         | ListPIdent PColon ArDecl Type PAssignmEq Exp { AbsChapel.AssgmArrayTypeDec $1 $2 $3 $4 $5 $6 }
-         | ListPIdent PColon ArDecl PAssignmEq Exp { AbsChapel.AssgmArrayDec $1 $2 $3 $4 $5 }
-         | ListPIdent PAssignmEq Exp { AbsChapel.AssgmDec $1 $2 $3 }
+         | ListPIdent PColon Type PAssignmEq ExprDecl { AbsChapel.AssgmTypeDec $1 $2 $3 $4 $5 }
+         | ListPIdent PColon ArDecl Type PAssignmEq ExprDecl { AbsChapel.AssgmArrayTypeDec $1 $2 $3 $4 $5 $6 }
+         | ListPIdent PColon ArDecl PAssignmEq ExprDecl { AbsChapel.AssgmArrayDec $1 $2 $3 $4 $5 }
+         | ListPIdent PAssignmEq ExprDecl { AbsChapel.AssgmDec $1 $2 $3 }
+ExprDecl :: { ExprDecl }
+ExprDecl : ArInit { AbsChapel.ExprDecArray $1 }
+         | Exp { AbsChapel.ExprDec $1 }
+ArInit :: { ArInit }
+ArInit : POpenBracket ListExprDecl PCloseBracket { AbsChapel.ArrayInit $1 $2 $3 }
+ListExprDecl :: { [ExprDecl] }
+ListExprDecl : ExprDecl { (:[]) $1 }
+             | ExprDecl ',' ListExprDecl { (:) $1 $3 }
 ArDecl :: { ArDecl }
 ArDecl : POpenBracket ListArDim PCloseBracket { AbsChapel.ArrayDeclIndex $1 $2 $3 }
        | POpenBracket ArBound PCloseBracket { AbsChapel.ArrayDeclFixed $1 $2 $3 }
@@ -291,17 +299,25 @@ Exp13 : Exp13 PEtimes Exp14 { AbsChapel.Etimes $1 $2 $3 }
       | Exp13 PEdiv Exp14 { AbsChapel.Ediv $1 $2 $3 }
       | Exp13 PEmod Exp14 { AbsChapel.Emod $1 $2 $3 }
       | Exp14 { $1 }
+Exp14 :: { Exp }
+Exp14 : UnaryOperator Exp14 { AbsChapel.Epreop $1 $2 }
+      | Exp15 { $1 }
+Exp15 :: { Exp }
+Exp15 : Exp15 ArInit { AbsChapel.Earray $1 $2 } | Exp16 { $1 }
 Exp6 :: { Exp }
 Exp6 : Exp7 { $1 }
 Exp7 :: { Exp }
 Exp7 : Exp8 { $1 }
 Exp11 :: { Exp }
 Exp11 : Exp12 { $1 }
-Exp14 :: { Exp }
-Exp14 : POpenParenthesis Exp PCloseParenthesis { AbsChapel.InnerExp $1 $2 $3 }
+Exp16 :: { Exp }
+Exp16 : POpenParenthesis Exp PCloseParenthesis { AbsChapel.InnerExp $1 $2 $3 }
       | PIdent { AbsChapel.Evar $1 }
       | Constant { AbsChapel.Econst $1 }
       | PString { AbsChapel.Estring $1 }
+UnaryOperator :: { UnaryOperator }
+UnaryOperator : PDef { AbsChapel.Address $1 }
+              | PEtimes { AbsChapel.Indirection $1 }
 Constant :: { Constant }
 Constant : PDouble { AbsChapel.Efloat $1 }
          | PChar { AbsChapel.Echar $1 }

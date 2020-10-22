@@ -171,7 +171,7 @@ typeCheckerDeclaration x = case x of
 typeCheckerIdentifiersArray identifiers array types = 
    mapM_ (typeCheckerIdentifier (typeCheckerArray array types)) identifiers    
 
-typeCheckerIdentifiersArrayWithExpression identifiers array types exp = do
+typeCheckerIdentifiersArrayWithExpression identifiers array types (ExprDec exp) = do
   environment <- get
   case types of
     (Left Infered) -> mapM_ (typeCheckerIdentifier (typeCheckerExpression environment exp)) identifiers
@@ -184,7 +184,7 @@ typeCheckerArray array types = case types of
 typeCheckerIdentifiers identifiers types = 
    mapM_ (typeCheckerIdentifier types) identifiers
     
-typeCheckerIdentifiersWithExpression identifiers types exp = do
+typeCheckerIdentifiersWithExpression identifiers types (ExprDec exp) = do
   environment <- get
   case types of
     (Left Infered) -> mapM_ (typeCheckerIdentifier (typeCheckerExpression environment exp)) identifiers
