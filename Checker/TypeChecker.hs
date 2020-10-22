@@ -173,19 +173,6 @@ typeCheckerDeclaration x = do
 
 typeCheckerBuildArrayType array types = Left $ Array Int []
 
-typeCheckerIdentifiersArray identifiers array types = 
-   mapM_ (typeCheckerIdentifier (typeCheckerArray array types)) identifiers    
-
-typeCheckerIdentifiersArrayWithExpression identifiers array types exp = do
-  environment <- get
-  case types of
-    (Left Infered) -> mapM_ (typeCheckerIdentifier (typeCheckerDeclExpression environment exp)) identifiers
-    (Left _) -> mapM_ (typeCheckerIdentifier (supdecl (typeCheckerArray array types) (typeCheckerDeclExpression environment exp))) identifiers 
-
-typeCheckerArray array types = case types of
-  (Left Infered) -> Left Int
-  (Left definedType) -> Left Int
-
 typeCheckerIdentifiers identifiers typeLeft typeRight = case (typeLeft, typeRight) of
    (Left Infered, _) ->  mapM_ (typeCheckerIdentifier typeRight) identifiers
    (_,Left Infered) ->  mapM_ (typeCheckerIdentifier typeLeft) identifiers
