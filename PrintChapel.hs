@@ -270,11 +270,11 @@ instance Print [AbsChapel.ExprDecl] where
 instance Print AbsChapel.ArDecl where
   prt i e = case e of
     AbsChapel.ArrayDeclIndex popenbracket ardims pclosebracket -> prPrec i 0 (concatD [prt 0 popenbracket, prt 0 ardims, prt 0 pclosebracket])
-    AbsChapel.ArrayDeclFixed popenbracket arbound pclosebracket -> prPrec i 0 (concatD [prt 0 popenbracket, prt 0 arbound, prt 0 pclosebracket])
 
 instance Print AbsChapel.ArDim where
   prt i e = case e of
     AbsChapel.ArrayDimSingle arbound1 ppoint1 ppoint2 arbound2 -> prPrec i 0 (concatD [prt 0 arbound1, prt 0 ppoint1, prt 0 ppoint2, prt 0 arbound2])
+    AbsChapel.ArrayDimBound arbound -> prPrec i 0 (concatD [prt 0 arbound])
   prtList _ [x] = concatD [prt 0 x]
   prtList _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
 

@@ -164,19 +164,25 @@ typeCheckerDeclaration x = do
   environment <- get
   case x of
     NoAssgmDec identifiers colon types -> typeCheckerIdentifiers identifiers (convertTypeSpecToTypeInferred types) (Left Infered)
-    NoAssgmArrayFixDec identifiers colon array -> typeCheckerIdentifiers identifiers (typeCheckerBuildArrayType array (Left Infered)) (Left Infered)
-    NoAssgmArrayDec identifiers colon array types -> typeCheckerIdentifiers identifiers (typeCheckerBuildArrayType array (Left Infered)) (convertTypeSpecToTypeInferred types)
+    NoAssgmArrayFixDec identifiers colon (ArrayDeclIndex _ array _) -> typeCheckerIdentifiers identifiers (typeCheckerBuildArrayType array (Left Infered)) (Left Infered)
+    NoAssgmArrayDec identifiers colon (ArrayDeclIndex _ array _) types -> typeCheckerIdentifiers identifiers (typeCheckerBuildArrayType array (convertTypeSpecToTypeInferred types)) (Left Infered)
     AssgmTypeDec identifiers colon types assignment exp -> typeCheckerIdentifiers identifiers (convertTypeSpecToTypeInferred types) (typeCheckerDeclExpression environment exp)
-    AssgmArrayTypeDec identifiers colon array types assignment exp -> typeCheckerIdentifiers identifiers  (typeCheckerBuildArrayType array (convertTypeSpecToTypeInferred types)) (typeCheckerDeclExpression environment exp)
-    AssgmArrayDec identifiers colon array assignment exp -> typeCheckerIdentifiers identifiers (typeCheckerBuildArrayType array (Left Infered)) (typeCheckerDeclExpression environment exp)
+    AssgmArrayTypeDec identifiers colon (ArrayDeclIndex _ array _) types assignment exp -> typeCheckerIdentifiers identifiers  (typeCheckerBuildArrayType array (convertTypeSpecToTypeInferred types)) (typeCheckerDeclExpression environment exp)
+    AssgmArrayDec identifiers colon (ArrayDeclIndex _ array _) assignment exp -> typeCheckerIdentifiers identifiers (typeCheckerBuildArrayType array (Left Infered)) (typeCheckerDeclExpression environment exp)
     AssgmDec identifiers assigment exp -> typeCheckerIdentifiers identifiers (typeCheckerDeclExpression environment exp) (Left Infered)
 
-typeCheckerBuildArrayType array types = Left $ Array Int []
+typeCheckerBuildArrayType array types  = Left $ typeCheckerBuildArrayType' array types
+  where
+    typeCheckerBuildArrayType' [] (Left types) = types
+    typeCheckerBuildArrayType' (array:arrays) types = Array $ typeCheckerBuildArrayType' arrays types
+  
 
-typeCheckerIdentifiers identifiers typeLeft typeRight = case (typeLeft, typeRight) of
-   (Left Infered, _) ->  mapM_ (typeCheckerIdentifier typeRight) identifiers
-   (_,Left Infered) ->  mapM_ (typeCheckerIdentifier typeLeft) identifiers
-   (_,_) ->  mapM_ (typeCheckerIdentifier (supdecl typeLeft typeRight)) identifiers
+--typeCheckerBuildArrayType' array (Left types) = case array of
+--  ArrayDimSingle leftBound _ _ rightBound = Left $ Array types
+--  ArrayDimBound elements = Left $ Array types
+
+typeCheckerIdentifiers identifiers typeLeft typeRight =
+   mapM_ (typeCheckerIdentifier (supdecl typeLeft typeRight)) identifiers
 
 typeCheckerIdentifier typess id = do
   (symtable, tree, current_id) <- get
@@ -196,7 +202,13 @@ typeCheckerVariable (PIdent ((l,c), identifier)) tree types currentIdNode =
       Nothing -> updateTree (addEntryNode identifier (Variable Normal (l,c) types) node) tree
 
 typeCheckerDeclExpression environment decExp = case decExp of
-  ExprDecArray arrays -> Left Int
+  ExprDecArray arrays@(ArrayInit _ expression@(exp:exps) _) -> let Left types = typeCheckerDeclExpression environment exp in Left $ Array types
+    --foldr (\x y -> let types = typeCheckerDeclExpression environment x in 
+    --  case types of
+    --    Left typeFound ->  supdecl (Array typeFound) y
+    --    Right typeFound ->  supdecl (Array typeFound) y) 
+    --  (Left Infered) expression
+      -- let Left types = typeCheckerDeclExpression environment exp in Left $ Array types
   ExprDec exp -> typeCheckerExpression environment exp
 
 typeCheckerExpression environment@(_sym, _tree, current_id) exp = case exp of
@@ -245,12 +257,20 @@ supBool' _ _ = Left Bool
 
 supdecl (Left a) (Left b) = supdecl' a b
 
+supdecl' Infered types = Left types
+supdecl' types Infered = Left types
 supdecl' Int Int = Left Int
 supdecl' Int Real = Right $ Error (ErrorIncompatibleTypes Int Real)
 supdecl' Real Int = Left Real
 supdecl' Real Real = Left Real
+supdecl' (Array typesFirst) (Array typesSecond) = let types = supdecl' typesFirst typesSecond in case types of 
+  Left typesFound -> Left $ Array typesFound
+  _ -> types
+supdecl' array@(Array typesFirst) types =  Right $ Error (ErrorIncompatibleTypes array types)
+supdecl' types array@(Array typesFirst) =  Right $ Error (ErrorIncompatibleTypes types array)
 supdecl' error@(Error _) _ = Right error
 supdecl' _ error@(Error _) = Right error
+
 
 
 convertTypeSpecToTypeInferred Tint {} = Left Int

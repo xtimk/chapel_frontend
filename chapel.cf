@@ -96,9 +96,9 @@ ArrayInit.           ArInit ::= POpenBracket [ExprDecl] PCloseBracket;
 (:).      [ExprDecl] ::= ExprDecl "," [ExprDecl];
 
 ArrayDeclIndex.      ArDecl ::= POpenBracket [ArDim] PCloseBracket ;
-ArrayDeclFixed.      ArDecl ::= POpenBracket ArBound PCloseBracket ;
 
 ArrayDimSingle.      ArDim ::= ArBound PPoint PPoint ArBound;
+ArrayDimBound.       ArDim ::= ArBound;
 
 
 (:[]).    [ArDim] ::= ArDim;

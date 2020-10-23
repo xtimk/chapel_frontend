@@ -223,8 +223,8 @@ All other symbols are terminals.
   | //[ExprDecl]// | -> | //ExprDecl//
   |  |  **|**  | //ExprDecl// ``,`` //[ExprDecl]//
   | //ArDecl// | -> | //POpenBracket// //[ArDim]// //PCloseBracket//
-  |  |  **|**  | //POpenBracket// //ArBound// //PCloseBracket//
   | //ArDim// | -> | //ArBound// //PPoint// //PPoint// //ArBound//
+  |  |  **|**  | //ArBound//
   | //[ArDim]// | -> | //ArDim//
   |  |  **|**  | //ArDim// ``,`` //[ArDim]//
   | //ArBound// | -> | //PIdent//
