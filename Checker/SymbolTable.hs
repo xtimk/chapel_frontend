@@ -20,7 +20,7 @@ data Type = Int | Real | Bool | Void | Infered | Array Type | Error ErrorChecker
 
 
 
-data ErrorChecker = ErrorVarNotDeclared Loc String | ErrorIncompatibleTypes Type Type | ErrorVarAlreadyDeclared Loc Loc String
+data ErrorChecker = ErrorVarNotDeclared Loc String | ErrorIncompatibleTypes Loc Type Type | ErrorVarAlreadyDeclared Loc Loc String
   deriving (Show)
 
 -- data Type' = Int' | Real' | Error' ErrorType

@@ -32,6 +32,38 @@ findNodeById searchedId tree = findNode (bp2list tree)
 
 getParentID (Node id val parentID children) = parentID
 
+modErrorPos (ErrorVarNotDeclared _oldloc a) (l,c) = ErrorVarNotDeclared (l,c) a
+modErrorPos (ErrorIncompatibleTypes _oldloc a b) (l,c) = ErrorIncompatibleTypes (l,c) a b
+modErrorPos (ErrorVarAlreadyDeclared _oldloc a b) (l,c) = ErrorVarAlreadyDeclared (l,c) a b
+
+getExprDeclPos (ExprDecArray (ArrayInit _ (e:exps) _)) = getExprDeclPos e
+getExprDeclPos (ExprDec exp) = getExpPos exp 
+
+getExpPos exp = case exp of
+    Evar (PIdent ((l,c),_)) -> (l,c)
+    Estring (PString ((l,c),_)) -> (l,c)
+    Econst (Efloat (PDouble ((l,c),_))) -> (l,c)
+    Econst (Echar (PChar ((l,c),_))) -> (l,c)
+    Econst (Eint (PInteger ((l,c),_))) -> (l,c)
+    EAss e1 _ _ -> getExpPos e1
+    Elor e1 _ _ -> getExpPos e1
+    Eland e1 _ _ -> getExpPos e1
+    Ebitand e1 _ _ -> getExpPos e1
+    Eeq e1 _ _ -> getExpPos e1
+    Eneq e1 _ _ -> getExpPos e1
+    Elthen e1 _ _ -> getExpPos e1
+    Egrthen e1 _ _ -> getExpPos e1
+    Ele e1 _ _ -> getExpPos e1
+    Ege e1 _ _ -> getExpPos e1
+    Eplus e1 _ _ -> getExpPos e1
+    Eminus e1 _ _ -> getExpPos e1
+    Etimes e1 _ _ -> getExpPos e1
+    Ediv e1 _ _ -> getExpPos e1
+    Emod e1 _ _ -> getExpPos e1
+    Epreop _ e1 -> getExpPos e1
+    Earray e1 _ -> getExpPos e1
+    InnerExp _ e1 _ -> getExpPos e1
+
 
 getSymbolTable tree@(Node _ (BP symboltable _ _) _ _) =  symboltable
 setSymbolTable sym tree@(Node id (BP _ statements errors) parent children) = Checker.BPTree.Node {Checker.BPTree.id = id,
