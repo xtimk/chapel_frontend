@@ -49,12 +49,13 @@ typeCheckerExt (x:xs) = case x of
         typeCheckerExt xs
 
 typeCheckerSignature signature = case signature of
-  SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' identifier params (Left Infered)
+  SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' identifier params Infered
   SignWRet identifier (FunParams _ params _) _ types -> typeCheckerSignature' identifier params (convertTypeSpecToTypeInferred types)
 
-typeCheckerSignature' (PIdent ((line,column),identifier)) params typess = 
-  case typess of
-    Left types -> do
+typeCheckerSignature' (PIdent ((line,column),identifier)) params types = 
+  case types of
+    Error _ -> get
+    _ -> do
       typeCheckerParams params
       (symtable, tree, currentIdNode) <- get
       let node = findNodeById currentIdNode tree; variables = map (snd.snd) (DMap.toAscList symtable)  in
@@ -76,7 +77,7 @@ typeCheckerParam x = case x of
     get
 
 typeCheckerParam' mode types (PIdent ((line,column),identifier)) = 
-  let Left typefound = convertTypeSpecToTypeInferred types in 
+  let typefound = convertTypeSpecToTypeInferred types in 
     modify(\(sym,_tree,_id) -> (DMap.insert identifier (identifier, Variable mode (line,column) typefound) sym, _tree, _id))
 
   
@@ -123,10 +124,10 @@ typeCheckerStatement statement = case statement of
       then do
         env <- get
         case typeCheckerExpression env (EAss e1 eqsym e2) of
-          Right (Error _) -> do 
+          Error _ -> do 
             (sym, tree, current_id) <- get
             get
-          (Left otherwhise) -> do
+          _ -> do
             (sym, tree, current_id) <- get
             get
       else do -- caso di lvalue non var
@@ -156,24 +157,24 @@ getAssignOpTok op = case op of
 typeCheckerGuard (SGuard _ expression _) = do
   (_sym, _tree, current_id) <- get
   case typeCheckerExpression (_sym, _tree, current_id) expression of
-    (Left Bool) -> get -- questo dovrebbe essere l'unico caso accettato, se expression non e' bool devo segnalarlo come errore
-    (Left _) -> get
+    Bool -> get -- questo dovrebbe essere l'unico caso accettato, se expression non e' bool devo segnalarlo come errore
+    _ -> get
 
 
 typeCheckerDeclaration x = do
   environment <- get
   case x of
-    NoAssgmDec identifiers colon types -> typeCheckerIdentifiers identifiers (convertTypeSpecToTypeInferred types) (Left Infered)
-    NoAssgmArrayFixDec identifiers colon (ArrayDeclIndex _ array _) -> typeCheckerIdentifiers identifiers (typeCheckerBuildArrayType array (Left Infered)) (Left Infered)
-    NoAssgmArrayDec identifiers colon (ArrayDeclIndex _ array _) types -> typeCheckerIdentifiers identifiers (typeCheckerBuildArrayType array (convertTypeSpecToTypeInferred types)) (Left Infered)
+    NoAssgmDec identifiers colon types -> typeCheckerIdentifiers identifiers (convertTypeSpecToTypeInferred types) Infered
+    NoAssgmArrayFixDec identifiers colon (ArrayDeclIndex _ array _) -> typeCheckerIdentifiers identifiers (typeCheckerBuildArrayType array Infered) Infered
+    NoAssgmArrayDec identifiers colon (ArrayDeclIndex _ array _) types -> typeCheckerIdentifiers identifiers (typeCheckerBuildArrayType array (convertTypeSpecToTypeInferred types)) Infered
     AssgmTypeDec identifiers colon types assignment exp -> typeCheckerIdentifiers identifiers (convertTypeSpecToTypeInferred types) (typeCheckerDeclExpression environment exp)
     AssgmArrayTypeDec identifiers colon (ArrayDeclIndex _ array _) types assignment exp -> typeCheckerIdentifiers identifiers  (typeCheckerBuildArrayType array (convertTypeSpecToTypeInferred types)) (typeCheckerDeclExpression environment exp)
-    AssgmArrayDec identifiers colon (ArrayDeclIndex _ array _) assignment exp -> typeCheckerIdentifiers identifiers (typeCheckerBuildArrayType array (Left Infered)) (typeCheckerDeclExpression environment exp)
-    AssgmDec identifiers assigment exp -> typeCheckerIdentifiers identifiers (typeCheckerDeclExpression environment exp) (Left Infered)
+    AssgmArrayDec identifiers colon (ArrayDeclIndex _ array _) assignment exp -> typeCheckerIdentifiers identifiers (typeCheckerBuildArrayType array Infered) (typeCheckerDeclExpression environment exp)
+    AssgmDec identifiers assigment exp -> typeCheckerIdentifiers identifiers (typeCheckerDeclExpression environment exp) Infered
 
-typeCheckerBuildArrayType array types  = Left $ typeCheckerBuildArrayType' array types
+typeCheckerBuildArrayType = typeCheckerBuildArrayType'
   where
-    typeCheckerBuildArrayType' [] (Left types) = types
+    typeCheckerBuildArrayType' [] types = types
     typeCheckerBuildArrayType' (array:arrays) types = Array $ typeCheckerBuildArrayType' arrays types
   
 
@@ -184,15 +185,15 @@ typeCheckerBuildArrayType array types  = Left $ typeCheckerBuildArrayType' array
 typeCheckerIdentifiers identifiers typeLeft typeRight =
    mapM_ (typeCheckerIdentifier (supdecl typeLeft typeRight)) identifiers
 
-typeCheckerIdentifier typess id = do
+typeCheckerIdentifier types id = do
   (symtable, tree, current_id) <- get
-  case typess of
-    Left types -> do
-      modify (\(symtable,tree,current_id) -> (symtable, typeCheckerVariable id tree types current_id, current_id ))
-      get
-    Right err@(Error error) -> do
+  case types of
+    Error error -> do
       let node = findNodeById current_id tree in
         modify (\(symtable,tree,current_id) -> (symtable, updateTree (addErrorNode error node) tree , current_id )) 
+      get
+    _ -> do
+      modify (\(symtable,tree,current_id) -> (symtable, typeCheckerVariable id tree types current_id, current_id ))
       get
 
 typeCheckerVariable (PIdent ((l,c), identifier)) tree types currentIdNode = 
@@ -202,14 +203,15 @@ typeCheckerVariable (PIdent ((l,c), identifier)) tree types currentIdNode =
       Nothing -> updateTree (addEntryNode identifier (Variable Normal (l,c) types) node) tree
 
 typeCheckerDeclExpression environment decExp = case decExp of
-  ExprDecArray arrays@(ArrayInit _ expression@(exp:exps) _) -> let Left types = typeCheckerDeclExpression environment exp in Left $ Array types
-    --foldr (\x y -> let types = typeCheckerDeclExpression environment x in 
-    --  case types of
-    --    Left typeFound ->  supdecl (Array typeFound) y
-    --    Right typeFound ->  supdecl (Array typeFound) y) 
-    --  (Left Infered) expression
-      -- let Left types = typeCheckerDeclExpression environment exp in Left $ Array types
+  ExprDecArray arrays@(ArrayInit _ expression@(exp:exps) _) -> foldr (typeCheckerDeclArrayExp environment) Infered expression
   ExprDec exp -> typeCheckerExpression environment exp
+
+typeCheckerDeclArrayExp environment expression types = case typeCheckerDeclExpression environment expression of
+  err@(Error _) -> err
+  typesFound -> case supdecl types typesFound of
+    err@(Error _) -> err
+    _ -> Array types
+
 
 typeCheckerExpression environment@(_sym, _tree, current_id) exp = case exp of
     EAss e1 _eqsym e2 -> supdecl (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
@@ -221,60 +223,61 @@ typeCheckerExpression environment@(_sym, _tree, current_id) exp = case exp of
     Elthen e1 pElthen e2 -> supBool (typeCheckerExpression environment e1) (typeCheckerExpression environment e2) 
     --Da fare ar declaration
     Earray expIdentifier arDeclaration -> typeCheckerExpression environment expIdentifier
-    Evar identifier -> Left $ getVarType identifier environment
-    Econst (Eint _) -> Left Int
-    Econst (Efloat _) -> Left Real
+    Evar identifier -> getVarType identifier environment
+    Econst (Eint _) -> Int
+    Econst (Efloat _) -> Real
   -- todo: aggiungere tutti i casi degli operatori esistenti
 
 
 -- infer del tipo fra due tipi. Da capire meglio cosa fare in caso di errore.
 
-sup (Left e1) (Left e2) = sup' e1 e2
+sup = sup'
 
-sup' Int Int = Left Int
-sup' Int Real = Left Real
-sup' Real Int = Left Real
-sup' Real Real = Left  Real
-sup' e1@(Error _) _ = Right e1
-sup' _ e1@(Error _) = Right e1
+sup' Int Int = Int
+sup' Int Real = Real
+sup' Real Int =  Real
+sup' Real Real =  Real
+sup' (Array typesFirst) (Array typesSecond) = let types = sup' typesFirst typesSecond in Array types
+sup' array@(Array typesFirst) types =  Error (ErrorIncompatibleTypes array types)
+sup' types array@(Array typesFirst) =  Error (ErrorIncompatibleTypes types array)
+sup' e1@(Error _) _ =  e1
+sup' _ e1@(Error _) =  e1
 
 -- infer del tipo tra due expr messe in relazione tramite un operatore booleano binario
-supBool (Left e1) (Left e2) = supBool' e1 e2
-supBool (Right e1) _ = Right e1
-supBool _ (Right e1) = Right e1
+supBool e1@(Error _) _ = e1
+supBool _ e1@(Error _) = e1
+supBool e1 e2 = supBool' e1 e2
 
 
-supBool' error@(Error _) _ = Left error
-supBool' _ error@(Error _) = Left error
-supBool' Int Int = Left Bool
-supBool' Real Real = Left Bool
-supBool' _ _ = Left Bool
+supBool' error@(Error _) _ = error
+supBool' _ error@(Error _) = error
+supBool' Int Int = Bool
+supBool' Real Real = Bool
+supBool' _ _ = Bool
 
 -- infer del tipo nel caso di dichiarazioni con inizializzazione della variabile
 -- e' leggermente diversa dalla sup definita sopra, sotto un commento al riguardo.
 -- supdecl Int Int = Int
 -- errore perche' questo corrisponde a codice del tipo: int x = 1.3; che deve ovviamente dare errore di tipo
 
-supdecl (Left a) (Left b) = supdecl' a b
+supdecl = supdecl'
 
-supdecl' Infered types = Left types
-supdecl' types Infered = Left types
-supdecl' Int Int = Left Int
-supdecl' Int Real = Right $ Error (ErrorIncompatibleTypes Int Real)
-supdecl' Real Int = Left Real
-supdecl' Real Real = Left Real
-supdecl' (Array typesFirst) (Array typesSecond) = let types = supdecl' typesFirst typesSecond in case types of 
-  Left typesFound -> Left $ Array typesFound
-  _ -> types
-supdecl' array@(Array typesFirst) types =  Right $ Error (ErrorIncompatibleTypes array types)
-supdecl' types array@(Array typesFirst) =  Right $ Error (ErrorIncompatibleTypes types array)
-supdecl' error@(Error _) _ = Right error
-supdecl' _ error@(Error _) = Right error
+supdecl' Infered types = types
+supdecl' types Infered = types
+supdecl' Int Int = Int
+supdecl' Int Real = Error (ErrorIncompatibleTypes Int Real)
+supdecl' Real Int = Real
+supdecl' Real Real = Real
+supdecl' (Array typesFirst) (Array typesSecond) = let types = supdecl' typesFirst typesSecond in Array types
+supdecl' array@(Array typesFirst) types =  Error (ErrorIncompatibleTypes array types)
+supdecl' types array@(Array typesFirst) =  Error (ErrorIncompatibleTypes types array)
+supdecl' error@(Error _) _ = error
+supdecl' _ error@(Error _) = error
 
 
 
-convertTypeSpecToTypeInferred Tint {} = Left Int
-convertTypeSpecToTypeInferred Treal {} = Left Real
+convertTypeSpecToTypeInferred Tint {} = Int
+convertTypeSpecToTypeInferred Treal {} = Real
 --convertTypeSpecToTypeInferred (Type Tchar) = Char
 
 convertMode PRef {} = Ref
