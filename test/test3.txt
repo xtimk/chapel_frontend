@@ -1,5 +1,6 @@
-var l :[1] real;
-var m = [1,[2],[3], g];
+var l :[4] real;
+var h :[4..5, a..10] real;
+var m = [[[1]],[[2,1]],[[2]],[[3]]];
 proc pluto (ref x : int, y, z: real) : int {
     var pippo = 3;
 
