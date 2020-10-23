@@ -210,7 +210,7 @@ typeCheckerDeclArrayExp environment expression types = case (typeCheckerDeclExpr
   (err@(Error _), _ ) -> err
   ( _, err@(Error _) ) -> err
   (typesFound, Array typesInfered) -> case supdecl (-1,-1) typesFound typesInfered of
-    err@(Error _) -> (Error (modErrorPos e (getExprDeclPos expression)))
+    err@(Error e) -> (Error (modErrorPos e (getExprDeclPos expression)))
     typesChecked -> Array typesChecked
 
 
