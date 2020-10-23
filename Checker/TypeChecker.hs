@@ -183,14 +183,14 @@ typeCheckerBuildArrayType = typeCheckerBuildArrayType'
 --  ArrayDimBound elements = Left $ Array types
 
 typeCheckerIdentifiers identifiers typeLeft typeRight =
-   mapM_ (typeCheckerIdentifier (supdecl typeLeft typeRight)) identifiers
+   mapM_ (typeCheckerIdentifier (supdecl (-2,-2) typeLeft typeRight)) identifiers
 
-typeCheckerIdentifier types id = do
+typeCheckerIdentifier types id@(PIdent ((l,c), _)) = do
   (symtable, tree, current_id) <- get
   case types of
     Error error -> do
       let node = findNodeById current_id tree in
-        modify (\(symtable,tree,current_id) -> (symtable, updateTree (addErrorNode error node) tree , current_id )) 
+        modify (\(symtable,tree,current_id) -> (symtable, updateTree (addErrorNode (modErrorPos error (l,c)) node) tree , current_id )) 
       get
     _ -> do
       modify (\(symtable,tree,current_id) -> (symtable, typeCheckerVariable id tree types current_id, current_id ))
@@ -208,17 +208,17 @@ typeCheckerDeclExpression environment decExp = case decExp of
 
 typeCheckerDeclArrayExp environment expression types = case typeCheckerDeclExpression environment expression of
   err@(Error _) -> err
-  typesFound -> case supdecl types typesFound of
-    err@(Error _) -> err
+  typesFound -> case supdecl (-1,-1) types typesFound of
+    err@(Error e) -> (Error (modErrorPos e (getExprDeclPos expression)))
     _ -> Array types
 
 
 typeCheckerExpression environment@(_sym, _tree, current_id) exp = case exp of
-    EAss e1 _eqsym e2 -> supdecl (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
-    Eplus e1 plus e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
-    Eminus e1 minus e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
-    Ediv e1 div e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
-    Etimes e1 div e2 -> sup (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
+    EAss e1 (AssgnEq (PAssignmEq ((l,c),_)) ) e2 -> supdecl (getExpPos e1) (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
+    Eplus e1 (PEplus ((l,c),_)) e2 -> sup (l,c) (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
+    Eminus e1 (PEminus ((l,c),_)) e2 -> sup (l,c) (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
+    Ediv e1 (PEdiv ((l,c),_)) e2 -> sup (l,c) (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
+    Etimes e1 (PEtimes ((l,c),_)) e2 -> sup (l,c) (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
     InnerExp _ e _ -> typeCheckerExpression environment e
     Elthen e1 pElthen e2 -> supBool (typeCheckerExpression environment e1) (typeCheckerExpression environment e2) 
     --Da fare ar declaration
@@ -233,15 +233,15 @@ typeCheckerExpression environment@(_sym, _tree, current_id) exp = case exp of
 
 sup = sup'
 
-sup' Int Int = Int
-sup' Int Real = Real
-sup' Real Int =  Real
-sup' Real Real =  Real
-sup' (Array typesFirst) (Array typesSecond) = let types = sup' typesFirst typesSecond in Array types
-sup' array@(Array typesFirst) types =  Error (ErrorIncompatibleTypes array types)
-sup' types array@(Array typesFirst) =  Error (ErrorIncompatibleTypes types array)
-sup' e1@(Error _) _ =  e1
-sup' _ e1@(Error _) =  e1
+sup' (l,c) Int Int = Int
+sup' (l,c) Int Real = Real
+sup' (l,c) Real Int =  Real
+sup' (l,c) Real Real =  Real
+sup' (l,c) (Array typesFirst) (Array typesSecond) = let types = sup' (l,c) typesFirst typesSecond in Array types
+sup' (l,c) array@(Array typesFirst) types =  Error (ErrorIncompatibleTypes (l,c) array types)
+sup' (l,c) types array@(Array typesFirst) =  Error (ErrorIncompatibleTypes (l,c) types array)
+sup' (l,c) e1@(Error _) _ =  e1
+sup' (l,c) _ e1@(Error _) =  e1
 
 -- infer del tipo tra due expr messe in relazione tramite un operatore booleano binario
 supBool e1@(Error _) _ = e1
@@ -262,17 +262,17 @@ supBool' _ _ = Bool
 
 supdecl = supdecl'
 
-supdecl' Infered types = types
-supdecl' types Infered = types
-supdecl' Int Int = Int
-supdecl' Int Real = Error (ErrorIncompatibleTypes Int Real)
-supdecl' Real Int = Real
-supdecl' Real Real = Real
-supdecl' (Array typesFirst) (Array typesSecond) = let types = supdecl' typesFirst typesSecond in Array types
-supdecl' array@(Array typesFirst) types =  Error (ErrorIncompatibleTypes array types)
-supdecl' types array@(Array typesFirst) =  Error (ErrorIncompatibleTypes types array)
-supdecl' error@(Error _) _ = error
-supdecl' _ error@(Error _) = error
+supdecl' (l,c) Infered types = types
+supdecl' (l,c) types Infered = types
+supdecl' (l,c) Int Int = Int
+supdecl' (l,c) Int Real = Error (ErrorIncompatibleTypes (l,c) Int Real)
+supdecl' (l,c) Real Int = Real
+supdecl' (l,c) Real Real = Real
+supdecl' (l,c) (Array typesFirst) (Array typesSecond) = let types = supdecl' (l,c) typesFirst typesSecond in Array types
+supdecl' (l,c) array@(Array typesFirst) types =  Error (ErrorIncompatibleTypes (l,c) array types)
+supdecl' (l,c) types array@(Array typesFirst) =  Error (ErrorIncompatibleTypes (l,c) types array)
+supdecl' (l,c) error@(Error _ ) _ = error
+supdecl' (l,c) _ error@(Error _) = error
 
 
 
