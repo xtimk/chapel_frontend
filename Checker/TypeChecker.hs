@@ -203,14 +203,15 @@ typeCheckerVariable (PIdent ((l,c), identifier)) tree types currentIdNode =
       Nothing -> updateTree (addEntryNode identifier (Variable Normal (l,c) types) node) tree
 
 typeCheckerDeclExpression environment decExp = case decExp of
-  ExprDecArray arrays@(ArrayInit _ expression@(exp:exps) _) -> foldr (typeCheckerDeclArrayExp environment) Infered expression
+  ExprDecArray arrays@(ArrayInit _ expression@(exp:exps) _) -> foldr (typeCheckerDeclArrayExp environment) (Array Infered) expression
   ExprDec exp -> typeCheckerExpression environment exp
 
-typeCheckerDeclArrayExp environment expression types = case typeCheckerDeclExpression environment expression of
-  err@(Error _) -> err
-  typesFound -> case supdecl types typesFound of
+typeCheckerDeclArrayExp environment expression types = case (typeCheckerDeclExpression environment expression, types) of
+  (err@(Error _), _ ) -> err
+  ( _, err@(Error _) ) -> err
+  (typesFound, Array typesInfered) -> case supdecl typesFound typesInfered of
     err@(Error _) -> err
-    _ -> Array types
+    typesChecked -> Array typesChecked
 
 
 typeCheckerExpression environment@(_sym, _tree, current_id) exp = case exp of
@@ -237,11 +238,11 @@ sup' Int Int = Int
 sup' Int Real = Real
 sup' Real Int =  Real
 sup' Real Real =  Real
+sup' e1@(Error _) _ =  e1
+sup' _ e1@(Error _) =  e1
 sup' (Array typesFirst) (Array typesSecond) = let types = sup' typesFirst typesSecond in Array types
 sup' array@(Array typesFirst) types =  Error (ErrorIncompatibleTypes array types)
 sup' types array@(Array typesFirst) =  Error (ErrorIncompatibleTypes types array)
-sup' e1@(Error _) _ =  e1
-sup' _ e1@(Error _) =  e1
 
 -- infer del tipo tra due expr messe in relazione tramite un operatore booleano binario
 supBool e1@(Error _) _ = e1
@@ -262,17 +263,19 @@ supBool' _ _ = Bool
 
 supdecl = supdecl'
 
+
 supdecl' Infered types = types
 supdecl' types Infered = types
 supdecl' Int Int = Int
 supdecl' Int Real = Error (ErrorIncompatibleTypes Int Real)
 supdecl' Real Int = Real
 supdecl' Real Real = Real
+supdecl' error@(Error _) _ = error
+supdecl' _ error@(Error _) = error
 supdecl' (Array typesFirst) (Array typesSecond) = let types = supdecl' typesFirst typesSecond in Array types
 supdecl' array@(Array typesFirst) types =  Error (ErrorIncompatibleTypes array types)
 supdecl' types array@(Array typesFirst) =  Error (ErrorIncompatibleTypes types array)
-supdecl' error@(Error _) _ = error
-supdecl' _ error@(Error _) = error
+
 
 
 
