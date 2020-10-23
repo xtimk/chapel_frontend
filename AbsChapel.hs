@@ -157,12 +157,12 @@ data ExprDecl = ExprDecArray ArInit | ExprDec Exp
 data ArInit = ArrayInit POpenBracket [ExprDecl] PCloseBracket
   deriving (Eq, Ord, Show, Read)
 
-data ArDecl
-    = ArrayDeclIndex POpenBracket [ArDim] PCloseBracket
-    | ArrayDeclFixed POpenBracket ArBound PCloseBracket
+data ArDecl = ArrayDeclIndex POpenBracket [ArDim] PCloseBracket
   deriving (Eq, Ord, Show, Read)
 
-data ArDim = ArrayDimSingle ArBound PPoint PPoint ArBound
+data ArDim
+    = ArrayDimSingle ArBound PPoint PPoint ArBound
+    | ArrayDimBound ArBound
   deriving (Eq, Ord, Show, Read)
 
 data ArBound = ArrayBoundIdent PIdent | ArratBoundConst Constant

@@ -217,9 +217,9 @@ ListExprDecl : ExprDecl { (:[]) $1 }
              | ExprDecl ',' ListExprDecl { (:) $1 $3 }
 ArDecl :: { ArDecl }
 ArDecl : POpenBracket ListArDim PCloseBracket { AbsChapel.ArrayDeclIndex $1 $2 $3 }
-       | POpenBracket ArBound PCloseBracket { AbsChapel.ArrayDeclFixed $1 $2 $3 }
 ArDim :: { ArDim }
 ArDim : ArBound PPoint PPoint ArBound { AbsChapel.ArrayDimSingle $1 $2 $3 $4 }
+      | ArBound { AbsChapel.ArrayDimBound $1 }
 ListArDim :: { [ArDim] }
 ListArDim : ArDim { (:[]) $1 } | ArDim ',' ListArDim { (:) $1 $3 }
 ArBound :: { ArBound }

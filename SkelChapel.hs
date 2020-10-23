@@ -167,10 +167,10 @@ transArInit x = case x of
 transArDecl :: ArDecl -> Result
 transArDecl x = case x of
   ArrayDeclIndex popenbracket ardims pclosebracket -> failure x
-  ArrayDeclFixed popenbracket arbound pclosebracket -> failure x
 transArDim :: ArDim -> Result
 transArDim x = case x of
   ArrayDimSingle arbound1 ppoint1 ppoint2 arbound2 -> failure x
+  ArrayDimBound arbound -> failure x
 transArBound :: ArBound -> Result
 transArBound x = case x of
   ArrayBoundIdent pident -> failure x
