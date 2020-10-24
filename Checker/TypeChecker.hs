@@ -157,7 +157,7 @@ typeCheckerIdentifier types id@(PIdent ((l,c), _)) = do
   case types of
     Error error -> do
       let node = findNodeById current_id tree in
-        modify (\(_s, _e, tree,_i) -> (_s, _e, updateTree (addErrorNode (modErrorPos error (l,c)) node) tree , _i )) 
+        modify (\(_s, _e, tree,_i) -> (_s, _e, updateTree (addErrorsNode node (modErrorsPos (l,c) error )) tree , _i )) 
       get
     _ -> do
       modify (\(_s,_e,tree,_i) -> (_s, _e, typeCheckerVariable id tree types current_id, _i ))
@@ -166,7 +166,7 @@ typeCheckerIdentifier types id@(PIdent ((l,c), _)) = do
 typeCheckerVariable (PIdent ((l,c), identifier)) tree types currentIdNode = 
   let node = findNodeById currentIdNode tree in case DMap.lookup identifier (getSymbolTable node) of
       Just (varAlreadyDeclName, Variable _ (varAlreadyDecLine,varAlreadyDecColumn) varAlreadyDecTypes) -> 
-        updateTree (addErrorNode (ErrorVarAlreadyDeclared (varAlreadyDecLine,varAlreadyDecColumn) (l,c) identifier ) node) tree
+        updateTree (addErrorsNode node [ErrorVarAlreadyDeclared (varAlreadyDecLine,varAlreadyDecColumn) (l,c) identifier]) tree
       Nothing -> updateTree (addEntryNode identifier (Variable Normal (l,c) types) node) tree
 
 typeCheckerDeclExpression environment decExp = case decExp of
@@ -174,10 +174,11 @@ typeCheckerDeclExpression environment decExp = case decExp of
   ExprDec exp -> typeCheckerExpression environment exp
 
 typeCheckerDeclArrayExp environment expression types = case (typeCheckerDeclExpression environment expression, types) of
+  ((Error er1), (Error er2)) -> Error $ er1 ++ er2
   (err@(Error _), _ ) -> err
   ( _, err@(Error _) ) -> err
   (typesFound, Array typesInfered (first, Fix n)) -> case supdecl (-1,-1) typesFound typesInfered of
-    err@(Error e) -> Error (modErrorPos e (getExprDeclPos expression))
+    err@(Error e) -> Error (modErrorsPos (getExprDeclPos expression) e )
     typesChecked -> Array typesChecked (first,Fix $ n + 1)
 
 typeCheckerBuildArrayParameter enviroment array = case array of
@@ -212,11 +213,15 @@ sup (l,c) Int Int = Int
 sup (l,c) Int Real = Real
 sup (l,c) Real Int =  Real
 sup (l,c) Real Real =  Real
+sup (l,c) (Error er1 ) (Error er2 ) = Error $ er1 ++ er2
 sup (l,c) e1@(Error _) _ =  e1
 sup (l,c) _ e1@(Error _) =  e1
-sup (l,c) (Array typesFirst dimensionFirst) (Array typesSecond _) = let types = sup (l,c) typesFirst typesSecond in Array types dimensionFirst
-sup (l,c) array@(Array _ _) types =  Error (ErrorIncompatibleTypes (l,c) array types)
-sup (l,c) types array@(Array _ _) =  Error (ErrorIncompatibleTypes (l,c) types array)
+sup (l,c) (Array typesFirst dimensionFirst) (Array typesSecond _) = 
+  let types = supdecl (l,c) typesFirst typesSecond in case types of 
+    err@(Error _) -> err
+    _ -> Array types dimensionFirst
+sup (l,c) array@(Array _ _) types =  Error [ErrorIncompatibleTypes (l,c) array types]
+sup (l,c) types array@(Array _ _) =  Error [ErrorIncompatibleTypes (l,c) types array]
 
 -- infer del tipo tra due expr messe in relazione tramite un operatore booleano binario
 supBool e1@(Error _) _ = e1
@@ -232,14 +237,18 @@ supBool' _ _ = Bool
 supdecl (l,c) Infered types = types
 supdecl (l,c) types Infered = types
 supdecl (l,c) Int Int = Int
-supdecl (l,c) Int Real = Error (ErrorIncompatibleTypes (l,c) Int Real)
+supdecl (l,c) Int Real = Error [ErrorIncompatibleTypes (l,c) Int Real]
 supdecl (l,c) Real Int = Real
 supdecl (l,c) Real Real = Real
+supdecl (l,c) (Error er1 ) (Error er2 ) = Error $ er1 ++ er2
 supdecl (l,c) error@(Error _ ) _ = error
 supdecl (l,c) _ error@(Error _) = error
-supdecl (l,c) (Array typesFirst dimensionFirst) (Array typesSecond _) = let types = supdecl (l,c) typesFirst typesSecond in Array types dimensionFirst
-supdecl (l,c) array@(Array _ _) types =  Error (ErrorIncompatibleTypes (l,c) array types)
-supdecl (l,c) types array@(Array _ _) =  Error (ErrorIncompatibleTypes (l,c) types array)
+supdecl (l,c) (Array typesFirst dimensionFirst) (Array typesSecond _) = 
+  let types = supdecl (l,c) typesFirst typesSecond in case types of 
+    err@(Error _) -> err
+    _ -> Array types dimensionFirst
+supdecl (l,c) array@(Array _ _) types =  Error [ErrorIncompatibleTypes (l,c) array types]
+supdecl (l,c) types array@(Array _ _) =  Error [ErrorIncompatibleTypes (l,c) types array]
 
 convertTypeSpecToTypeInferred Tint {} = Int
 convertTypeSpecToTypeInferred Treal {} = Real
