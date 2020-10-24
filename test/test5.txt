@@ -1,6 +1,8 @@
 var x : real = 6;
 proc main () : int
 {
-    var x = 8;
-    var x = 9;
+    do while
+    {
+        x = 5;
+    }  (x + 5)
 }
