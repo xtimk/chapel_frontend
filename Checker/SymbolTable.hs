@@ -18,16 +18,19 @@ data Mode = Normal | Ref | Out | Name | In
 data Type = Int | Real | Bool | Void | Char | Infered | Array Type (Bound , Bound) | Pointer Type | Error [ErrorChecker]
   deriving (Show)
 
+data ErrorChecker =  ErrorChecker Loc DefinedError
+ deriving (Show)
 
-
-data ErrorChecker = 
-  ErrorVarNotDeclared Loc String | 
-  ErrorIncompatibleTypes Loc Type Type | 
-  ErrorVarAlreadyDeclared Loc Loc String |
-  ErrorGuardNotBoolean Loc |
-  ErrorDeclarationBoundNotCorrectType Loc Type String |
-  ErrorDeclarationBoundArray Loc Type String |
-  ErrorDimensionArray Loc Int Loc Int 
+data DefinedError = 
+  ErrorVarNotDeclared String | 
+  ErrorIncompatibleTypes Type Type | 
+  ErrorVarAlreadyDeclared Loc String |
+  ErrorGuardNotBoolean |
+  ErrorDeclarationBoundNotCorrectType Type String |
+  ErrorArrayCallExpression |
+  ErrorArrayIdentifierType Type String |
+  ErrorDeclarationBoundArray Type String |
+  ErrorDimensionArray Int Loc Int 
   deriving (Show)
 
 -- data Type' = Int' | Real' | Error' ErrorType

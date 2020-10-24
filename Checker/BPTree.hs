@@ -32,9 +32,7 @@ getParentID (Node id val parentID children) = parentID
 
 modErrorsPos pos = map (modErrorPos pos)
 
-modErrorPos (l,c) (ErrorVarNotDeclared _oldloc a) = ErrorVarNotDeclared (l,c) a
-modErrorPos (l,c) (ErrorIncompatibleTypes _oldloc a b)  = ErrorIncompatibleTypes (l,c) a b
-modErrorPos (l,c) (ErrorVarAlreadyDeclared _oldloc a b) = ErrorVarAlreadyDeclared (l,c) a b
+modErrorPos (l,c) (ErrorChecker _oldloc a) = ErrorChecker (l,c) a
 
 getExprDeclPos (ExprDecArray (ArrayInit _ (e:exps) _)) = getExprDeclPos e
 getExprDeclPos (ExprDec exp) = getExpPos exp 
@@ -113,7 +111,7 @@ getVarType (PIdent ((l,c), identifier)) (_,_,tree,currentNode) =
         case DMap.lookup identifier symtable of
             Just (_,Variable _ _ t) -> t
             Just (_,Function _ _ t) -> t
-            Nothing -> Checker.SymbolTable.Error [Checker.SymbolTable.ErrorVarNotDeclared (l,c) identifier]
+            Nothing -> Checker.SymbolTable.Error [ErrorChecker (l,c) $ Checker.SymbolTable.ErrorVarNotDeclared identifier]
 
 uniteSymTables = foldr (\y@(Node _ (BP sym _ _errors) _ _) x -> DMap.union sym x ) DMap.empty
 
