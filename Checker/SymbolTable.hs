@@ -15,10 +15,10 @@ data EnvEntry =
 data Mode = Normal | Ref | Out | Name | In 
  deriving (Show)
 
-data Type = Int | Real | Bool | Void | Infered | Array ModeType (Bound , Bound) | TypeError [ErrorChecker]
+data Type = Int | Real | Char | Bool | Void | Array ModeType (Bound , Bound) | TypeError [ErrorChecker]
   deriving (Show)
 
-data ModeType = ModeType Mode Type | Error [ErrorChecker]
+data ModeType = ModeType Mode Type | Infered | Error [ErrorChecker]
   deriving (Show)
 
 data ErrorChecker = 
@@ -26,8 +26,8 @@ data ErrorChecker =
   ErrorIncompatibleTypes Loc Type Type | 
   ErrorVarAlreadyDeclared Loc Loc String |
   ErrorGuardNotBoolean Loc |
-  ErrorDeclarationBoundNotCorrectType Loc Type String |
-  ErrorDeclarationBoundArray Loc Type String |
+  ErrorDeclarationBoundNotCorrectType Loc ModeType String |
+  ErrorDeclarationBoundArray Loc ModeType String |
   ErrorDimensionArray Loc Int Loc Int 
   deriving (Show)
 
