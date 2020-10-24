@@ -112,7 +112,7 @@ gotoParent tree (Node id val parent children) = case parent of
 --             Just (_,Function _ _ t) -> t
 --             Nothing -> getVarType' xs
 
-getVarType (PIdent ((l,c), identifier)) (sym, tree, currentNode) = 
+getVarType (PIdent ((l,c), identifier)) (_,_,tree,currentNode) = 
     let symtable = uniteSymTables $ bpPathToList currentNode tree in
         case DMap.lookup identifier symtable of
             Just (_,Variable _ _ t) -> t
