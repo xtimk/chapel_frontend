@@ -24,7 +24,8 @@ data ErrorChecker =
   ErrorVarNotDeclared Loc String | 
   ErrorIncompatibleTypes Loc Type Type | 
   ErrorVarAlreadyDeclared Loc Loc String |
-  ErrorGuardNotBoolean Loc
+  ErrorGuardNotBoolean Loc |
+  ErrorDimensionArray Loc Int Loc Int 
   deriving (Show)
 
 -- data Type' = Int' | Real' | Error' ErrorType

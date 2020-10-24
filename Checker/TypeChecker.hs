@@ -106,7 +106,7 @@ typeCheckerStatement statement = case statement of
           Error error -> do
             (_s,_e,tree,current_id) <- get
             let node = findNodeById current_id tree in
-              modify (\(_s, _e, tree,_i) -> (_s, _e, (updateTree (addErrorNode error node) tree) , _i ))
+              modify (\(_s, _e, tree,_i) -> (_s, _e, (updateTree (addErrorsNode node error) tree) , _i ))
             get
           _ ->get -- se non ho errore non faccio nulla nello stato
       else get
