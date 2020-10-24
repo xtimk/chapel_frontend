@@ -1,4 +1,2 @@
-proc main () : int {
-    var y = 9;
-    var x = &y + 5;
-}
+var x: [2,3] int = [2,3];
+
