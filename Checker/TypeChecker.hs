@@ -221,13 +221,25 @@ typeCheckerExpression environment exp = case exp of
     Ediv e1 (PEdiv ((l,c),_)) e2 -> sup (l,c) (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
     Etimes e1 (PEtimes ((l,c),_)) e2 -> sup (l,c) (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
     InnerExp _ e _ -> typeCheckerExpression environment e
-    Elthen e1 pElthen e2 -> supBool (typeCheckerExpression environment e1) (typeCheckerExpression environment e2) 
+    Elthen e1 pElthen e2 -> supBool (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)
+    Epreop (Indirection _) e1 -> typeCheckerExpression environment e1 -- todo: e' un pointer?
+    Epreop (Address _) e1 -> case isExpVar e1 of
+      True -> Pointer (typeCheckerExpression environment e1)
+      _ -> Error [ErrorCantAddressAnExpression (-4,-4)]
     --Da fare ar declaration
     Earray expIdentifier arDeclaration -> typeCheckerExpression environment expIdentifier
     Evar identifier -> getVarType identifier environment
     Econst (Eint _) -> Int
     Econst (Efloat _) -> Real
 -- todo: aggiungere tutti i casi degli operatori esistenti
+
+sup pos@(l,c) (Pointer _) Real = Error [ErrorCantAddRealToAddress pos]
+sup pos@(l,c) Real (Pointer _) = Error [ErrorCantAddRealToAddress pos]
+sup pos@(l,c) (Pointer _) Char = Error [ErrorCantAddCharToAddress pos]
+sup pos@(l,c) Char (Pointer _) = Error [ErrorCantAddCharToAddress pos]
+
+sup pos@(l,c) (Pointer _p) Int = Pointer _p
+sup pos@(l,c) Int (Pointer _p) = Pointer _p
 
 sup (l,c) Int Int = Int
 sup (l,c) Int Real = Real
