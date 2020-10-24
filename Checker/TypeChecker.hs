@@ -34,11 +34,11 @@ typeCheckerSignature signature = case signature of
 typeCheckerSignature' (PIdent ((line,column),identifier)) params types = 
   case types of
     Error _ -> get
-    _ -> do
+    (ModeType _ typesFound) -> do
       typeCheckerParams params
       (symtable, _e, tree, currentIdNode) <- get
       let node = findNodeById currentIdNode tree; variables = map (snd.snd) (DMap.toAscList symtable)  in
-        put (symtable, _e, updateTree (addEntryNode identifier (Function (line,column) variables types) node) tree, currentIdNode )
+        put (symtable, _e, updateTree (addEntryNode identifier (Function (line,column) variables typesFound) node) tree, currentIdNode )
       get 
 
 typeCheckerSignatureParams identifier = get
@@ -56,7 +56,7 @@ typeCheckerParam x = case x of
     get
 
 typeCheckerParam' mode types (PIdent ((line,column),identifier)) = 
-  let typefound = convertTypeSpecToTypeInferred types in 
+  let (ModeType _ typefound) = convertTypeSpecToTypeInferred types in 
     modify(\(sym,_e,_t,_i) -> (DMap.insert identifier (identifier, Variable mode (line,column) typefound) sym,_e,_t,_i))
 
   
@@ -103,7 +103,7 @@ typeCheckerStatement statement = case statement of
       then do
         env <- get
         case typeCheckerExpression env (EAss e1 eqsym e2) of
-          ModeType _ (Error error) -> do
+          Error error -> do
             (_s,_e,tree,current_id) <- get
             let node = findNodeById current_id tree in
               modify (\(_s, _e, tree,_i) -> (_s, _e, (updateTree (addErrorsNode node error) tree) , _i ))
@@ -163,7 +163,7 @@ typeCheckerBuildArrayType environment (ArrayDeclIndex _ array _) = typeCheckerBu
   where
     typeCheckerBuildArrayType' enviroment [] types = (types, [])
     typeCheckerBuildArrayType' enviroment (array:arrays) types = 
-      let (bounds, errors) = typeCheckerBuildArrayParameter enviroment array; (typesFound, othersErrors) = typeCheckerBuildArrayType' enviroment arrays types in (Array typesFound bounds, errors ++ othersErrors )
+      let (bounds, errors) = typeCheckerBuildArrayParameter enviroment array; (typesFound, othersErrors) = typeCheckerBuildArrayType' enviroment arrays types in (ModeType Normal (Array typesFound bounds), errors ++ othersErrors )
 
 typeCheckerIdentifiers identifiers typeLeft typeRight = do
    mapM_ (typeCheckerIdentifier (supModeDecl (-2,-2) typeLeft typeRight)) identifiers
@@ -180,23 +180,23 @@ typeCheckerIdentifier types id@(PIdent ((l,c), _)) = do
       modify (\(_s,_e,tree,_i) -> (_s, _e, typeCheckerVariable id tree types current_id, _i ))
       get
 
-typeCheckerVariable (PIdent ((l,c), identifier)) tree types currentIdNode = 
+typeCheckerVariable (PIdent ((l,c), identifier)) tree (ModeType mode types) currentIdNode = 
   let node = findNodeById currentIdNode tree in case DMap.lookup identifier (getSymbolTable node) of
       Just (varAlreadyDeclName, Variable _ (varAlreadyDecLine,varAlreadyDecColumn) varAlreadyDecTypes) -> 
         updateTree (addErrorsNode node [ErrorVarAlreadyDeclared (varAlreadyDecLine,varAlreadyDecColumn) (l,c) identifier]) tree
-      Nothing -> updateTree (addEntryNode identifier (Variable Normal (l,c) types) node) tree
+      Nothing -> updateTree (addEntryNode identifier (Variable mode (l,c) types) node) tree
 
 typeCheckerDeclExpression environment decExp = case decExp of
-  ExprDecArray arrays@(ArrayInit _ expression@(exp:exps) _) -> foldr (typeCheckerDeclArrayExp environment) (Array Infered (Fix 0, Fix 0)) expression
+  ExprDecArray arrays@(ArrayInit _ expression@(exp:exps) _) -> foldr (typeCheckerDeclArrayExp environment) (ModeType Normal (Array Infered (Fix 0, Fix 0))) expression
   ExprDec exp -> typeCheckerExpression environment exp
 
 typeCheckerDeclArrayExp environment expression types = case (typeCheckerDeclExpression environment expression, types) of
   ((Error er1), (Error er2)) -> Error $ er1 ++ er2
   (err@(Error _), _ ) -> err
   ( _, err@(Error _) ) -> err
-  (typesFound, Array typesInfered (first, Fix n)) -> case supModeDecl (-1,-1) typesFound typesInfered of
+  (typesFound, ModeType Normal (Array typesInfered (first, Fix n))) -> case supModeDecl (-1,-1) typesFound typesInfered of
     err@(Error e) -> Error (modErrorsPos (getExprDeclPos expression) e )
-    typesChecked -> Array typesChecked (first, Fix $ n + 1)
+    typesChecked ->  ModeType Normal (Array typesChecked (first, Fix $ n + 1))
 
 typeCheckerBuildArrayParameter enviroment array = case array of
   ArrayDimSingle leftBound _ _ rightBound -> typeCheckerBuildArrayBound enviroment leftBound rightBound
@@ -208,12 +208,11 @@ typeCheckerBuildArrayBound enviroment lBound rBound =
     typeCheckerBuildArrayBound' bound = case bound of 
       ArrayBoundIdent id@(PIdent (loc,name)) -> case getVarType id enviroment of 
        Error err -> (Fix $ -1, modErrorsPos loc err)
-       Int -> (Var name, [])
+       ModeType Normal Int -> (Var name, [])
        types -> (Fix $ -1, [ErrorDeclarationBoundNotCorrectType loc types name])
       ArratBoundConst constant -> case constant of
-        Efloat (PDouble (loc, id)) -> (Fix $ -1, [ErrorDeclarationBoundArray loc Real id])
-        --Bisogna mettere il tipo giusto!!
-        Echar (PChar (loc,id)) -> ( Fix $ -1, [ErrorDeclarationBoundArray loc Real id])
+        Efloat (PDouble (loc, id)) -> (Fix $ -1, [ErrorDeclarationBoundArray loc (ModeType Normal Real) id])
+        Echar (PChar (loc,id)) -> ( Fix $ -1, [ErrorDeclarationBoundArray loc (ModeType Normal Char) id])
         Eint (PInteger (loc,dimension)) -> (Fix $ read dimension, [])
 
 typeCheckerExpression environment exp = case exp of
@@ -239,6 +238,8 @@ supMode (l,c) (ModeType Ref _) (ModeType Normal Real) = ModeType Ref Real -- err
 supMode (l,c) (ModeType Normal t1) (ModeType Normal t2) = ModeType Normal (sup (l,c) t1 t2)
 
 -- todo check
+supModeDecl (l,c) Infered types = types
+supModeDecl (l,c) types Infered = types
 supModeDecl (l,c) (ModeType Ref _) (ModeType Normal Int) = ModeType Ref Int
 supModeDecl (l,c) (ModeType Ref _) (ModeType Normal Real) = ModeType Ref Real -- errore
 supModeDecl (l,c) (ModeType Normal t1) (ModeType Normal t2) = ModeType Normal (supdecl (l,c) t1 t2)
@@ -258,7 +259,7 @@ sup (l,c) e1@(TypeError _) _ =  e1
 sup (l,c) _ e1@(TypeError _) =  e1
 sup (l,c) (Array typesFirst dimensionFirst) (Array typesSecond _) = 
   let types = supModeDecl (l,c) typesFirst typesSecond in case types of 
-    err@(TypeError _) -> err
+    err@(Error error) -> TypeError error
     _ -> Array types dimensionFirst
 sup (l,c) array@(Array _ _) types =  TypeError [ErrorIncompatibleTypes (l,c) array types]
 sup (l,c) types array@(Array _ _) =  TypeError [ErrorIncompatibleTypes (l,c) types array]
@@ -274,8 +275,8 @@ supBool' Int Int = Bool
 supBool' Real Real = Bool
 supBool' _ _ = Bool
 
-supdecl (l,c) Infered types = types
-supdecl (l,c) types Infered = types
+--supdecl (l,c) Infered types = types
+--supdecl (l,c) types Infered = types
 supdecl (l,c) Int Int = Int
 supdecl (l,c) Int Real = TypeError [ErrorIncompatibleTypes (l,c) Int Real]
 supdecl (l,c) Real Int = Real
@@ -284,14 +285,14 @@ supdecl (l,c) (TypeError er1 ) (TypeError er2 ) = TypeError $ er1 ++ er2
 supdecl (l,c) error@(TypeError _ ) _ = error
 supdecl (l,c) _ error@(TypeError _) = error
 supdecl (l,c) (Array typesFirst dimensionFirst) (Array typesSecond _) = 
-  let types = supdecl (l,c) typesFirst typesSecond in case types of 
-    err@(TypeError _) -> err
+  let types = supModeDecl (l,c) typesFirst typesSecond in case types of 
+    err@(Error error) -> TypeError error
     _ -> Array types dimensionFirst
 supdecl (l,c) array@(Array _ _) types =  TypeError [ErrorIncompatibleTypes (l,c) array types]
 supdecl (l,c) types array@(Array _ _) =  TypeError [ErrorIncompatibleTypes (l,c) types array]
 
-convertTypeSpecToTypeInferred Tint {} = Int
-convertTypeSpecToTypeInferred Treal {} = Real
+convertTypeSpecToTypeInferred Tint {} = ModeType Normal Int
+convertTypeSpecToTypeInferred Treal {} = ModeType Normal Real
 --convertTypeSpecToTypeInferred (Type Tchar) = Char
 
 convertMode PRef {} = Ref
