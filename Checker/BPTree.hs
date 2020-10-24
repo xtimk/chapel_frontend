@@ -117,7 +117,7 @@ getVarType (PIdent ((l,c), identifier)) (_,_,tree,currentNode) =
         case DMap.lookup identifier symtable of
             Just (_,Variable _ _ t) -> t
             Just (_,Function _ _ t) -> t
-            Nothing -> Checker.SymbolTable.Error (Checker.SymbolTable.ErrorVarNotDeclared (l,c) identifier)       
+            Nothing -> Checker.SymbolTable.Error (Checker.SymbolTable.ErrorVarNotDeclared (l,c) identifier)
 
 uniteSymTables = foldr (\y@(Node _ (BP sym _ _errors) _ _) x -> DMap.union sym x ) DMap.empty
 

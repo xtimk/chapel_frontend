@@ -103,8 +103,12 @@ typeCheckerStatement statement = case statement of
       then do
         env <- get
         case typeCheckerExpression env (EAss e1 eqsym e2) of
-          Error _ -> get
-          _ ->get
+          Error error -> do
+            (_s,_e,tree,current_id) <- get
+            let node = findNodeById current_id tree in
+              modify (\(_s, _e, tree,_i) -> (_s, _e, (updateTree (addErrorNode error node) tree) , _i ))
+            get
+          _ ->get -- se non ho errore non faccio nulla nello stato
       else get
   StExp _ _-> get
   RetVal {} -> get
