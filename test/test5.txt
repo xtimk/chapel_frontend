@@ -1,6 +1,4 @@
-var x : real = 6;
-proc main () : int
-{
-    var x = 8;
-    var x = 9;
-}
+var l :[4] real = [a, b];
+
+
+

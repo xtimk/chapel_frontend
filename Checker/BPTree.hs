@@ -28,13 +28,13 @@ findNodeById searchedId tree = findNode (bp2list tree)
             then actualNode
             else findNode xs
 
-    
-
 getParentID (Node id val parentID children) = parentID
 
-modErrorPos (ErrorVarNotDeclared _oldloc a) (l,c) = ErrorVarNotDeclared (l,c) a
-modErrorPos (ErrorIncompatibleTypes _oldloc a b) (l,c) = ErrorIncompatibleTypes (l,c) a b
-modErrorPos (ErrorVarAlreadyDeclared _oldloc a b) (l,c) = ErrorVarAlreadyDeclared (l,c) a b
+modErrorsPos pos = map (modErrorPos pos)
+
+modErrorPos (l,c) (ErrorVarNotDeclared _oldloc a) = ErrorVarNotDeclared (l,c) a
+modErrorPos (l,c) (ErrorIncompatibleTypes _oldloc a b)  = ErrorIncompatibleTypes (l,c) a b
+modErrorPos (l,c) (ErrorVarAlreadyDeclared _oldloc a b) = ErrorVarAlreadyDeclared (l,c) a b
 
 getExprDeclPos (ExprDecArray (ArrayInit _ (e:exps) _)) = getExprDeclPos e
 getExprDeclPos (ExprDec exp) = getExpPos exp 
@@ -66,19 +66,20 @@ getExpPos exp = case exp of
 
 
 getSymbolTable tree@(Node _ (BP symboltable _ _) _ _) =  symboltable
-setSymbolTable sym tree@(Node id (BP _ statements errors) parent children) = Checker.BPTree.Node {Checker.BPTree.id = id,
-                                                                   val = BP {symboltable = sym, statements = statements, errors = errors}, 
-                                                                   parentID = parent, 
-                                                                   children = children}
+setSymbolTable sym tree@(Node id (BP _ statements errors) parent children) = 
+    Checker.BPTree.Node {Checker.BPTree.id = id,
+    val = BP {symboltable = sym, statements = statements, errors = errors}, 
+    parentID = parent, 
+    children = children}
               
---addEntryTree identifier entry identifierNode tree = updateTree (addEntryNode identifier entry (findNodeById identifierNode tree)) tree
 addEntryNode identifier entry tree@(Node id (BP symboltable statements errors) parent children) = 
     Checker.BPTree.Node {Checker.BPTree.id = id,
     val = BP {symboltable = DMap.insert identifier (identifier, entry) symboltable, statements = statements, errors = errors}, 
     parentID = parent, 
     children = children}
-
---addErrorTree error identifierNode tree = updateTree (addErrorNode error (findNodeById identifierNode tree)) tree
+    
+addErrorsNode :: (Foldable t0) => BPTree BP -> t0 ErrorChecker -> BPTree BP
+addErrorsNode = foldr addErrorNode
 addErrorNode errorChecker tree@(Node id (BP symboltable statements errors) parent children) = 
     Checker.BPTree.Node {Checker.BPTree.id = id,
     val = BP {symboltable = symboltable, statements = statements, errors = errorChecker:errors}, 
@@ -95,29 +96,22 @@ addChild actualNode@(Node idActual val parentId childrenActualNode) childNodeToA
     then Node idActual val parentId (reverse (childNodeToAdd:childrenActualNode))
     else Node idEntire _a _b (map (addChild actualNode childNodeToAdd) children)
 
-createChild identifier tree@(Node id val parent children) = Checker.BPTree.Node {Checker.BPTree.id = identifier, 
-                                                                   parentID = Just id, 
-                                                                   val = BP {symboltable = DMap.empty, statements = [], errors = []}, 
-                                                                   children = []}
+createChild identifier tree@(Node id val parent children) = Checker.BPTree.Node 
+    {Checker.BPTree.id = identifier, 
+    parentID = Just id, 
+    val = BP {symboltable = DMap.empty, statements = [], errors = []}, 
+    children = []}
 
 gotoParent tree (Node id val parent children) = case parent of
     Nothing -> Checker.BPTree.Void
     Just parentReal -> findNodeById parentReal tree
-
---getVarType (PIdent ((l,c), identifier)) (sym, tree, currentNode) = getVarType'  (bpPathToList currentNode (updateTree(setSymbolTable sym (findNodeById currentNode tree)) tree) ) 
---     where
---         getVarType' [] = Checker.SymbolTable.ErrorVarNotDeclared (l,c) identifier
---         getVarType' ((Node _ (BP actualSym _) _ _):xs) = case DMap.lookup identifier actualSym of
---             Just (_,Variable _ t) -> t
---             Just (_,Function _ _ t) -> t
---             Nothing -> getVarType' xs
 
 getVarType (PIdent ((l,c), identifier)) (_,_,tree,currentNode) = 
     let symtable = uniteSymTables $ bpPathToList currentNode tree in
         case DMap.lookup identifier symtable of
             Just (_,Variable _ _ t) -> t
             Just (_,Function _ _ t) -> t
-            Nothing -> Checker.SymbolTable.Error (Checker.SymbolTable.ErrorVarNotDeclared (l,c) identifier)       
+            Nothing -> Checker.SymbolTable.Error [Checker.SymbolTable.ErrorVarNotDeclared (l,c) identifier]     
 
 uniteSymTables = foldr (\y@(Node _ (BP sym _ _errors) _ _) x -> DMap.union sym x ) DMap.empty
 
