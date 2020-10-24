@@ -1,2 +1,4 @@
-var a = 10.2;
-var h :[a..'c'] real = [1,2,3,4];
+proc main () : int {
+    var y = 9;
+    var x = &y + 5;
+}
