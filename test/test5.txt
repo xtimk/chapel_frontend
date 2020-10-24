@@ -1,4 +1,2 @@
-var l :[4] real = [a, b];
-
-
-
+var a = 10.2;
+var h :[a..'c'] real = [1,2,3,4];

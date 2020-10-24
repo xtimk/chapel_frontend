@@ -77,7 +77,9 @@ addEntryNode identifier entry tree@(Node id (BP symboltable statements errors) p
     val = BP {symboltable = DMap.insert identifier (identifier, entry) symboltable, statements = statements, errors = errors}, 
     parentID = parent, 
     children = children}
-    
+
+addErrorsCurrentNode errors (_s,_e,tree,currentId) = (_s,_e,updateTree (addErrorsNode (findNodeById currentId tree) errors) tree, currentId)
+
 addErrorsNode :: (Foldable t0) => BPTree BP -> t0 ErrorChecker -> BPTree BP
 addErrorsNode = foldr addErrorNode
 addErrorNode errorChecker tree@(Node id (BP symboltable statements errors) parent children) = 
