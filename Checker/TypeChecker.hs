@@ -108,7 +108,7 @@ typeCheckerStatement statement = case statement of
             let node = findNodeById current_id tree in
               modify (\(_s, _e, tree,_i) -> (_s, _e, (updateTree (addErrorsNode node error) tree) , _i ))
             get
-          _ ->get -- se non ho errore non faccio nulla nello stato
+          _ -> get -- se non ho errore non faccio nulla nello stato
       else get
   StExp _ _-> get
   RetVal {} -> get
@@ -136,7 +136,7 @@ typeCheckerGuard (SGuard _ expression _) = do
     Bool -> get -- questo dovrebbe essere l'unico caso accettato, se expression non e' bool devo segnalarlo come errore
     _otherwhise -> do
       let node = findNodeById current_id tree in
-        modify (\(_s, _e, tree,_i) -> (_s, _e, (updateTree (addErrorNode (ErrorGuardNotBoolean (getExpPos expression)) node) tree) , _i ))
+        modify (\(_s, _e, tree,_i) -> (_s, _e, (updateTree (addErrorNode (ErrorChecker (getExpPos expression) ErrorGuardNotBoolean ) node) tree) , _i ))
       get
       
 
@@ -182,7 +182,7 @@ typeCheckerIdentifier types id@(PIdent ((l,c), _)) = do
 typeCheckerVariable (PIdent ((l,c), identifier)) tree types currentIdNode = 
   let node = findNodeById currentIdNode tree in case DMap.lookup identifier (getSymbolTable node) of
       Just (varAlreadyDeclName, Variable _ (varAlreadyDecLine,varAlreadyDecColumn) varAlreadyDecTypes) -> 
-        updateTree (addErrorsNode node [ErrorVarAlreadyDeclared (varAlreadyDecLine,varAlreadyDecColumn) (l,c) identifier]) tree
+        updateTree (addErrorsNode node [ErrorChecker (varAlreadyDecLine,varAlreadyDecColumn) $ ErrorVarAlreadyDeclared (l,c) identifier]) tree
       Nothing -> updateTree (addEntryNode identifier (Variable Normal (l,c) types) node) tree
 
 typeCheckerDeclExpression environment decExp = case decExp of
@@ -208,10 +208,10 @@ typeCheckerBuildArrayBound enviroment lBound rBound =
       ArrayBoundIdent id@(PIdent (loc,name)) -> case getVarType id enviroment of 
        Error err -> (Fix $ -1, modErrorsPos loc err)
        Int -> (Var name, [])
-       types -> (Fix $ -1, [ErrorDeclarationBoundNotCorrectType loc types name])
+       types -> (Fix $ -1, [ErrorChecker loc $ ErrorDeclarationBoundNotCorrectType types name])
       ArratBoundConst constant -> case constant of
-        Efloat (PDouble (loc, id)) -> (Fix $ -1, [ErrorDeclarationBoundArray loc Real id])
-        Echar (PChar (loc,id)) -> ( Fix $ -1, [ErrorDeclarationBoundArray loc Char id])
+        Efloat (PDouble (loc, id)) -> (Fix $ -1, [ErrorChecker loc $ ErrorDeclarationBoundArray Real id])
+        Echar (PChar (loc,id)) -> ( Fix $ -1, [ErrorChecker loc $ ErrorDeclarationBoundArray  Char id])
         Eint (PInteger (loc,dimension)) -> (Fix $ read dimension, [])
 
 typeCheckerExpression environment exp = case exp of
@@ -225,18 +225,28 @@ typeCheckerExpression environment exp = case exp of
     Epreop (Indirection _) e1 -> typeCheckerExpression environment e1 -- todo: e' un pointer?
     Epreop (Address _) e1 -> case isExpVar e1 of
       True -> Pointer (typeCheckerExpression environment e1)
-      _ -> Error [ErrorCantAddressAnExpression (-4,-4)]
+      _ -> Error [ErrorChecker (-4,-4) $ ErrorCantAddressAnExpression]
     --Da fare ar declaration
-    Earray expIdentifier arDeclaration -> typeCheckerExpression environment expIdentifier
+    Earray expIdentifier arDeclaration -> typeCheckerDeclarationArray  environment expIdentifier arDeclaration
     Evar identifier -> getVarType identifier environment
     Econst (Eint _) -> Int
     Econst (Efloat _) -> Real
 -- todo: aggiungere tutti i casi degli operatori esistenti
+typeCheckerDeclarationArray environment exp arDeclaration = case exp of
+  Evar (PIdent ((l,c), identifier)) -> case typeCheckerExpression environment exp of
+    types@(Array subType dimension) -> types--case typeCheckerDeclExpression environment arDeclarations of
+      --(Array subType dimension) 
+    types -> Error [ErrorChecker (getExpPos exp) $ ErrorDeclarationBoundNotCorrectType types identifier]
+  _ -> Error [ ErrorChecker (getExpPos exp) $ ErrorArrayCallExpression] 
 
-sup pos@(l,c) (Pointer _) Real = Error [ErrorCantAddRealToAddress pos]
-sup pos@(l,c) Real (Pointer _) = Error [ErrorCantAddRealToAddress pos]
-sup pos@(l,c) (Pointer _) Char = Error [ErrorCantAddCharToAddress pos]
-sup pos@(l,c) Char (Pointer _) = Error [ErrorCantAddCharToAddress pos]
+
+getArrayDimension (Array subtype _) = 1 + getArrayDimension subtype
+getArrayDimension _ = 1
+
+sup pos@(l,c) (Pointer _) Real = Error [ErrorChecker pos ErrorCantAddRealToAddress]
+sup pos@(l,c) Real (Pointer _) = Error [ErrorChecker pos ErrorCantAddRealToAddress]
+sup pos@(l,c) (Pointer _) Char = Error [ErrorChecker pos ErrorCantAddCharToAddress]
+sup pos@(l,c) Char (Pointer _) = Error [ErrorChecker pos ErrorCantAddCharToAddress]
 
 sup pos@(l,c) (Pointer _p) Int = Pointer _p
 sup pos@(l,c) Int (Pointer _p) = Pointer _p
@@ -252,8 +262,8 @@ sup (l,c) (Array typesFirst dimensionFirst) (Array typesSecond _) =
   let types = supdecl (l,c) typesFirst typesSecond in case types of 
     err@(Error _) -> err
     _ -> Array types dimensionFirst
-sup (l,c) array@(Array _ _) types =  Error [ErrorIncompatibleTypes (l,c) array types]
-sup (l,c) types array@(Array _ _) =  Error [ErrorIncompatibleTypes (l,c) types array]
+sup (l,c) array@(Array _ _) types =  Error [ErrorChecker (l,c) $ ErrorIncompatibleTypes array types]
+sup (l,c) types array@(Array _ _) =  Error [ErrorChecker (l,c) $ ErrorIncompatibleTypes types array]
 
 -- infer del tipo tra due expr messe in relazione tramite un operatore booleano binario
 supBool e1@(Error _) _ = e1
@@ -269,7 +279,7 @@ supBool' _ _ = Bool
 supdecl (l,c) Infered types = types
 supdecl (l,c) types Infered = types
 supdecl (l,c) Int Int = Int
-supdecl (l,c) Int Real = Error [ErrorIncompatibleTypes (l,c) Int Real]
+supdecl (l,c) Int Real = Error [ErrorChecker (l,c) $ ErrorIncompatibleTypes Int Real]
 supdecl (l,c) Real Int = Real
 supdecl (l,c) Real Real = Real
 supdecl (l,c) (Error er1 ) (Error er2 ) = Error $ er1 ++ er2
@@ -279,8 +289,8 @@ supdecl (l,c) (Array typesFirst dimensionFirst) (Array typesSecond _) =
   let types = supdecl (l,c) typesFirst typesSecond in case types of 
     err@(Error _) -> err
     _ -> Array types dimensionFirst
-supdecl (l,c) array@(Array _ _) types =  Error [ErrorIncompatibleTypes (l,c) array types]
-supdecl (l,c) types array@(Array _ _) =  Error [ErrorIncompatibleTypes (l,c) types array]
+supdecl (l,c) array@(Array _ _) types =  Error [ErrorChecker (l,c) $ ErrorIncompatibleTypes array types]
+supdecl (l,c) types array@(Array _ _) =  Error [ErrorChecker (l,c) $ ErrorIncompatibleTypes types array]
 
 convertTypeSpecToTypeInferred Tint {} = Int
 convertTypeSpecToTypeInferred Treal {} = Real
