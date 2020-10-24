@@ -27,7 +27,10 @@ data ErrorChecker =
   ErrorGuardNotBoolean Loc |
   ErrorDeclarationBoundNotCorrectType Loc Type String |
   ErrorDeclarationBoundArray Loc Type String |
-  ErrorDimensionArray Loc Int Loc Int 
+  ErrorDimensionArray Loc Int Loc Int |
+  ErrorCantAddRealToAddress Loc |
+  ErrorCantAddCharToAddress Loc |
+  ErrorCantAddressAnExpression Loc
   deriving (Show)
 
 -- data Type' = Int' | Real' | Error' ErrorType

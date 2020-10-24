@@ -32,6 +32,8 @@ getParentID (Node id val parentID children) = parentID
 
 modErrorsPos pos = map (modErrorPos pos)
 
+modErrorPos (l,c) (ErrorCantAddCharToAddress _oldloc) = ErrorCantAddCharToAddress (l,c)
+modErrorPos (l,c) (ErrorCantAddRealToAddress _oldloc) = ErrorCantAddRealToAddress (l,c)
 modErrorPos (l,c) (ErrorVarNotDeclared _oldloc a) = ErrorVarNotDeclared (l,c) a
 modErrorPos (l,c) (ErrorIncompatibleTypes _oldloc a b)  = ErrorIncompatibleTypes (l,c) a b
 modErrorPos (l,c) (ErrorVarAlreadyDeclared _oldloc a b) = ErrorVarAlreadyDeclared (l,c) a b
