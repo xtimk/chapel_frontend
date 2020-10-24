@@ -103,8 +103,12 @@ typeCheckerStatement statement = case statement of
       then do
         env <- get
         case typeCheckerExpression env (EAss e1 eqsym e2) of
-          Error _ -> get
-          _ ->get
+          Error error -> do
+            (_s,_e,tree,current_id) <- get
+            let node = findNodeById current_id tree in
+              modify (\(_s, _e, tree,_i) -> (_s, _e, (updateTree (addErrorNode error node) tree) , _i ))
+            get
+          _ ->get -- se non ho errore non faccio nulla nello stato
       else get
   StExp _ _-> get
   RetVal {} -> get
@@ -127,10 +131,14 @@ getAssignOpTok op = case op of
   (AssgnPlEq (PAssignmPlus ((l,c),t))) -> t
 
 typeCheckerGuard (SGuard _ expression _) = do
-  environment <- get
-  case typeCheckerExpression environment expression of
+  (_s,_e,tree,current_id) <- get
+  case typeCheckerExpression (_s,_e,tree,current_id) expression of
     Bool -> get -- questo dovrebbe essere l'unico caso accettato, se expression non e' bool devo segnalarlo come errore
-    _ -> get
+    _otherwhise -> do
+      let node = findNodeById current_id tree in
+        modify (\(_s, _e, tree,_i) -> (_s, _e, (updateTree (addErrorNode (ErrorGuardNotBoolean (getExpPos expression)) node) tree) , _i ))
+      get
+      
 
 typeCheckerDeclaration x = do
   environment <- get
