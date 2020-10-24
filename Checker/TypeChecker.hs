@@ -146,19 +146,27 @@ typeCheckerDeclaration x = do
     NoAssgmDec ids _colon types -> typeCheckerIdentifiers ids (convertTypeSpecToTypeInferred types) Infered
     AssgmDec ids assigment exp -> typeCheckerIdentifiers ids (typeCheckerDeclExpression environment exp) Infered
     AssgmTypeDec ids _colon types assignment exp -> typeCheckerIdentifiers ids (convertTypeSpecToTypeInferred types) (typeCheckerDeclExpression environment exp)
-    NoAssgmArrayFixDec ids _colon array -> typeCheckerIdentifiers ids (typeCheckerBuildArrayType environment array Infered) Infered
-    NoAssgmArrayDec ids _colon array types -> typeCheckerIdentifiers ids (typeCheckerBuildArrayType environment array (convertTypeSpecToTypeInferred types)) Infered
-    AssgmArrayTypeDec ids _colon array types assignment exp -> typeCheckerIdentifiers ids  (typeCheckerBuildArrayType environment array (convertTypeSpecToTypeInferred types)) (typeCheckerDeclExpression environment exp)
-    AssgmArrayDec ids _colon array assignment exp -> typeCheckerIdentifiers ids (typeCheckerBuildArrayType environment array Infered) (typeCheckerDeclExpression environment exp)
-   
+    NoAssgmArrayFixDec ids _colon array -> typeCheckerIdentifiersArray ids array Infered Infered
+    NoAssgmArrayDec ids _colon array types -> typeCheckerIdentifiersArray ids array (convertTypeSpecToTypeInferred types) Infered
+    AssgmArrayTypeDec ids _colon array types assignment exp -> typeCheckerIdentifiersArray ids array (convertTypeSpecToTypeInferred types) (typeCheckerDeclExpression environment exp)
+    AssgmArrayDec ids _colon array assignment exp -> typeCheckerIdentifiersArray ids array Infered (typeCheckerDeclExpression environment exp)
+
+typeCheckerIdentifiersArray ids array typeLeft typeRight = do
+  environment <- get
+  let (typeArray, errors) = typeCheckerBuildArrayType environment array typeLeft in do
+    modify (addErrorsCurrentNode errors)
+    typeCheckerIdentifiers ids typeArray typeRight
+  get
 
 typeCheckerBuildArrayType environment (ArrayDeclIndex _ array _) = typeCheckerBuildArrayType' environment array
   where
-    typeCheckerBuildArrayType' enviroment [] types = types
-    typeCheckerBuildArrayType' enviroment (array:arrays) types = Array (typeCheckerBuildArrayType' enviroment arrays types) (typeCheckerBuildArrayParameter enviroment array)
+    typeCheckerBuildArrayType' enviroment [] types = (types, [])
+    typeCheckerBuildArrayType' enviroment (array:arrays) types = 
+      let (bounds, errors) = typeCheckerBuildArrayParameter enviroment array; (typesFound, othersErrors) = typeCheckerBuildArrayType' enviroment arrays types in (Array typesFound bounds, errors ++ othersErrors )
 
-typeCheckerIdentifiers identifiers typeLeft typeRight =
+typeCheckerIdentifiers identifiers typeLeft typeRight = do
    mapM_ (typeCheckerIdentifier (supdecl (-2,-2) typeLeft typeRight)) identifiers
+   get
 
 typeCheckerIdentifier types id@(PIdent ((l,c), _)) = do
   (_s,_e,tree,current_id) <- get
@@ -187,20 +195,25 @@ typeCheckerDeclArrayExp environment expression types = case (typeCheckerDeclExpr
   ( _, err@(Error _) ) -> err
   (typesFound, Array typesInfered (first, Fix n)) -> case supdecl (-1,-1) typesFound typesInfered of
     err@(Error e) -> Error (modErrorsPos (getExprDeclPos expression) e )
-    typesChecked -> Array typesChecked (first,Fix $ n + 1)
+    typesChecked -> Array typesChecked (first, Fix $ n + 1)
 
 typeCheckerBuildArrayParameter enviroment array = case array of
   ArrayDimSingle leftBound _ _ rightBound -> typeCheckerBuildArrayBound enviroment leftBound rightBound
   ArrayDimBound elements -> typeCheckerBuildArrayBound enviroment (ArratBoundConst $ Eint $ PInteger ((-1,-1), "0") ) elements 
 
-typeCheckerBuildArrayBound enviroment leftBound rightBound = (typeCheckerBuildArrayBound' leftBound,  typeCheckerBuildArrayBound' rightBound)
+typeCheckerBuildArrayBound enviroment lBound rBound = 
+  let (leftBound, leftErrors) = typeCheckerBuildArrayBound' lBound; (rightBound, rightErrors) = typeCheckerBuildArrayBound' rBound in ((leftBound, rightBound), leftErrors ++ rightErrors)
   where
     typeCheckerBuildArrayBound' bound = case bound of 
-      ArrayBoundIdent (PIdent ((_,_),identifier)) -> Var identifier
+      ArrayBoundIdent id@(PIdent (loc,name)) -> case getVarType id enviroment of 
+       Error err -> (Fix $ -1, modErrorsPos loc err)
+       Int -> (Var name, [])
+       types -> (Fix $ -1, [ErrorDeclarationBoundNotCorrectType loc types name])
       ArratBoundConst constant -> case constant of
-        Efloat _ -> Fix 0
-        Echar _ -> Fix  0
-        Eint (PInteger ((_,_),dimension)) -> Fix $ read dimension
+        Efloat (PDouble (loc, id)) -> (Fix $ -1, [ErrorDeclarationBoundArray loc Real id])
+        --Bisogna mettere il tipo giusto!!
+        Echar (PChar (loc,id)) -> ( Fix $ -1, [ErrorDeclarationBoundArray loc Real id])
+        Eint (PInteger (loc,dimension)) -> (Fix $ read dimension, [])
 
 typeCheckerExpression environment exp = case exp of
     EAss e1 (AssgnEq (PAssignmEq ((l,c),_)) ) e2 -> supdecl (getExpPos e1) (typeCheckerExpression environment e1) (typeCheckerExpression environment e2)

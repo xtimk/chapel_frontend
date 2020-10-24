@@ -25,6 +25,8 @@ data ErrorChecker =
   ErrorIncompatibleTypes Loc Type Type | 
   ErrorVarAlreadyDeclared Loc Loc String |
   ErrorGuardNotBoolean Loc |
+  ErrorDeclarationBoundNotCorrectType Loc Type String |
+  ErrorDeclarationBoundArray Loc Type String |
   ErrorDimensionArray Loc Int Loc Int 
   deriving (Show)
 
