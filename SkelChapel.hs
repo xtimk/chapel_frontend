@@ -193,6 +193,9 @@ transParam :: Param -> Result
 transParam x = case x of
   ParNoMode pidents pcolon type_ -> failure x
   ParWMode mode pidents pcolon type_ -> failure x
+transPassedParam :: PassedParam -> Result
+transPassedParam x = case x of
+  PassedPar exp -> failure x
 transBody :: Body -> Result
 transBody x = case x of
   BodyBlock popengraph bodystatements pclosegraph -> failure x
@@ -245,6 +248,7 @@ transExp x = case x of
   Epreop unaryoperator exp -> failure x
   Earray exp arinit -> failure x
   InnerExp popenparenthesis exp pcloseparenthesis -> failure x
+  EFun pident popenparenthesis passedparams pcloseparenthesis -> failure x
   Evar pident -> failure x
   Econst constant -> failure x
   Estring pstring -> failure x

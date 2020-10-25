@@ -245,6 +245,12 @@ ListParam : {- empty -} { [] }
 Param :: { Param }
 Param : ListPIdent PColon Type { AbsChapel.ParNoMode $1 $2 $3 }
       | Mode ListPIdent PColon Type { AbsChapel.ParWMode $1 $2 $3 $4 }
+ListPassedParam :: { [PassedParam] }
+ListPassedParam : {- empty -} { [] }
+                | PassedParam { (:[]) $1 }
+                | PassedParam ',' ListPassedParam { (:) $1 $3 }
+PassedParam :: { PassedParam }
+PassedParam : Exp { AbsChapel.PassedPar $1 }
 Body :: { Body }
 Body : POpenGraph ListBodyStatement PCloseGraph { AbsChapel.BodyBlock $1 (reverse $2) $3 }
 ListBodyStatement :: { [BodyStatement] }
@@ -312,6 +318,7 @@ Exp11 :: { Exp }
 Exp11 : Exp12 { $1 }
 Exp16 :: { Exp }
 Exp16 : POpenParenthesis Exp PCloseParenthesis { AbsChapel.InnerExp $1 $2 $3 }
+      | PIdent POpenParenthesis ListPassedParam PCloseParenthesis { AbsChapel.EFun $1 $2 $3 $4 }
       | PIdent { AbsChapel.Evar $1 }
       | Constant { AbsChapel.Econst $1 }
       | PString { AbsChapel.Estring $1 }

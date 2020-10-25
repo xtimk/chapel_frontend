@@ -188,6 +188,9 @@ data Param
     | ParWMode Mode [PIdent] PColon Type
   deriving (Eq, Ord, Show, Read)
 
+data PassedParam = PassedPar Exp
+  deriving (Eq, Ord, Show, Read)
+
 data Body = BodyBlock POpenGraph [BodyStatement] PCloseGraph
   deriving (Eq, Ord, Show, Read)
 
@@ -239,6 +242,7 @@ data Exp
     | Epreop UnaryOperator Exp
     | Earray Exp ArInit
     | InnerExp POpenParenthesis Exp PCloseParenthesis
+    | EFun PIdent POpenParenthesis [PassedParam] PCloseParenthesis
     | Evar PIdent
     | Econst Constant
     | Estring PString

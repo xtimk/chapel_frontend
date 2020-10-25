@@ -242,6 +242,10 @@ All other symbols are terminals.
   |  |  **|**  | //Param// ``,`` //[Param]//
   | //Param// | -> | //[PIdent]// //PColon// //Type//
   |  |  **|**  | //Mode// //[PIdent]// //PColon// //Type//
+  | //[PassedParam]// | -> | **eps**
+  |  |  **|**  | //PassedParam//
+  |  |  **|**  | //PassedParam// ``,`` //[PassedParam]//
+  | //PassedParam// | -> | //Exp//
   | //Body// | -> | //POpenGraph// //[BodyStatement]// //PCloseGraph//
   | //[BodyStatement]// | -> | **eps**
   |  |  **|**  | //BodyStatement// //[BodyStatement]//
@@ -293,6 +297,7 @@ All other symbols are terminals.
   | //Exp7// | -> | //Exp8//
   | //Exp11// | -> | //Exp12//
   | //Exp16// | -> | //POpenParenthesis// //Exp// //PCloseParenthesis//
+  |  |  **|**  | //PIdent// //POpenParenthesis// //[PassedParam]// //PCloseParenthesis//
   |  |  **|**  | //PIdent//
   |  |  **|**  | //Constant//
   |  |  **|**  | //PString//

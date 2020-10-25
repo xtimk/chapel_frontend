@@ -8,7 +8,7 @@ import Checker.BPTree
 import Data.Maybe
 import Debug.Trace
 
-startState = (DMap.empty, [], Checker.BPTree.Node {Checker.BPTree.id = "0", val = BP {symboltable = DMap.empty, statements = [], errors = []}, parentID = Nothing, children = []}, "0")
+startState = (DMap.empty, [], Checker.BPTree.Node {Checker.BPTree.id = "0", val = BP {symboltable = DMap.empty, statements = [], errors = [], blocktype = ExternalBlk}, parentID = Nothing, children = []}, "0")
 
 typeChecker (Progr p) = typeCheckerModule p
 
@@ -24,7 +24,7 @@ typeCheckerExt (x:xs) = case x of
         typeCheckerExt xs
     ExtFun (FunDec (PProc ((l,c),funname) ) signature body) -> do
         typeCheckerSignature signature
-        typeCheckerBody (createId l c funname) body
+        typeCheckerBody ProcedureBlk (createId l c funname) body
         typeCheckerExt xs
 
 typeCheckerSignature signature = case signature of
@@ -60,43 +60,43 @@ typeCheckerParam' mode types (PIdent ((line,column),identifier)) =
     modify(\(sym,_e,_t,_i) -> (DMap.insert identifier (identifier, Variable mode (line,column) typefound) sym,_e,_t,_i))
 
   
-typeCheckerBody identifier (BodyBlock  _ xs _  ) = do
+typeCheckerBody blkType identifier (BodyBlock  _ xs _  ) = do
   -- create new child for the blk and enter in it
   (sym, _e, tree, current_id) <- get
-  let actualNode = findNodeById current_id tree; child = createChild identifier actualNode in
+  let actualNode = findNodeById current_id tree; child = createChild identifier blkType actualNode in
      put (DMap.empty, _e, addChild actualNode (setSymbolTable sym child) tree, identifier)
   -- process body
-  mapM_ typeCheckerBody' xs
+  mapM_ (typeCheckerBody' blkType) xs
   modify(\(_s,_e,_t,_) -> (_s,_e,_t,current_id))
   get
 
-typeCheckerBody' x = do
+typeCheckerBody' blkType x = do
   case x of
     Stm statement -> typeCheckerStatement statement
     Fun _ _ -> get
     DeclStm (Decl decMode declList _ ) -> do
       mapM_ typeCheckerDeclaration declList
       get
-    Block body@(BodyBlock (POpenGraph ((l,c), name)) _ _) -> typeCheckerBody (createId l c name) body
+    Block body@(BodyBlock (POpenGraph ((l,c), name)) _ _) -> typeCheckerBody SimpleBlk (createId l c name) body
   get
 
 typeCheckerStatement statement = case statement of
   DoWhile (Pdo ((l,c),name)) _while body guard -> do
-    typeCheckerBody (createId l c name) body
+    typeCheckerBody DoWhileBlk (createId l c name) body
     typeCheckerGuard guard
     get
   While (PWhile ((l,c), name)) guard body -> do
     typeCheckerGuard guard
-    typeCheckerBody (createId l c name) body
+    typeCheckerBody WhileBlk (createId l c name) body
     get
   If (PIf ((l,c), name)) guard _then body -> do
     typeCheckerGuard guard
-    typeCheckerBody (createId l c name) body
+    typeCheckerBody IfSimpleBlk (createId l c name) body
     get
   IfElse (PIf ((lIf,cIf), nameIf)) guard _then bodyIf (PElse ((lElse,cElse), nameElse)) bodyElse -> do
     typeCheckerGuard guard
-    typeCheckerBody (createId lIf cIf nameIf) bodyIf
-    typeCheckerBody (createId lElse cElse nameElse) bodyElse
+    typeCheckerBody IfThenBlk (createId lIf cIf nameIf) bodyIf
+    typeCheckerBody IfElseBlk (createId lElse cElse nameElse) bodyElse
     get
   StExp exp@(EAss e1 eqsym e2) _semicolon ->
     if isExpVar e1
@@ -111,7 +111,16 @@ typeCheckerStatement statement = case statement of
           _ -> get -- se non ho errore non faccio nulla nello stato
       else get
   StExp _ _-> get
-  RetVal {} -> get
+  RetVal _return exp _semicolon -> do
+    (_s,_e,tree,current_id) <- get
+    case getBlkType tree current_id of
+      ProcedureBlk -> get
+      _otherwhise -> do
+        get
+        -- let node = findNodeById current_id tree in
+        --   modify (\(_s, _e, tree,_i) -> (_s, _e, (updateTree (addErrorsNode node ([ErrorReturnNotInsideAProcedure (getExpPos exp)])) tree) , _i ))
+        --   get
+    get
   RetVoid {} -> get
 
 isExpVar e = case e of
@@ -229,6 +238,7 @@ typeCheckerExpression environment exp = case exp of
       _ -> Error [ErrorChecker (-4,-4) $ ErrorCantAddressAnExpression]
     --Da fare ar declaration
     Earray expIdentifier arDeclaration -> typeCheckerDeclarationArray  environment expIdentifier arDeclaration
+    EFun funidentifier _ passedparams _ -> getVarType funidentifier environment
     Evar identifier -> getVarType identifier environment
     Econst (Eint _) -> Int
     Econst (Efloat _) -> Real
