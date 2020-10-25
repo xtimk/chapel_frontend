@@ -30,7 +30,9 @@ data DefinedError =
   ErrorArrayCallExpression |
   ErrorArrayIdentifierType Type String |
   ErrorDeclarationBoundArray Type String |
-  ErrorDimensionArray Int Loc Int 
+  ErrorDimensionArray Int Loc Int | 
+  ErrorWrongDimensionArray Int Int String |
+  ErrorArrayExpressionRequest 
   deriving (Show)
 
 -- data Type' = Int' | Real' | Error' ErrorType
