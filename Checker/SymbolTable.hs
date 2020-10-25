@@ -41,6 +41,9 @@ data DefinedError =
   ErrorArrayCallExpression |
   ErrorArrayIdentifierType Type String |
   ErrorDeclarationBoundArray Type String |
+  ErrorDimensionArray Int Loc Int | 
+  ErrorWrongDimensionArray Int Int String |
+  ErrorArrayExpressionRequest |
   ErrorDimensionArray Int Loc Int |
   ErrorCantAddRealToAddress  |
   ErrorCantAddCharToAddress  |

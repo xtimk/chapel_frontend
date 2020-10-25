@@ -242,16 +242,32 @@ typeCheckerExpression environment exp = case exp of
     Econst (Eint _) -> Int
     Econst (Efloat _) -> Real
 -- todo: aggiungere tutti i casi degli operatori esistenti
-typeCheckerDeclarationArray environment exp arDeclaration = case exp of
-  Evar (PIdent ((l,c), identifier)) -> case typeCheckerExpression environment exp of
-    types@(Array subType dimension) -> types--case typeCheckerDeclExpression environment arDeclarations of
-      --(Array subType dimension) 
-    types -> Error [ErrorChecker (getExpPos exp) $ ErrorDeclarationBoundNotCorrectType types identifier]
-  _ -> Error [ ErrorChecker (getExpPos exp) $ ErrorArrayCallExpression] 
 
+typeCheckerDeclarationArray environment exp (ArrayInit _ arrays _ ) = case exp of
+  Evar (PIdent ((l,c), identifier)) -> case typeCheckerExpression environment exp of
+    types@(Array _ _) -> let (dimension, Error errors) = getDeclarationDimension environment arrays in 
+      case (getArrayDimension types, dimension) of
+        (arrayDim, callDim) -> if arrayDim >= callDim 
+          then if null errors
+            then getSubarrayDimension types callDim
+            else Error $ errors
+          else Error $ [ErrorChecker (l,c) $ ErrorWrongDimensionArray arrayDim callDim identifier] ++ errors
+    types -> Error $ [ErrorChecker (getExpPos exp) $ ErrorDeclarationBoundNotCorrectType types identifier] 
+  _ -> Error [ ErrorChecker (getExpPos exp) $ ErrorArrayCallExpression]
+
+getDeclarationDimension environment [] = (0, Error $ [])
+getDeclarationDimension environment (array:arrays) = let (dimension, Error errors) = getDeclarationDimension environment arrays in 
+  case array of
+    ExprDec exp -> case sup (getExpPos exp) Int (typeCheckerExpression environment exp) of
+      Error errorsFound -> (dimension + 1, Error $ errors ++ errorsFound)
+      _ -> (dimension + 1, Error errors)
+    expDecl -> (dimension + 1, Error $ [ErrorChecker (getExprDeclPos expDecl) $ ErrorArrayExpressionRequest] ++ errors)
+
+getSubarrayDimension types 0 = types
+getSubarrayDimension (Array subtype _) i = getSubarrayDimension subtype (i - 1)
 
 getArrayDimension (Array subtype _) = 1 + getArrayDimension subtype
-getArrayDimension _ = 1
+getArrayDimension _ = 0  
 
 sup pos@(l,c) (Pointer _) Real = Error [ErrorChecker pos ErrorCantAddRealToAddress]
 sup pos@(l,c) Real (Pointer _) = Error [ErrorChecker pos ErrorCantAddRealToAddress]
