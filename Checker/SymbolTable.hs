@@ -15,6 +15,12 @@ data EnvEntry =
 data Mode = Normal | Ref | Out | Name | In 
  deriving (Show)
 
+data DataChecker a = DataChecker {
+  datas :: a,
+  checkerErrors :: [ErrorChecker]
+} deriving (Show)
+
+
 data Type = Int | Real | Bool | Void | Char | Infered | Array Type (Bound , Bound) | Pointer Type | Error [ErrorChecker]
   deriving (Show)
 
@@ -33,7 +39,6 @@ data DefinedError =
   ErrorDimensionArray Int Loc Int | 
   ErrorWrongDimensionArray Int Int String |
   ErrorArrayExpressionRequest |
-  ErrorDimensionArray Int Loc Int |
   ErrorCantAddRealToAddress  |
   ErrorCantAddCharToAddress  |
   ErrorCantAddressAnExpression 
