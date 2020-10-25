@@ -134,6 +134,16 @@ FunParams.      FunctionParams ::= POpenParenthesis [Param] PCloseParenthesis ;
 ParNoMode.     Param ::= [PIdent] PColon Type ;
 ParWMode.      Param  ::= Mode [PIdent] PColon Type ;
 
+
+[].       [PassedParam] ::= ;
+(:[]).    [PassedParam] ::= PassedParam;
+(:).      [PassedParam] ::= PassedParam "," [PassedParam];
+
+
+-- parameters of procedures
+PassedPar.     PassedParam ::= Exp ;
+-- ParWMode.      PassedParam  ::= Mode [PIdent] PColon Type ;
+
 BodyBlock.       Body ::= POpenGraph [BodyStatement] PCloseGraph ;
 
 [].       [BodyStatement] ::= ;
@@ -203,7 +213,7 @@ InnerExp. Exp16 ::= POpenParenthesis Exp PCloseParenthesis ;
 Address.      UnaryOperator ::= PDef ;
 Indirection.  UnaryOperator ::= PEtimes ;
 
-
+EFun.        Exp16 ::= PIdent POpenParenthesis [PassedParam] PCloseParenthesis ;
 Evar.        Exp16 ::= PIdent;
 Econst.      Exp16 ::= Constant;
 Estring.     Exp16 ::= PString;

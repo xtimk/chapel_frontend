@@ -1,4 +1,9 @@
-proc main() {
+proc main() : int {
     var y : int ;
     var x = &(y + 4);
+}
+
+proc test()
+{
+    var z = main(3,56 + y, x);
 }

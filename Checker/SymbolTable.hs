@@ -12,6 +12,17 @@ data EnvEntry =
 --  | Constant Literal
  deriving (Show)
 
+data BlkType = 
+  DoWhileBlk |
+  WhileBlk |
+  ProcedureBlk |
+  ExternalBlk |
+  SimpleBlk |
+  IfSimpleBlk |
+  IfThenBlk |
+  IfElseBlk
+  deriving (Show)
+
 data Mode = Normal | Ref | Out | Name | In 
  deriving (Show)
 
@@ -33,7 +44,8 @@ data DefinedError =
   ErrorDimensionArray Int Loc Int |
   ErrorCantAddRealToAddress  |
   ErrorCantAddCharToAddress  |
-  ErrorCantAddressAnExpression 
+  ErrorCantAddressAnExpression |
+  ErrorReturnNotInsideAProcedure Loc
   deriving (Show)
 
 -- data Type' = Int' | Real' | Error' ErrorType
