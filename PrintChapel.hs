@@ -318,6 +318,16 @@ instance Print AbsChapel.Param where
   prtList _ [x] = concatD [prt 0 x]
   prtList _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
 
+instance Print [AbsChapel.PassedParam] where
+  prt = prtList
+
+instance Print AbsChapel.PassedParam where
+  prt i e = case e of
+    AbsChapel.PassedPar exp -> prPrec i 0 (concatD [prt 0 exp])
+  prtList _ [] = concatD []
+  prtList _ [x] = concatD [prt 0 x]
+  prtList _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
+
 instance Print AbsChapel.Body where
   prt i e = case e of
     AbsChapel.BodyBlock popengraph bodystatements pclosegraph -> prPrec i 0 (concatD [prt 0 popengraph, prt 0 bodystatements, prt 0 pclosegraph])
@@ -382,6 +392,7 @@ instance Print AbsChapel.Exp where
     AbsChapel.Epreop unaryoperator exp -> prPrec i 14 (concatD [prt 0 unaryoperator, prt 14 exp])
     AbsChapel.Earray exp arinit -> prPrec i 15 (concatD [prt 15 exp, prt 0 arinit])
     AbsChapel.InnerExp popenparenthesis exp pcloseparenthesis -> prPrec i 16 (concatD [prt 0 popenparenthesis, prt 0 exp, prt 0 pcloseparenthesis])
+    AbsChapel.EFun pident popenparenthesis passedparams pcloseparenthesis -> prPrec i 16 (concatD [prt 0 pident, prt 0 popenparenthesis, prt 0 passedparams, prt 0 pcloseparenthesis])
     AbsChapel.Evar pident -> prPrec i 16 (concatD [prt 0 pident])
     AbsChapel.Econst constant -> prPrec i 16 (concatD [prt 0 constant])
     AbsChapel.Estring pstring -> prPrec i 16 (concatD [prt 0 pstring])
