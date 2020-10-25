@@ -114,12 +114,12 @@ typeCheckerStatement statement = case statement of
   RetVal _return exp _semicolon -> do
     (_s,_e,tree,current_id) <- get
     case getBlkType tree current_id of
-      ProcedureBlk -> get
+      ProcedureBlk -> get -- devo controllare quì che il tipo di ritorno nel return sia compatibile con il tipo di ritorno della funzione
       _otherwhise -> do
         get
-        -- let node = findNodeById current_id tree in
-        --   modify (\(_s, _e, tree,_i) -> (_s, _e, (updateTree (addErrorsNode node ([ErrorReturnNotInsideAProcedure (getExpPos exp)])) tree) , _i ))
-        --   get
+        let node = findNodeById current_id tree ; errors = ErrorChecker (getExpPos exp) ErrorReturnNotInsideAProcedure in
+          modify (\(_s, _e, tree,_i) -> (_s, _e, (updateTree (addErrorNode errors node) tree) , _i ))
+        get
     get
   RetVoid {} -> get
 
