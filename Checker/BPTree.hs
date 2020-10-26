@@ -31,7 +31,7 @@ findNodeById searchedId tree = findNode (bp2list tree)
 
 getBlkType tree current_id = 
     let node = findNodeById current_id tree in
-        case (getBlkTypeSimple node) of
+        case getBlkTypeSimple node of
             ProcedureBlk -> ProcedureBlk
             ExternalBlk -> ExternalBlk
             _otherwhise -> getBlkType tree (getParentID node)
@@ -157,3 +157,6 @@ bp2list = bpttolist []
         bpttolist xs Checker.BPTree.Void = xs
         bpttolist xs x@(Node _ _ _ []) = x:xs
         bpttolist xs x@(Node _ _ _ children) =  x : concatMap (bpttolist xs) children
+
+
+--addDefineFunction identifier args ret

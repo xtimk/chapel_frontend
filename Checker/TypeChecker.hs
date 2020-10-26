@@ -106,7 +106,7 @@ typeCheckerStatement statement = case statement of
           DataChecker (Error _ )error -> do
             (_s,_e,tree,current_id) <- get
             let node = findNodeById current_id tree in
-              modify (\(_s, _e, tree,_i) -> (_s, _e, (updateTree (addErrorsNode node error) tree) , _i ))
+              modify (\(_s, _e, tree,_i) -> (_s, _e, updateTree (addErrorsNode node error) tree , _i ))
             get
           _ -> get -- se non ho errore non faccio nulla nello stato
       else get
@@ -118,7 +118,7 @@ typeCheckerStatement statement = case statement of
       _otherwhise -> do
         get
         let node = findNodeById current_id tree ; errors = ErrorChecker (getExpPos exp) ErrorReturnNotInsideAProcedure in
-          modify (\(_s, _e, tree,_i) -> (_s, _e, (updateTree (addErrorNode errors node) tree) , _i ))
+          modify (\(_s, _e, tree,_i) -> (_s, _e, updateTree (addErrorNode errors node) tree , _i ))
         get
     get
   RetVoid {} -> get
@@ -145,7 +145,7 @@ typeCheckerGuard (SGuard _ expression _) = do
     DataChecker Bool errors-> get -- questo dovrebbe essere l'unico caso accettato, se expression non e' bool devo segnalarlo come errore
     _otherwhise -> do
       let node = findNodeById current_id tree in
-        modify (\(_s, _e, tree,_i) -> (_s, _e, (updateTree (addErrorNode (ErrorChecker (getExpPos expression) ErrorGuardNotBoolean ) node) tree) , _i ))
+        modify (\(_s, _e, tree,_i) -> (_s, _e, updateTree (addErrorNode (ErrorChecker (getExpPos expression) ErrorGuardNotBoolean ) node) tree , _i ))
       get
       
 
@@ -215,7 +215,7 @@ typeCheckerDeclArrayExp environment types expression = case (typeCheckerDeclExpr
   (err@(DataChecker (Error _ ) _), _ ) -> err
   ( _, err@(DataChecker (Error _ ) _)) -> err
   (DataChecker typesFound errorsExp, DataChecker (Array typesInfered (first, Fix n)) errorsTy) -> case supdecl "array" (getExprDeclPos expression) typesInfered typesFound of
-    DataChecker (Error ty) e -> DataChecker (Error ty) ((modErrorsPos (getExprDeclPos expression) e) ++ errorsExp ++ errorsTy)
+    DataChecker (Error ty) e -> DataChecker (Error ty) $ modErrorsPos (getExprDeclPos expression) e ++ errorsExp ++ errorsTy
     DataChecker typesChecked e -> DataChecker (Array typesChecked (first, Fix $ n + 1)) (e ++ errorsExp ++ errorsTy)
 
 typeCheckerBuildArrayParameter enviroment array = case array of
@@ -265,10 +265,10 @@ eFunTypeChecker funidentifier passedparams environment =
 checkPassedParams funidentifier [] [] environment acc@(DataChecker tye errors) = acc
 
 checkPassedParams funidentifier@(PIdent ((l,c),_)) [] (e:expectedParams) environment acc@(DataChecker tye errors) = 
-  (DataChecker tye (errors ++ [ErrorChecker (l,c) ErrorCalledProcWithLessArgs]))
+  DataChecker tye (errors ++ [ErrorChecker (l,c) ErrorCalledProcWithLessArgs])
 
 checkPassedParams funidentifier@(PIdent ((l,c),_)) (p:passedParams) [] environment acc@(DataChecker tye errors) = 
-  (DataChecker tye (errors ++ [ErrorChecker (l,c) ErrorCalledProcWithTooMuchArgs]))
+  DataChecker tye (errors ++ [ErrorChecker (l,c) ErrorCalledProcWithTooMuchArgs])
 
 
 checkPassedParams funidentifier (p:passedParams) (e:expectedParams) environment acc@(DataChecker tye errors) =
@@ -320,7 +320,7 @@ typeCheckerDeclarationArray environment exp (ArrayInit _ arrays _ ) = case exp o
             then DataChecker typeFound []
             else DataChecker typeFound (errors ++ expErrors)
           else DataChecker (Error Nothing) ([ErrorChecker (l,c) $ ErrorWrongDimensionArray arrayDim callDim identifier] ++ errors ++ expErrors)
-    DataChecker types expErrors -> DataChecker (Error Nothing ) ([ErrorChecker (getExpPos exp) $ ErrorDeclarationBoundNotCorrectType types identifier] ++ expErrors)
+    DataChecker types expErrors -> DataChecker (Error Nothing ) $ ErrorChecker (getExpPos exp) (ErrorDeclarationBoundNotCorrectType types identifier):expErrors
   _ -> DataChecker (Error Nothing) [ ErrorChecker (getExpPos exp) ErrorArrayCallExpression]
 
 getDeclarationDimension environment [] = DataChecker 0 [] 
@@ -329,7 +329,7 @@ getDeclarationDimension environment (array:arrays) = let DataChecker dimension e
     ExprDec exp -> let DataChecker ty expErrors = typeCheckerExpression environment exp in  case sup (getExpPos exp) Int ty of
       DataChecker (Error _) errorsFound -> DataChecker (dimension + 1) (errors ++ errorsFound ++ expErrors)
       _ -> DataChecker (dimension + 1) (errors ++ expErrors)
-    expDecl -> DataChecker (dimension + 1) ([ErrorChecker (getExprDeclPos expDecl) ErrorArrayExpressionRequest] ++ errors)
+    expDecl -> DataChecker (dimension + 1) $ ErrorChecker (getExprDeclPos expDecl) ErrorArrayExpressionRequest : errors
 
 getSubarrayDimension types 0 = types
 getSubarrayDimension (Array subtype _) i = getSubarrayDimension subtype (i - 1)
@@ -352,12 +352,14 @@ sup (l,c) Real Real = DataChecker Real []
 sup (l,c) (Error ty1) (Error ty2 ) = DataChecker (Error ty1) []
 sup (l,c) e1@(Error _ ) _ =  DataChecker e1 []
 sup (l,c) _ e1@(Error _ ) =  DataChecker e1 []
-sup (l,c) (Array typesFirst dimensionFirst) (Array typesSecond _) = 
-  let DataChecker types errors = sup (l,c) typesFirst typesSecond in case types of 
-    err@(Error _ ) -> DataChecker err errors
-    _ -> DataChecker (Array types dimensionFirst) []
-sup (l,c) array@(Array _ _) types = DataChecker (Error Nothing) [ErrorChecker (l,c) $ ErrorIncompatibleTypes array types]
-sup (l,c) types array@(Array _ _) = DataChecker (Error Nothing) [ErrorChecker (l,c) $ ErrorIncompatibleTypes types array]
+sup (l,c) ar1@(Array typesFirst dimensionFirst) ar2@(Array typesSecond _) = 
+  let DataChecker types errors = sup (l,c) typesFirst typesSecond;
+      errorConverted = map (errorIncompatibleTypesChange ar1 ar2) errors in 
+  case types of 
+    err@(Error _ ) -> DataChecker err errorConverted
+    _ -> DataChecker (Array types dimensionFirst) errorConverted
+sup (l,c) array@(Array _ _) types = DataChecker (Error Nothing) [ErrorChecker (l,c) $ ErrorIncompatibleDeclTypes "" array types]
+sup (l,c) types array@(Array _ _) = DataChecker (Error Nothing) [ErrorChecker (l,c) $ ErrorIncompatibleDeclTypes "" types array]
 
 -- infer del tipo tra due expr messe in relazione tramite un operatore booleano binario
 supBool (l,c) e1@(Error _ ) _ = DataChecker e1 []
@@ -381,16 +383,16 @@ supdecl id (l,c) error@(Error _ ) _ = DataChecker error []
 supdecl id (l,c) ty error@(Error _ ) = DataChecker ty []
 supdecl id (l,c)  ar1@(Array typesFirst dimensionFirst) ar2@(Array typesSecond _) = 
   let DataChecker types errors = supdecl id (l,c) typesFirst typesSecond;
-      errorConverted = map (errorIncopatibleTypesChange ar1 ar2) errors in 
+      errorConverted = map (errorIncompatibleTypesChange ar1 ar2) errors in 
     case types of 
       err@(Error _ ) -> DataChecker err errorConverted
       _ -> DataChecker (Array types dimensionFirst) errorConverted
 supdecl id (l,c) array@(Array _ _) types = DataChecker array [ErrorChecker (l,c) $ ErrorIncompatibleDeclTypes id array types]
 supdecl id (l,c) types array@(Array _ _) = DataChecker types [ErrorChecker (l,c) $ ErrorIncompatibleDeclTypes id types array]
 
-errorIncopatibleTypesChange ty1 ty2 (ErrorChecker (l,c) (ErrorIncompatibleDeclTypes id array types)) = 
+errorIncompatibleTypesChange ty1 ty2 (ErrorChecker (l,c) (ErrorIncompatibleDeclTypes id array types)) = 
   ErrorChecker (l,c) $ ErrorIncompatibleDeclTypes id ty1 ty2
-errorIncopatibleTypesChange ty1 ty2 error = error
+errorIncompatibleTypesChange ty1 ty2 error = error
 
 convertTypeSpecToTypeInferred Tint {} = Int
 convertTypeSpecToTypeInferred Treal {} = Real
