@@ -1,3 +1,12 @@
-var x,z,f = [[2.2], [2.3]];
-var l:int = x[1,2,3];
+
+proc pippo (x:int) : int
+{
+
+}
+
+proc main (x:int , y:real)
+{
+   writeInt(y);
+   writeReal(x);
+}
 
