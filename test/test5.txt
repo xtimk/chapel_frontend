@@ -1,2 +1,9 @@
-var x:[2,3] int = [[2,3],[3,4],[4,4]];
-var m:int = x[a,b];
+proc main() : int {
+    var y : int ;
+    var x = &(y + 4);
+}
+
+proc test()
+{
+    var z = main(3,56 + y, x);
+}
