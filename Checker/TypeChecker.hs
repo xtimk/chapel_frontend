@@ -155,21 +155,21 @@ typeCheckerDeclaration x = do
     NoAssgmDec ids _colon types -> typeCheckerIdentifiers ids (convertTypeSpecToTypeInferred types) Infered
     AssgmDec ids assigment exp -> let DataChecker ty errors = typeCheckerDeclExpression environment exp in do
       typeCheckerIdentifiers ids Infered ty
-      modify (addErrorsCurrentNode errors)
+      modify $ addErrorsCurrentNode errors
       get
     AssgmTypeDec ids _colon types assignment exp -> let DataChecker ty errors = typeCheckerDeclExpression environment exp in do
        typeCheckerIdentifiers ids (convertTypeSpecToTypeInferred types) ty
-       modify (addErrorsCurrentNode errors)
+       modify $ addErrorsCurrentNode errors
        get
     NoAssgmArrayFixDec ids _colon array -> typeCheckerIdentifiersArray ids array Infered Infered
     NoAssgmArrayDec ids _colon array types -> typeCheckerIdentifiersArray ids array (convertTypeSpecToTypeInferred types) Infered
     AssgmArrayTypeDec ids _colon array types assignment exp ->  let DataChecker ty errors = typeCheckerDeclExpression environment exp in do
       typeCheckerIdentifiersArray ids array (convertTypeSpecToTypeInferred types) ty
-      modify (addErrorsCurrentNode errors)
+      modify $ addErrorsCurrentNode errors
       get
     AssgmArrayDec ids _colon array assignment exp ->  let DataChecker ty errors = typeCheckerDeclExpression environment exp in do
        typeCheckerIdentifiersArray ids array Infered ty
-       modify (addErrorsCurrentNode errors)
+       modify $ addErrorsCurrentNode errors
        get
 
 typeCheckerIdentifiersArray ids array typeLeft typeRight = do
@@ -237,7 +237,7 @@ typeCheckerBuildArrayBound enviroment lBound rBound =
         Eint (PInteger (loc,dimension)) -> DataChecker (Fix $ read dimension) []
 
 typeCheckerExpression environment exp = case exp of
-    EAss e1 (AssgnEq (PAssignmEq ((l,c),_)) ) e2 -> typeCheckerExpression' environment sup (l,c) e1 e2
+    EAss e1 (AssgnEq (PAssignmEq ((l,c),_)) ) e2 -> typeCheckerExpression' environment supdecl (l,c) e1 e2
     Eplus e1 (PEplus ((l,c),_)) e2 -> typeCheckerExpression' environment sup (l,c) e1 e2
     Eminus e1 (PEminus ((l,c),_)) e2 -> typeCheckerExpression' environment sup (l,c) e1 e2
     Ediv e1 (PEdiv ((l,c),_)) e2 -> typeCheckerExpression' environment sup (l,c) e1 e2
@@ -305,7 +305,7 @@ sup (l,c) (Error ty1) (Error ty2 ) = DataChecker (Error ty1) []
 sup (l,c) e1@(Error _ ) _ =  DataChecker e1 []
 sup (l,c) _ e1@(Error _ ) =  DataChecker e1 []
 sup (l,c) (Array typesFirst dimensionFirst) (Array typesSecond _) = 
-  let DataChecker types errors = supdecl (l,c) typesFirst typesSecond in case types of 
+  let DataChecker types errors = sup (l,c) typesFirst typesSecond in case types of 
     err@(Error _ ) -> DataChecker err errors
     _ -> DataChecker (Array types dimensionFirst) []
 sup (l,c) array@(Array _ _) types = DataChecker (Error Nothing) [ErrorChecker (l,c) $ ErrorIncompatibleTypes array types]
