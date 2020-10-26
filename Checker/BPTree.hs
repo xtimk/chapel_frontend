@@ -125,9 +125,9 @@ gotoParent tree (Node id val parent children) = case parent of
 getVarType (PIdent ((l,c), identifier)) (_,_,tree,currentNode) = 
     let symtable = uniteSymTables $ bpPathToList currentNode tree in
         case DMap.lookup identifier symtable of
-            Just (_,Variable _ _ t) -> t
-            Just (_,Function _ _ t) -> t
-            Nothing -> Checker.SymbolTable.Error [ErrorChecker (l,c) $ Checker.SymbolTable.ErrorVarNotDeclared identifier]
+            Just (_,Variable _ _ t) -> DataChecker t []
+            Just (_,Function _ _ t) -> DataChecker t []
+            Nothing -> DataChecker (Checker.SymbolTable.Error Nothing []) [ErrorChecker (l,c) $ Checker.SymbolTable.ErrorVarNotDeclared identifier]
 
 uniteSymTables = foldr (\y@(Node _ (BP sym _ _errors _) _ _) x -> DMap.union sym x ) DMap.empty
 
