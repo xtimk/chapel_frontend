@@ -41,6 +41,7 @@ data ErrorChecker =  ErrorChecker Loc DefinedError
 data DefinedError = 
   ErrorVarNotDeclared String | 
   ErrorIncompatibleTypes Type Type | 
+  ErrorIncompatibleDeclTypes String Type Type | 
   ErrorVarAlreadyDeclared Loc String |
   ErrorGuardNotBoolean |
   ErrorDeclarationBoundNotCorrectType Type String |
