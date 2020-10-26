@@ -79,6 +79,13 @@ getExpPos exp = case exp of
     InnerExp _ e1 _ -> getExpPos e1
     EFun (PIdent ((l,c),_)) _ _ _ -> (l,c)
 
+modFunRetType identifier tye tree@(Node id (BP symboltable statements errors blocktype) parent children) = 
+    Checker.BPTree.Node {Checker.BPTree.id = id,
+    val = BP {symboltable = DMap.adjust (alterRetType tye) identifier symboltable, statements = statements, errors = errors, blocktype = blocktype}, 
+    parentID = parent, 
+    children = children}
+
+alterRetType tye (s,(Function _a _b t1 )) = (s,(Function _a _b tye))
 
 getSymbolTable tree@(Node _ (BP symboltable _ _ blocktype) _ _) =  symboltable
 setSymbolTable sym tree@(Node id (BP _ statements errors blocktype) parent children) = 

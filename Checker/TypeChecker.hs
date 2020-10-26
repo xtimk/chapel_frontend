@@ -34,7 +34,7 @@ typeCheckerExt (x:xs) = case x of
         typeCheckerExt xs
     ExtFun (FunDec (PProc ((l,c),funname) ) signature body) -> do
         typeCheckerSignature signature
-        typeCheckerBody ProcedureBlk (createId l c funname) body
+        typeCheckerBody ProcedureBlk (funname) body
         typeCheckerExt xs
 
 typeCheckerSignature signature = case signature of
@@ -128,14 +128,35 @@ typeCheckerStatement statement = case statement of
   RetVal _return exp _semicolon -> do
     (_s,_e,tree,current_id) <- get
     case getBlkType tree current_id of
-      ProcedureBlk -> get -- devo controllare quì che il tipo di ritorno nel return sia compatibile con il tipo di ritorno della funzione
-      _otherwhise -> do
+      ProcedureBlk -> do -- devo controllare quì che il tipo di ritorno nel return sia compatibile con il tipo di ritorno della funzione
+        case getFunRetType (_s,_e,tree,current_id) of
+          DataChecker Infered e -> setReturnType (_s,_e,tree,current_id) $ typeCheckerExpression (_s,_e,tree,current_id) exp
+          _oth -> get -- TODO: se non e' infered: devo controllare tutti i return successivi che siano compatibili
+        get
+      _otherwhise -> do -- caso in cui trovo un return che non e' dentro una procedura (ma si trova al livello esterno)
         get
         let node = findNodeById current_id tree ; errors = ErrorChecker (getExpPos exp) ErrorReturnNotInsideAProcedure in
           modify (\(_s, _e, tree,_i) -> (_s, _e, updateTree (addErrorNode errors node) tree , _i ))
         get
     get
   RetVoid {} -> get
+
+setReturnType (_s,_e,tree,current_id) (DataChecker ty _errs) = do
+  let n@(Node id (BP _ _ _ blkTy) (Just parID) _) = findNodeById current_id tree in
+    case blkTy of
+      ProcedureBlk -> let node@(Node id (BP symbolTable _ _ blkTy) (Just parID) _) = findNodeById parID tree in
+        do
+          get
+          modify (\(_s, _e, tree,_i) -> (_s, _e, updateTree (modFunRetType id ty node) tree , _i ))
+          get
+
+      _otherwhise -> setReturnType (_s,_e,tree,parID) (DataChecker ty _errs)
+
+getFunRetType env@(_s,_e,tree,current_id) = 
+  let n@(Node id (BP _ _ _ blkTy) (Just parID) _) = findNodeById current_id tree in
+    case blkTy of
+      ProcedureBlk -> getVarType (PIdent ((0,0), id)) env
+      _otherwhise -> getFunRetType (_s,_e,tree,parID)
 
 isExpVar e = case e of
   (Evar (PIdent ((l,c),indentifier))) -> True
