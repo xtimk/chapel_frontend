@@ -249,11 +249,58 @@ typeCheckerExpression environment exp = case exp of
       else DataChecker (Error Nothing) [ErrorChecker (-4,-4) ErrorCantAddressAnExpression]
     --Da fare ar declaration
     Earray expIdentifier arDeclaration -> typeCheckerDeclarationArray  environment expIdentifier arDeclaration
-    EFun funidentifier _ passedparams _ -> getVarType funidentifier environment
+    EFun funidentifier _ passedparams _ -> eFunTypeChecker funidentifier passedparams environment
     Evar identifier -> getVarType identifier environment
     Econst (Eint _) -> DataChecker Int []
     Econst (Efloat _) -> DataChecker Real []
 -- todo: aggiungere tutti i casi degli operatori esistenti
+
+eFunTypeChecker funidentifier passedparams environment = 
+  case getVarType funidentifier environment of
+    e@(DataChecker (Error (Just ty)) errors) -> e
+    e@(DataChecker (Error Nothing) er) -> e
+    _otherwhise -> checkPassedParams funidentifier passedparams (getFunParams funidentifier environment) environment _otherwhise
+
+
+checkPassedParams funidentifier [] [] environment acc@(DataChecker tye errors) = acc
+
+checkPassedParams funidentifier@(PIdent ((l,c),_)) [] (e:expectedParams) environment acc@(DataChecker tye errors) = 
+  (DataChecker tye (errors ++ [ErrorChecker (l,c) ErrorCalledProcWithLessArgs]))
+
+checkPassedParams funidentifier@(PIdent ((l,c),_)) (p:passedParams) [] environment acc@(DataChecker tye errors) = 
+  (DataChecker tye (errors ++ [ErrorChecker (l,c) ErrorCalledProcWithTooMuchArgs]))
+
+
+checkPassedParams funidentifier (p:passedParams) (e:expectedParams) environment acc@(DataChecker tye errors) =
+  case checkCorrectTypeOfParam p e environment of
+    Nothing -> checkPassedParams funidentifier passedParams expectedParams environment acc
+    Just err -> checkPassedParams funidentifier passedParams expectedParams environment (DataChecker tye (errors ++ err))
+
+-- parametro che mi aspetto sia un intero
+checkCorrectTypeOfParam (PassedPar exp) (Variable Normal (l1,c1) Int) environment = case
+  typeCheckerExpression environment exp of
+    (DataChecker Int errors) -> Just errors
+    (DataChecker tye errors) -> Just (errors ++ [ErrorChecker (getExpPos exp) (ErrorCalledProcWithWrongTypeParam tye Int)])
+
+-- parametro che mi aspetto sia un real
+checkCorrectTypeOfParam (PassedPar exp) (Variable Normal (l1,c1) Real) environment = case
+  typeCheckerExpression environment exp of
+    (DataChecker Int errors) -> Just errors
+    (DataChecker Real errors) -> Just errors
+    (DataChecker tye errors) -> Just (errors ++ [ErrorChecker (l1,c1) (ErrorCalledProcWithWrongTypeParam tye Int)])
+
+-- parametro che mi aspetto sia un char
+checkCorrectTypeOfParam (PassedPar exp) (Variable Normal (l1,c1) Char) environment = case
+  typeCheckerExpression environment exp of
+    (DataChecker Char errors) -> Just errors
+    (DataChecker tye errors) -> Just (errors ++ [ErrorChecker (l1,c1) (ErrorCalledProcWithWrongTypeParam tye Int)])
+
+-- parametro che mi aspetto sia un char
+checkCorrectTypeOfParam (PassedPar exp) (Variable Normal (l1,c1) Bool) environment = case
+  typeCheckerExpression environment exp of
+    (DataChecker Bool errors) -> Just errors
+    (DataChecker tye errors) -> Just (errors ++ [ErrorChecker (l1,c1) (ErrorCalledProcWithWrongTypeParam tye Int)])
+
 
 typeCheckerExpression' environment supCheck loc e1 e2 =
   let DataChecker tye1 errors1 = typeCheckerExpression environment e1; 
