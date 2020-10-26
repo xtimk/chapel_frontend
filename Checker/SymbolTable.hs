@@ -53,7 +53,7 @@ data DefinedError =
   ErrorCantAddRealToAddress  |
   ErrorCantAddCharToAddress  |
   ErrorCantAddressAnExpression |
-  ErrorReturnNotInsideAProcedure Loc
+  ErrorReturnNotInsideAProcedure
   deriving (Show)
 
 -- data Type' = Int' | Real' | Error' ErrorType
