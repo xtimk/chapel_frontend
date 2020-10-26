@@ -1,8 +1,8 @@
-proc f(x : int) : int
+proc f(x : int)
 {
     return x;
 }
 
 proc main(x : int, y : real) : int {
-    var z = f(f(4));
+    var z = f(3.2);
 }
