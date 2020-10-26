@@ -12,7 +12,17 @@ startState = (DMap.empty, [], Checker.BPTree.Node {Checker.BPTree.id = "0", val 
 
 typeChecker (Progr p) = typeCheckerModule p
 
-typeCheckerModule (Mod m) = typeCheckerExt m
+typeCheckerModule (Mod m) = do
+  modify (addFunctionOnCurrentNode "writeInt" (-1,-1) [Variable Normal (-1,-1) Int] Checker.SymbolTable.Void)
+  modify (addFunctionOnCurrentNode "writeReal" (-1,-1) [Variable Normal (-1,-1) Real] Checker.SymbolTable.Void)
+  modify (addFunctionOnCurrentNode "writeChar" (-1,-1) [Variable Normal (-1,-1) Char] Checker.SymbolTable.Void)
+  modify (addFunctionOnCurrentNode "writeString" (-1,-1) [Variable Normal (-1,-1) String] Checker.SymbolTable.Void)
+  modify (addFunctionOnCurrentNode "readInt" (-1,-1) [] Checker.SymbolTable.Int)
+  modify (addFunctionOnCurrentNode "readReal" (-1,-1) [] Checker.SymbolTable.Real)
+  modify (addFunctionOnCurrentNode "readChar" (-1,-1) [] Checker.SymbolTable.Char)
+  modify (addFunctionOnCurrentNode "readString" (-1,-1) [] Checker.SymbolTable.String)
+  typeCheckerExt m
+  get
 
 createId l c name = show l ++ "_" ++ show c ++ "_" ++ name
 
@@ -110,7 +120,11 @@ typeCheckerStatement statement = case statement of
             get
           _ -> get -- se non ho errore non faccio nulla nello stato
       else get
-  StExp _ _-> get
+  StExp exp@(EFun funidentifier _ params _) _semicolon-> do
+    environment <- get
+    let DataChecker ty errors = eFunTypeChecker funidentifier params environment in
+      modify $ addErrorsCurrentNode errors
+    get
   RetVal _return exp _semicolon -> do
     (_s,_e,tree,current_id) <- get
     case getBlkType tree current_id of
@@ -261,7 +275,6 @@ eFunTypeChecker funidentifier passedparams environment =
     e@(DataChecker (Error Nothing) er) -> e
     _otherwhise -> checkPassedParams funidentifier passedparams (getFunParams funidentifier environment) environment _otherwhise
 
-
 checkPassedParams funidentifier [] [] environment acc@(DataChecker tye errors) = acc
 
 checkPassedParams funidentifier@(PIdent ((l,c),_)) [] (e:expectedParams) environment acc@(DataChecker tye errors) = 
@@ -270,37 +283,13 @@ checkPassedParams funidentifier@(PIdent ((l,c),_)) [] (e:expectedParams) environ
 checkPassedParams funidentifier@(PIdent ((l,c),_)) (p:passedParams) [] environment acc@(DataChecker tye errors) = 
   DataChecker tye (errors ++ [ErrorChecker (l,c) ErrorCalledProcWithTooMuchArgs])
 
-
 checkPassedParams funidentifier (p:passedParams) (e:expectedParams) environment acc@(DataChecker tye errors) =
-  case checkCorrectTypeOfParam p e environment of
-    Nothing -> checkPassedParams funidentifier passedParams expectedParams environment acc
-    Just err -> checkPassedParams funidentifier passedParams expectedParams environment (DataChecker tye (errors ++ err))
+  let err = checkCorrectTypeOfParam p e environment in 
+    checkPassedParams funidentifier passedParams expectedParams environment (DataChecker tye (errors ++ err))
 
--- parametro che mi aspetto sia un intero
-checkCorrectTypeOfParam (PassedPar exp) (Variable Normal (l1,c1) Int) environment = case
-  typeCheckerExpression environment exp of
-    (DataChecker Int errors) -> Just errors
-    (DataChecker tye errors) -> Just (errors ++ [ErrorChecker (getExpPos exp) (ErrorCalledProcWithWrongTypeParam tye Int)])
-
--- parametro che mi aspetto sia un real
-checkCorrectTypeOfParam (PassedPar exp) (Variable Normal (l1,c1) Real) environment = case
-  typeCheckerExpression environment exp of
-    (DataChecker Int errors) -> Just errors
-    (DataChecker Real errors) -> Just errors
-    (DataChecker tye errors) -> Just (errors ++ [ErrorChecker (l1,c1) (ErrorCalledProcWithWrongTypeParam tye Int)])
-
--- parametro che mi aspetto sia un char
-checkCorrectTypeOfParam (PassedPar exp) (Variable Normal (l1,c1) Char) environment = case
-  typeCheckerExpression environment exp of
-    (DataChecker Char errors) -> Just errors
-    (DataChecker tye errors) -> Just (errors ++ [ErrorChecker (l1,c1) (ErrorCalledProcWithWrongTypeParam tye Int)])
-
--- parametro che mi aspetto sia un char
-checkCorrectTypeOfParam (PassedPar exp) (Variable Normal (l1,c1) Bool) environment = case
-  typeCheckerExpression environment exp of
-    (DataChecker Bool errors) -> Just errors
-    (DataChecker tye errors) -> Just (errors ++ [ErrorChecker (l1,c1) (ErrorCalledProcWithWrongTypeParam tye Int)])
-
+checkCorrectTypeOfParam (PassedPar exp) (Variable Normal (l1,c1) tyVar) environment = 
+  let DataChecker tyExp errorsExp = typeCheckerExpression environment exp;
+      DataChecker ty errorsVar = supFunc (getExpPos exp) tyExp tyVar in errorsVar ++ errorsExp
 
 typeCheckerExpression' environment supCheck loc e1 e2 =
   let DataChecker tye1 errors1 = typeCheckerExpression environment e1; 
@@ -389,6 +378,13 @@ supdecl id (l,c)  ar1@(Array typesFirst dimensionFirst) ar2@(Array typesSecond _
       _ -> DataChecker (Array types dimensionFirst) errorConverted
 supdecl id (l,c) array@(Array _ _) types = DataChecker array [ErrorChecker (l,c) $ ErrorIncompatibleDeclTypes id array types]
 supdecl id (l,c) types array@(Array _ _) = DataChecker types [ErrorChecker (l,c) $ ErrorIncompatibleDeclTypes id types array]
+
+supFunc loc Int Int = DataChecker Int []
+supFunc loc Real Real = DataChecker Real []
+supFunc loc Char Char = DataChecker Char []
+supFunc loc Bool Bool = DataChecker Char []
+supFunc loc String String = DataChecker Char []
+supFunc loc ty1 ty2 = DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
 
 errorIncompatibleTypesChange ty1 ty2 (ErrorChecker (l,c) (ErrorIncompatibleDeclTypes id array types)) = 
   ErrorChecker (l,c) $ ErrorIncompatibleDeclTypes id ty1 ty2

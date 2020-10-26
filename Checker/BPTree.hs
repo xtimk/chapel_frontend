@@ -87,13 +87,18 @@ setSymbolTable sym tree@(Node id (BP _ statements errors blocktype) parent child
     parentID = parent, 
     children = children}
               
-addEntryNode identifier entry tree@(Node id (BP symboltable statements errors blocktype) parent children) = 
+
+addFunctionOnCurrentNode identifier loc variables types (_s,_e,tree,currentId) = 
+    let entry = Function loc variables types in
+    (_s,_e,updateTree (addEntryNode identifier entry (findNodeById currentId tree)) tree, currentId)
+addEntryNode identifier entry tree@(Node id (BP symboltable _st _e _bt) _p _c) = 
     Checker.BPTree.Node {Checker.BPTree.id = id,
-    val = BP {symboltable = DMap.insert identifier (identifier, entry) symboltable, statements = statements, errors = errors, blocktype = blocktype}, 
-    parentID = parent, 
-    children = children}
+    val = BP {symboltable = DMap.insert identifier (identifier, entry) symboltable, statements = _st, errors = _e, blocktype = _bt}, 
+    parentID = _p, 
+    children = _c}
 
 addErrorsCurrentNode errors (_s,_e,tree,currentId) = (_s,_e,updateTree (addErrorsNode (findNodeById currentId tree) errors) tree, currentId)
+
 
 addErrorsNode :: (Foldable t0) => BPTree BP -> t0 ErrorChecker -> BPTree BP
 addErrorsNode = foldr addErrorNode
@@ -159,4 +164,7 @@ bp2list = bpttolist []
         bpttolist xs x@(Node _ _ _ children) =  x : concatMap (bpttolist xs) children
 
 
---addDefineFunction identifier args ret
+
+
+createVariable = Variable 
+addDefineFunction = Function 
