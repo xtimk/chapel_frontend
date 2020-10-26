@@ -141,7 +141,7 @@ typeCheckerStatement statement = case statement of
     get
   RetVoid {} -> get
 
-setReturnType (_s,_e,tree,current_id) (DataChecker ty _errs) = do
+setReturnType (_s,_e,tree,current_id) (DataChecker ty _errs) = 
   let n@(Node id (BP _ _ _ blkTy) (Just parID) _) = findNodeById current_id tree in
     case blkTy of
       ProcedureBlk -> let node@(Node id (BP symbolTable _ _ blkTy) (Just parID) _) = findNodeById parID tree in
@@ -149,7 +149,6 @@ setReturnType (_s,_e,tree,current_id) (DataChecker ty _errs) = do
           get
           modify (\(_s, _e, tree,_i) -> (_s, _e, updateTree (modFunRetType id ty node) tree , _i ))
           get
-
       _otherwhise -> setReturnType (_s,_e,tree,parID) (DataChecker ty _errs)
 
 getFunRetType env@(_s,_e,tree,current_id) = 
