@@ -77,6 +77,7 @@ getExpPos exp = case exp of
     Epreop _ e1 -> getExpPos e1
     Earray e1 _ -> getExpPos e1
     InnerExp _ e1 _ -> getExpPos e1
+    EFun (PIdent ((l,c),_)) _ _ _ -> (l,c)
 
 
 getSymbolTable tree@(Node _ (BP symboltable _ _ blocktype) _ _) =  symboltable
@@ -128,6 +129,12 @@ getVarType (PIdent ((l,c), identifier)) (_,_,tree,currentNode) =
             Just (_,Variable _ _ t) -> DataChecker t []
             Just (_,Function _ _ t) -> DataChecker t []
             Nothing -> DataChecker (Checker.SymbolTable.Error Nothing ) [ErrorChecker (l,c) $ Checker.SymbolTable.ErrorVarNotDeclared identifier]
+
+getFunParams (PIdent ((l,c), identifier)) (_,_,tree,currentNode) = 
+    let symtable = uniteSymTables $ bpPathToList currentNode tree in
+        case DMap.lookup identifier symtable of
+            Just (_,Function _ params _) -> params
+
 
 uniteSymTables = foldr (\y@(Node _ (BP sym _ _errors _) _ _) x -> DMap.union sym x ) DMap.empty
 

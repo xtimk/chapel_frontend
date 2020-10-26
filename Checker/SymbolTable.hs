@@ -53,7 +53,10 @@ data DefinedError =
   ErrorCantAddRealToAddress  |
   ErrorCantAddCharToAddress  |
   ErrorCantAddressAnExpression |
-  ErrorReturnNotInsideAProcedure
+  ErrorReturnNotInsideAProcedure |
+  ErrorCalledProcWithWrongTypeParam Type Type |
+  ErrorCalledProcWithLessArgs |
+  ErrorCalledProcWithTooMuchArgs
   deriving (Show)
 
 -- data Type' = Int' | Real' | Error' ErrorType
