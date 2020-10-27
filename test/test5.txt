@@ -7,11 +7,11 @@ proc pippo (l:int) : char
 
    proc bella (m:string) : string
    {
-      a + 5 = 4;
+      a + 5 = l +4;
       return 4;
    };
    var hiu:char;
-   hiu= bella("44");
+   hiu= bella(f);
 
    l = m[2];
 }
@@ -22,5 +22,6 @@ proc main (x:int , m:real)
    writeReal(x);
    var h = "ciao";
    pippo(h);
+   bella(10);
 }
 
