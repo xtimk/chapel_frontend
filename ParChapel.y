@@ -28,8 +28,11 @@ import ErrM
   L_PElse { PT _ (T_PElse _) }
   L_Pdo { PT _ (T_Pdo _) }
   L_PWhile { PT _ (T_PWhile _) }
-  L_PInt { PT _ (T_PInt _) }
-  L_PReal { PT _ (T_PReal _) }
+  L_PIntType { PT _ (T_PIntType _) }
+  L_PRealType { PT _ (T_PRealType _) }
+  L_PCharType { PT _ (T_PCharType _) }
+  L_PBoolType { PT _ (T_PBoolType _) }
+  L_PStringType { PT _ (T_PStringType _) }
   L_PAssignmEq { PT _ (T_PAssignmEq _) }
   L_PAssignmPlus { PT _ (T_PAssignmPlus _) }
   L_PRef { PT _ (T_PRef _) }
@@ -37,6 +40,8 @@ import ErrM
   L_PConst { PT _ (T_PConst _) }
   L_PProc { PT _ (T_PProc _) }
   L_PReturn { PT _ (T_PReturn _) }
+  L_PTrue { PT _ (T_PTrue _) }
+  L_PFalse { PT _ (T_PFalse _) }
   L_PElthen { PT _ (T_PElthen _) }
   L_PEgrthen { PT _ (T_PEgrthen _) }
   L_PEplus { PT _ (T_PEplus _) }
@@ -101,11 +106,20 @@ Pdo  : L_Pdo { Pdo (mkPosToken $1)}
 PWhile :: { PWhile}
 PWhile  : L_PWhile { PWhile (mkPosToken $1)}
 
-PInt :: { PInt}
-PInt  : L_PInt { PInt (mkPosToken $1)}
+PIntType :: { PIntType}
+PIntType  : L_PIntType { PIntType (mkPosToken $1)}
 
-PReal :: { PReal}
-PReal  : L_PReal { PReal (mkPosToken $1)}
+PRealType :: { PRealType}
+PRealType  : L_PRealType { PRealType (mkPosToken $1)}
+
+PCharType :: { PCharType}
+PCharType  : L_PCharType { PCharType (mkPosToken $1)}
+
+PBoolType :: { PBoolType}
+PBoolType  : L_PBoolType { PBoolType (mkPosToken $1)}
+
+PStringType :: { PStringType}
+PStringType  : L_PStringType { PStringType (mkPosToken $1)}
 
 PAssignmEq :: { PAssignmEq}
 PAssignmEq  : L_PAssignmEq { PAssignmEq (mkPosToken $1)}
@@ -127,6 +141,12 @@ PProc  : L_PProc { PProc (mkPosToken $1)}
 
 PReturn :: { PReturn}
 PReturn  : L_PReturn { PReturn (mkPosToken $1)}
+
+PTrue :: { PTrue}
+PTrue  : L_PTrue { PTrue (mkPosToken $1)}
+
+PFalse :: { PFalse}
+PFalse  : L_PFalse { PFalse (mkPosToken $1)}
 
 PElthen :: { PElthen}
 PElthen  : L_PElthen { PElthen (mkPosToken $1)}
@@ -272,7 +292,11 @@ Statement : Pdo PWhile Body Guard { AbsChapel.DoWhile $1 $2 $3 $4 }
 Guard :: { Guard }
 Guard : POpenParenthesis Exp PCloseParenthesis { AbsChapel.SGuard $1 $2 $3 }
 Type :: { Type }
-Type : PInt { AbsChapel.Tint $1 } | PReal { AbsChapel.Treal $1 }
+Type : PIntType { AbsChapel.Tint $1 }
+     | PRealType { AbsChapel.Treal $1 }
+     | PCharType { AbsChapel.Tchar $1 }
+     | PStringType { AbsChapel.Tstring $1 }
+     | PBoolType { AbsChapel.Tbool $1 }
 AssgnmOp :: { AssgnmOp }
 AssgnmOp : PAssignmEq { AbsChapel.AssgnEq $1 }
          | PAssignmPlus { AbsChapel.AssgnPlEq $1 }
@@ -321,14 +345,16 @@ Exp16 : POpenParenthesis Exp PCloseParenthesis { AbsChapel.InnerExp $1 $2 $3 }
       | PIdent POpenParenthesis ListPassedParam PCloseParenthesis { AbsChapel.EFun $1 $2 $3 $4 }
       | PIdent { AbsChapel.Evar $1 }
       | Constant { AbsChapel.Econst $1 }
-      | PString { AbsChapel.Estring $1 }
 UnaryOperator :: { UnaryOperator }
 UnaryOperator : PDef { AbsChapel.Address $1 }
               | PEtimes { AbsChapel.Indirection $1 }
 Constant :: { Constant }
-Constant : PDouble { AbsChapel.Efloat $1 }
+Constant : PString { AbsChapel.Estring $1 }
+         | PDouble { AbsChapel.Efloat $1 }
          | PChar { AbsChapel.Echar $1 }
          | PInteger { AbsChapel.Eint $1 }
+         | PTrue { AbsChapel.ETrue $1 }
+         | PFalse { AbsChapel.EFalse $1 }
 {
 
 returnM :: a -> Err a

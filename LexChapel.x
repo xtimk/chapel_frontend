@@ -57,9 +57,15 @@ d o
 w h i l e
     { tok (\p s -> PT p (eitherResIdent (T_PWhile . share) s)) }
 i n t
-    { tok (\p s -> PT p (eitherResIdent (T_PInt . share) s)) }
+    { tok (\p s -> PT p (eitherResIdent (T_PIntType . share) s)) }
 r e a l
-    { tok (\p s -> PT p (eitherResIdent (T_PReal . share) s)) }
+    { tok (\p s -> PT p (eitherResIdent (T_PRealType . share) s)) }
+c h a r
+    { tok (\p s -> PT p (eitherResIdent (T_PCharType . share) s)) }
+b o o l
+    { tok (\p s -> PT p (eitherResIdent (T_PBoolType . share) s)) }
+s t r i n g
+    { tok (\p s -> PT p (eitherResIdent (T_PStringType . share) s)) }
 \=
     { tok (\p s -> PT p (eitherResIdent (T_PAssignmEq . share) s)) }
 \+ \=
@@ -74,6 +80,10 @@ p r o c
     { tok (\p s -> PT p (eitherResIdent (T_PProc . share) s)) }
 r e t u r n
     { tok (\p s -> PT p (eitherResIdent (T_PReturn . share) s)) }
+t r u e
+    { tok (\p s -> PT p (eitherResIdent (T_PTrue . share) s)) }
+f a l s e
+    { tok (\p s -> PT p (eitherResIdent (T_PFalse . share) s)) }
 \<
     { tok (\p s -> PT p (eitherResIdent (T_PElthen . share) s)) }
 \>
@@ -149,8 +159,11 @@ data Tok =
  | T_PElse !String
  | T_Pdo !String
  | T_PWhile !String
- | T_PInt !String
- | T_PReal !String
+ | T_PIntType !String
+ | T_PRealType !String
+ | T_PCharType !String
+ | T_PBoolType !String
+ | T_PStringType !String
  | T_PAssignmEq !String
  | T_PAssignmPlus !String
  | T_PRef !String
@@ -158,6 +171,8 @@ data Tok =
  | T_PConst !String
  | T_PProc !String
  | T_PReturn !String
+ | T_PTrue !String
+ | T_PFalse !String
  | T_PElthen !String
  | T_PEgrthen !String
  | T_PEplus !String
@@ -228,8 +243,11 @@ prToken t = case t of
   PT _ (T_PElse s) -> s
   PT _ (T_Pdo s) -> s
   PT _ (T_PWhile s) -> s
-  PT _ (T_PInt s) -> s
-  PT _ (T_PReal s) -> s
+  PT _ (T_PIntType s) -> s
+  PT _ (T_PRealType s) -> s
+  PT _ (T_PCharType s) -> s
+  PT _ (T_PBoolType s) -> s
+  PT _ (T_PStringType s) -> s
   PT _ (T_PAssignmEq s) -> s
   PT _ (T_PAssignmPlus s) -> s
   PT _ (T_PRef s) -> s
@@ -237,6 +255,8 @@ prToken t = case t of
   PT _ (T_PConst s) -> s
   PT _ (T_PProc s) -> s
   PT _ (T_PReturn s) -> s
+  PT _ (T_PTrue s) -> s
+  PT _ (T_PFalse s) -> s
   PT _ (T_PElthen s) -> s
   PT _ (T_PEgrthen s) -> s
   PT _ (T_PEplus s) -> s

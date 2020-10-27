@@ -22,8 +22,11 @@ position token PElse ({"else"});
 position token Pdo {"do"};
 position token PWhile {"while"};
 
-position token PInt ({"int"});
-position token PReal ({"real"});
+position token PIntType ({"int"});
+position token PRealType ({"real"});
+position token PCharType ({"char"});
+position token PBoolType ({"bool"});
+position token PStringType ({"string"});
 
 position token PAssignmEq ('=') ;
 position token PAssignmPlus ({"+="}) ;
@@ -36,6 +39,9 @@ position token PConst ({"const"});
 position token PProc({"proc"});
 
 position token PReturn ({"return"});
+
+position token PTrue ({"true"});
+position token PFalse ({"false"});
 
 position token PElthen ('<');
 position token PEgrthen ('>');
@@ -168,8 +174,11 @@ StExp.     Statement      ::= Exp PSemicolon;
 
 SGuard.    Guard          ::= POpenParenthesis Exp PCloseParenthesis ;     
 
-Tint.      Type ::= PInt ;
-Treal.     Type ::= PReal ;
+Tint.      Type ::= PIntType ;
+Treal.     Type ::= PRealType ;
+Tchar.     Type ::= PCharType ;
+Tstring.   Type ::= PStringType ;
+Tbool.     Type ::= PBoolType ;
 
 AssgnEq.   AssgnmOp ::= PAssignmEq ;
 AssgnPlEq. AssgnmOp ::= PAssignmPlus ;
@@ -216,8 +225,10 @@ Indirection.  UnaryOperator ::= PEtimes ;
 EFun.        Exp16 ::= PIdent POpenParenthesis [PassedParam] PCloseParenthesis ;
 Evar.        Exp16 ::= PIdent;
 Econst.      Exp16 ::= Constant;
-Estring.     Exp16 ::= PString;
 
+Estring.       Constant ::= PString;
 Efloat.        Constant ::= PDouble;
 Echar.         Constant ::= PChar;
 Eint.          Constant ::= PInteger;
+ETrue.         Constant ::= PTrue;
+EFalse.        Constant ::= PFalse;

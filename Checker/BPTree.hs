@@ -55,7 +55,7 @@ getExprDeclPos (ExprDec exp) = getExpPos exp
 
 getExpPos exp = case exp of
     Evar (PIdent ((l,c),_)) -> (l,c)
-    Estring (PString ((l,c),_)) -> (l,c)
+    Econst (Estring (PString ((l,c),_))) -> (l,c)
     Econst (Efloat (PDouble ((l,c),_))) -> (l,c)
     Econst (Echar (PChar ((l,c),_))) -> (l,c)
     Econst (Eint (PInteger ((l,c),_))) -> (l,c)

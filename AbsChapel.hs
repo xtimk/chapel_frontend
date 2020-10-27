@@ -45,10 +45,19 @@ newtype Pdo = Pdo ((Int,Int),String)
 newtype PWhile = PWhile ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
-newtype PInt = PInt ((Int,Int),String)
+newtype PIntType = PIntType ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
-newtype PReal = PReal ((Int,Int),String)
+newtype PRealType = PRealType ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PCharType = PCharType ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PBoolType = PBoolType ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PStringType = PStringType ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
 newtype PAssignmEq = PAssignmEq ((Int,Int),String)
@@ -70,6 +79,12 @@ newtype PProc = PProc ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
 newtype PReturn = PReturn ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PTrue = PTrue ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PFalse = PFalse ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
 newtype PElthen = PElthen ((Int,Int),String)
@@ -214,7 +229,12 @@ data Statement
 data Guard = SGuard POpenParenthesis Exp PCloseParenthesis
   deriving (Eq, Ord, Show, Read)
 
-data Type = Tint PInt | Treal PReal
+data Type
+    = Tint PIntType
+    | Treal PRealType
+    | Tchar PCharType
+    | Tstring PStringType
+    | Tbool PBoolType
   deriving (Eq, Ord, Show, Read)
 
 data AssgnmOp = AssgnEq PAssignmEq | AssgnPlEq PAssignmPlus
@@ -245,12 +265,17 @@ data Exp
     | EFun PIdent POpenParenthesis [PassedParam] PCloseParenthesis
     | Evar PIdent
     | Econst Constant
-    | Estring PString
   deriving (Eq, Ord, Show, Read)
 
 data UnaryOperator = Address PDef | Indirection PEtimes
   deriving (Eq, Ord, Show, Read)
 
-data Constant = Efloat PDouble | Echar PChar | Eint PInteger
+data Constant
+    = Estring PString
+    | Efloat PDouble
+    | Echar PChar
+    | Eint PInteger
+    | ETrue PTrue
+    | EFalse PFalse
   deriving (Eq, Ord, Show, Read)
 

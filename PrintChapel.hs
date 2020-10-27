@@ -130,11 +130,20 @@ instance Print AbsChapel.Pdo where
 instance Print AbsChapel.PWhile where
   prt _ (AbsChapel.PWhile (_,i)) = doc (showString i)
 
-instance Print AbsChapel.PInt where
-  prt _ (AbsChapel.PInt (_,i)) = doc (showString i)
+instance Print AbsChapel.PIntType where
+  prt _ (AbsChapel.PIntType (_,i)) = doc (showString i)
 
-instance Print AbsChapel.PReal where
-  prt _ (AbsChapel.PReal (_,i)) = doc (showString i)
+instance Print AbsChapel.PRealType where
+  prt _ (AbsChapel.PRealType (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PCharType where
+  prt _ (AbsChapel.PCharType (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PBoolType where
+  prt _ (AbsChapel.PBoolType (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PStringType where
+  prt _ (AbsChapel.PStringType (_,i)) = doc (showString i)
 
 instance Print AbsChapel.PAssignmEq where
   prt _ (AbsChapel.PAssignmEq (_,i)) = doc (showString i)
@@ -156,6 +165,12 @@ instance Print AbsChapel.PProc where
 
 instance Print AbsChapel.PReturn where
   prt _ (AbsChapel.PReturn (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PTrue where
+  prt _ (AbsChapel.PTrue (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PFalse where
+  prt _ (AbsChapel.PFalse (_,i)) = doc (showString i)
 
 instance Print AbsChapel.PElthen where
   prt _ (AbsChapel.PElthen (_,i)) = doc (showString i)
@@ -360,8 +375,11 @@ instance Print AbsChapel.Guard where
 
 instance Print AbsChapel.Type where
   prt i e = case e of
-    AbsChapel.Tint pint -> prPrec i 0 (concatD [prt 0 pint])
-    AbsChapel.Treal preal -> prPrec i 0 (concatD [prt 0 preal])
+    AbsChapel.Tint pinttype -> prPrec i 0 (concatD [prt 0 pinttype])
+    AbsChapel.Treal prealtype -> prPrec i 0 (concatD [prt 0 prealtype])
+    AbsChapel.Tchar pchartype -> prPrec i 0 (concatD [prt 0 pchartype])
+    AbsChapel.Tstring pstringtype -> prPrec i 0 (concatD [prt 0 pstringtype])
+    AbsChapel.Tbool pbooltype -> prPrec i 0 (concatD [prt 0 pbooltype])
 
 instance Print AbsChapel.AssgnmOp where
   prt i e = case e of
@@ -395,7 +413,6 @@ instance Print AbsChapel.Exp where
     AbsChapel.EFun pident popenparenthesis passedparams pcloseparenthesis -> prPrec i 16 (concatD [prt 0 pident, prt 0 popenparenthesis, prt 0 passedparams, prt 0 pcloseparenthesis])
     AbsChapel.Evar pident -> prPrec i 16 (concatD [prt 0 pident])
     AbsChapel.Econst constant -> prPrec i 16 (concatD [prt 0 constant])
-    AbsChapel.Estring pstring -> prPrec i 16 (concatD [prt 0 pstring])
 
 instance Print AbsChapel.UnaryOperator where
   prt i e = case e of
@@ -404,7 +421,10 @@ instance Print AbsChapel.UnaryOperator where
 
 instance Print AbsChapel.Constant where
   prt i e = case e of
+    AbsChapel.Estring pstring -> prPrec i 0 (concatD [prt 0 pstring])
     AbsChapel.Efloat pdouble -> prPrec i 0 (concatD [prt 0 pdouble])
     AbsChapel.Echar pchar -> prPrec i 0 (concatD [prt 0 pchar])
     AbsChapel.Eint pinteger -> prPrec i 0 (concatD [prt 0 pinteger])
+    AbsChapel.ETrue ptrue -> prPrec i 0 (concatD [prt 0 ptrue])
+    AbsChapel.EFalse pfalse -> prPrec i 0 (concatD [prt 0 pfalse])
 
