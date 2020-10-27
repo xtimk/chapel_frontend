@@ -34,11 +34,15 @@ typeCheckerExt (x:xs) = case x of
     ExtDecl (Decl decMode declList _ ) -> do
         mapM_ typeCheckerDeclaration declList
         typeCheckerExt xs
-    ExtFun (FunDec (PProc ((l,c),funname) ) signature body) -> do
-        typeCheckerSignature signature
-        typeCheckerBody ProcedureBlk (createId l c funname) body
+    ExtFun fun -> do
+        typeCheckerFunction fun
         typeCheckerExt xs
 
+typeCheckerFunction (FunDec (PProc ((l,c),funname) ) signature body) = do
+  typeCheckerSignature signature
+  typeCheckerBody ProcedureBlk (createId l c funname) body
+  get
+  
 typeCheckerSignature signature = case signature of
   SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' identifier params Infered
   SignWRet identifier (FunParams _ params _) _ types -> typeCheckerSignature' identifier params (convertTypeSpecToTypeInferred types)
@@ -85,7 +89,7 @@ typeCheckerBody blkType identifier (BodyBlock  _ xs _  ) = do
 typeCheckerBody' blkType x = do
   case x of
     Stm statement -> typeCheckerStatement statement
-    Fun _ _ -> get
+    Fun fun _ -> typeCheckerFunction fun
     DeclStm (Decl decMode declList _ ) -> do
       mapM_ typeCheckerDeclaration declList
       get
@@ -274,13 +278,18 @@ typeCheckerBuildArrayBound enviroment lBound rBound =
         Eint (PInteger (loc,dimension)) -> DataChecker (Fix $ read dimension) []
 
 typeCheckerExpression environment exp = case exp of
-    EAss e1 (AssgnEq (PAssignmEq ((l,c),_)) ) e2 -> typeCheckerExpression' environment Sup (l,c) e1 e2
+    EAss e1 (AssgnEq (PAssignmEq ((l,c),_)) ) e2 -> typeCheckerExpression' environment SupDecl (l,c) e1 e2
     Eplus e1 (PEplus ((l,c),_)) e2 -> typeCheckerExpression' environment Sup (l,c) e1 e2
     Eminus e1 (PEminus ((l,c),_)) e2 -> typeCheckerExpression' environment Sup (l,c) e1 e2
     Ediv e1 (PEdiv ((l,c),_)) e2 -> typeCheckerExpression' environment Sup (l,c) e1 e2
     Etimes e1 (PEtimes ((l,c),_)) e2 -> typeCheckerExpression' environment Sup (l,c) e1 e2
     InnerExp _ e _ -> typeCheckerExpression environment e
     Elthen e1 pElthen e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
+    Eneq e1 pEneq e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
+    Eeq e1 pEeq e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
+    Egrthen e1 pEgrthen e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
+    Ele e1 pEle e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
+    Ege e1 pEge e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
     Epreop (Indirection _) e1 -> typeCheckerExpression environment e1 -- todo: e' un pointer?
     Epreop (Address _) e1 -> if isExpVar e1
       then let DataChecker ty errors = typeCheckerExpression environment e1 in DataChecker (Pointer ty) errors
@@ -297,11 +306,13 @@ typeCheckerExpression environment exp = case exp of
     Econst (EFalse _) -> DataChecker Bool []
 -- todo: aggiungere tutti i casi degli operatori esistenti
 
-eFunTypeChecker funidentifier passedparams environment = 
-  case getVarType funidentifier environment of
-    e@(DataChecker (Error (Just ty)) errors) -> e
-    e@(DataChecker (Error Nothing) er) -> e
-    _otherwhise -> checkPassedParams funidentifier passedparams (getFunParams funidentifier environment) environment _otherwhise
+eFunTypeChecker funidentifier@(PIdent ((l,c),identifier)) passedparams environment = 
+  case getEntry funidentifier environment of
+    DataChecker Nothing errors -> DataChecker (Error Nothing) errors
+    DataChecker (Just (Variable _ _ ty)) _-> DataChecker (Error Nothing) [ErrorChecker (l,c) $ ErrorCalledProcWithVariable identifier]
+    DataChecker (Just (Function _ params ty)) _-> let DataChecker _tys err = checkPassedParams funidentifier passedparams params environment (DataChecker ty [])
+     in DataChecker ty err
+
 
 checkPassedParams funidentifier [] [] environment acc@(DataChecker tye errors) = acc
 

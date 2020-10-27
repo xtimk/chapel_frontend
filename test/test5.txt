@@ -3,6 +3,15 @@ var z:int = m[2];
 
 proc pippo (l:int) : char
 {
+   l(3);
+
+   proc bella (m:string) : string
+   {
+      a + 5 = 4;
+      return 4;
+   };
+   var hiu:char;
+   hiu= bella("44");
 
    l = m[2];
 }
