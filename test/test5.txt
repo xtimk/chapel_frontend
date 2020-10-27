@@ -1,12 +1,14 @@
 
-proc pippo (x:int) : int
+proc pippo (l:int) : char
 {
 
 }
 
-proc main (x:int , y:real)
+proc main (x:int , m:real)
 {
-   writeInt(y);
-   writeReal(x);
+   writeInt(x);
+   writeReal(m);
+   var h = "ciao";
+   pippo(h);
 }
 

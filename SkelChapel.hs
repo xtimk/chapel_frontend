@@ -51,12 +51,21 @@ transPdo x = case x of
 transPWhile :: PWhile -> Result
 transPWhile x = case x of
   PWhile string -> failure x
-transPInt :: PInt -> Result
-transPInt x = case x of
-  PInt string -> failure x
-transPReal :: PReal -> Result
-transPReal x = case x of
-  PReal string -> failure x
+transPIntType :: PIntType -> Result
+transPIntType x = case x of
+  PIntType string -> failure x
+transPRealType :: PRealType -> Result
+transPRealType x = case x of
+  PRealType string -> failure x
+transPCharType :: PCharType -> Result
+transPCharType x = case x of
+  PCharType string -> failure x
+transPBoolType :: PBoolType -> Result
+transPBoolType x = case x of
+  PBoolType string -> failure x
+transPStringType :: PStringType -> Result
+transPStringType x = case x of
+  PStringType string -> failure x
 transPAssignmEq :: PAssignmEq -> Result
 transPAssignmEq x = case x of
   PAssignmEq string -> failure x
@@ -78,6 +87,12 @@ transPProc x = case x of
 transPReturn :: PReturn -> Result
 transPReturn x = case x of
   PReturn string -> failure x
+transPTrue :: PTrue -> Result
+transPTrue x = case x of
+  PTrue string -> failure x
+transPFalse :: PFalse -> Result
+transPFalse x = case x of
+  PFalse string -> failure x
 transPElthen :: PElthen -> Result
 transPElthen x = case x of
   PElthen string -> failure x
@@ -219,8 +234,11 @@ transGuard x = case x of
   SGuard popenparenthesis exp pcloseparenthesis -> failure x
 transType :: Type -> Result
 transType x = case x of
-  Tint pint -> failure x
-  Treal preal -> failure x
+  Tint pinttype -> failure x
+  Treal prealtype -> failure x
+  Tchar pchartype -> failure x
+  Tstring pstringtype -> failure x
+  Tbool pbooltype -> failure x
 transAssgnmOp :: AssgnmOp -> Result
 transAssgnmOp x = case x of
   AssgnEq passignmeq -> failure x
@@ -251,14 +269,16 @@ transExp x = case x of
   EFun pident popenparenthesis passedparams pcloseparenthesis -> failure x
   Evar pident -> failure x
   Econst constant -> failure x
-  Estring pstring -> failure x
 transUnaryOperator :: UnaryOperator -> Result
 transUnaryOperator x = case x of
   Address pdef -> failure x
   Indirection petimes -> failure x
 transConstant :: Constant -> Result
 transConstant x = case x of
+  Estring pstring -> failure x
   Efloat pdouble -> failure x
   Echar pchar -> failure x
   Eint pinteger -> failure x
+  ETrue ptrue -> failure x
+  EFalse pfalse -> failure x
 

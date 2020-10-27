@@ -51,8 +51,7 @@ data DefinedError =
   ErrorDimensionArray Int Loc Int | 
   ErrorWrongDimensionArray Int Int String |
   ErrorArrayExpressionRequest |
-  ErrorCantAddRealToAddress  |
-  ErrorCantAddCharToAddress  |
+  ErrorCantOpToAddress Type|
   ErrorCantAddressAnExpression |
   ErrorReturnNotInsideAProcedure |
   ErrorCalledProcWithWrongTypeParam Type Type |
@@ -60,11 +59,7 @@ data DefinedError =
   ErrorCalledProcWithTooMuchArgs
   deriving (Show)
 
--- data Type' = Int' | Real' | Error' ErrorType
---   deriving (Show)
-
--- data ErrorType = ErrorInitExpr String Loc Type' Type' | ErrorNotInitVar 
---   deriving(Show) 
+data SupMode = SupDecl | SupFun | SupBool | Sup 
 
 type Loc = (Int,Int)
 
