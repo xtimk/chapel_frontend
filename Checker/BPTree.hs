@@ -140,6 +140,12 @@ gotoParent tree (Node id val parent children) = case parent of
     Nothing -> Checker.BPTree.Void
     Just parentReal -> findNodeById parentReal tree
 
+getEntry (PIdent ((l,c), identifier)) (_,_,tree,currentNode) = 
+    let symtable = uniteSymTables $ bpPathToList currentNode tree in
+        case DMap.lookup identifier symtable of
+            Just (_, entry) -> DataChecker (Just entry) []
+            Nothing -> DataChecker Nothing [ErrorChecker (l,c) $ Checker.SymbolTable.ErrorVarNotDeclared identifier]
+            
 getVarType (PIdent ((l,c), identifier)) (_,_,tree,currentNode) = 
     let symtable = uniteSymTables $ bpPathToList currentNode tree in
         case DMap.lookup identifier symtable of

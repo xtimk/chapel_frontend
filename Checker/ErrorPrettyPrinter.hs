@@ -24,5 +24,6 @@ printDefinedError error = case error of
   ErrorCantAddressAnExpression -> "An expression cannot address"
   ErrorReturnNotInsideAProcedure -> "Return can be write only in a procedure"
   ErrorCalledProcWithWrongTypeParam ty1 ty2 -> "Parameter must be of type " ++ show ty1 ++ " but was found type "++ show ty2 ++ "."
-  ErrorCalledProcWithLessArgs -> "Not too much parameter for function"
-  ErrorCalledProcWithTooMuchArgs -> "To much parameter for function"
+  ErrorCalledProcWithLessArgs -> "Not too much parameter for function."
+  ErrorCalledProcWithTooMuchArgs -> "To much parameter for function."
+  ErrorCalledProcWithVariable id -> "Variable " ++ show id ++ " is not a procedure."
