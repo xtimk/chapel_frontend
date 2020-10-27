@@ -21,6 +21,9 @@ data BP = BP {
     blocktype :: BlkType
 } deriving (Show)
 
+
+getTreeErrors tree = foldr (\tree errors -> getErrors tree ++ errors ) [] (bp2list tree)
+
 findNodeById searchedId tree = findNode (bp2list tree)
     where
         findNode [] = Checker.BPTree.Void
@@ -93,6 +96,8 @@ setSymbolTable sym tree@(Node id (BP _ statements errors blocktype) parent child
     val = BP {symboltable = sym, statements = statements, errors = errors, blocktype = blocktype}, 
     parentID = parent, 
     children = children}
+
+getErrors tree@(Node _ (BP _ _ errors _) _ _) = errors
               
 
 addFunctionOnCurrentNode identifier loc variables types (_s,_e,tree,currentId) = 

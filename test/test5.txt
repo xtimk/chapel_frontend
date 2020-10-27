@@ -1,13 +1,16 @@
+var m = [2.3,3,4,5,[3]];
+var z:int = m[2];
 
 proc pippo (l:int) : char
 {
 
+   l = m[2];
 }
 
 proc main (x:int , m:real)
 {
-   writeInt(x);
-   writeReal(m);
+   writeInt(m);
+   writeReal(x);
    var h = "ciao";
    pippo(h);
 }

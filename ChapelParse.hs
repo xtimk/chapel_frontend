@@ -15,6 +15,8 @@ import AbsChapel
 import qualified Data.Map as DMap
 import Checker.TypeChecker
 import Control.Monad.Trans.State
+import Checker.ErrorPrettyPrinter
+import Checker.BPTree
 
 
 
@@ -87,6 +89,9 @@ parseTest filepath = do
 
                    putStrLn "\n\n ** TREE **"
                    print (getTree (evalState (typeChecker tree) startState))
+
+                   putStrLn "\n\n ** ERRORS **\n"
+                   printErrors $ getTreeErrors $ getTree (evalState (typeChecker tree) startState)
 
                    exitSuccess
 
