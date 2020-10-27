@@ -54,9 +54,8 @@ data DefinedError =
   ErrorCantOpToAddress Type|
   ErrorCantAddressAnExpression |
   ErrorReturnNotInsideAProcedure |
-  ErrorCalledProcWithWrongTypeParam Type Type |
-  ErrorCalledProcWithLessArgs |
-  ErrorCalledProcWithTooMuchArgs | 
+  ErrorCalledProcWithWrongTypeParam Int Type Type String|
+  ErrorCalledProcWrongArgs Int Int String |
   ErrorCalledProcWithVariable String  
   deriving (Show)
 

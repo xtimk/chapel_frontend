@@ -18,85 +18,50 @@ sup mode id loc ty1@Int ty2@Int = case mode of
   _ -> DataChecker Int []
 sup mode id loc ty1@Int ty2@Real = case mode of
   SupDecl -> DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
   SupBool -> DataChecker Bool []
-  Sup -> DataChecker Real []
-sup mode id loc ty1@Int ty2@Char = case mode of
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
-  _ -> DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
-sup mode id loc ty1@Int ty2@String = case mode of
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
-  _ -> DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
-sup mode id loc ty1@Int ty2@Bool = case mode of
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
-  _ -> DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
+  _ -> DataChecker Real []
+sup mode id loc ty1@Int ty2@Char =  DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
+sup mode id loc ty1@Int ty2@String =  DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
+sup mode id loc ty1@Int ty2@Bool = DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
 --Real
 sup mode id loc ty1@Real ty2@Int = case mode of
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
   SupBool -> DataChecker Bool []
   _ -> DataChecker Real []
 sup mode id loc ty1@Real ty2@Real = case mode of 
   SupBool -> DataChecker Bool []
   _ -> DataChecker Real []
-sup mode id loc ty1@Real ty2@Char = case mode of 
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
-  _ ->  DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
-sup mode id loc ty1@Real ty2@String = case mode of 
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
-  _ ->  DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
-sup mode id loc ty1@Real ty2@Bool = case mode of 
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
-  _ ->  DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
+sup mode id loc ty1@Real ty2@Char = DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
+sup mode id loc ty1@Real ty2@String =  DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
+sup mode id loc ty1@Real ty2@Bool = DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
 --Char
 sup mode id loc ty1@Char ty2@Int = case mode of
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
   SupBool -> DataChecker Bool []
   _ -> DataChecker Char []
-sup mode id loc ty1@Char ty2@Real = case mode of 
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
-  _ ->  DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
+sup mode id loc ty1@Char ty2@Real = DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
 sup mode id loc ty1@Char ty2@Char = case mode of 
   SupBool -> DataChecker Bool []
   _ -> DataChecker Char []
 sup mode id loc ty1@Char ty2@String = case mode of 
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
-  SupDecl -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
+  SupDecl -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
   SupBool -> DataChecker Bool []
   _ ->  DataChecker String []
-sup mode id loc ty1@Char ty2@Bool = case mode of 
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
-  _ ->  DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
+sup mode id loc ty1@Char ty2@Bool = DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
 --String
-sup mode id loc ty1@String ty2@Int = case mode of
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
-  _ -> DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
-sup mode id loc ty1@String ty2@Real = case mode of 
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
-  _ ->  DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
+sup mode id loc ty1@String ty2@Int = DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
+sup mode id loc ty1@String ty2@Real = DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
 sup mode id loc ty1@String ty2@Char = case mode of 
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
   SupBool -> DataChecker Bool []
   _ -> DataChecker String []
 sup mode id loc ty1@String ty2@String = case mode of 
   SupBool -> DataChecker Bool []
   _ ->  DataChecker String []
-sup mode id loc ty1@String ty2@Bool = case mode of 
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
-  _ ->  DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
+sup mode id loc ty1@String ty2@Bool = DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
 --Bool
-sup mode id loc ty1@Bool ty2@Int = case mode of
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
-  _ -> DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
-sup mode id loc ty1@Bool ty2@Real = case mode of 
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
-  _ ->  DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
-sup mode id loc ty1@Bool ty2@Char = case mode of 
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
-  _ ->  DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
-sup mode id loc ty1@Bool ty2@String = case mode of 
-  SupFun -> DataChecker (Error Nothing ) [ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam ty1 ty2]
-  _ ->  DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
-sup mode id loc ty1@Bool ty2@Bool =  DataChecker Bool []
+sup mode id loc ty1@Bool ty2@Int = DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
+sup mode id loc ty1@Bool ty2@Real = DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
+sup mode id loc ty1@Bool ty2@Char = DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
+sup mode id loc ty1@Bool ty2@String = DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
+sup mode id loc ty1@Bool ty2@Bool = DataChecker Bool []
 --Error
 sup mode id loc (Error ty1) (Error ty2 ) = DataChecker Real []
 sup mode id loc e1@(Error _ ) _ =  DataChecker e1 []
