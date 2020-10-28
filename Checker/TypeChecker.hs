@@ -278,6 +278,7 @@ typeCheckerBuildArrayBound enviroment lBound rBound =
 typeCheckerExpression environment exp = case exp of
     EAss e1 (AssgnEq (PAssignmEq ((l,c),_)) ) e2 -> typeCheckerExpression' environment SupDecl (l,c) e1 e2
     Eplus e1 (PEplus ((l,c),_)) e2 -> typeCheckerExpression' environment Sup (l,c) e1 e2
+    Emod e1 (PEmod ((l,c),_)) e2 -> typeCheckerExpression' environment Sup (l,c) e1 e2
     Eminus e1 (PEminus ((l,c),_)) e2 -> typeCheckerExpression' environment Sup (l,c) e1 e2
     Ediv e1 (PEdiv ((l,c),_)) e2 -> typeCheckerExpression' environment Sup (l,c) e1 e2
     Etimes e1 (PEtimes ((l,c),_)) e2 -> typeCheckerExpression' environment Sup (l,c) e1 e2
