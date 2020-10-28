@@ -63,9 +63,6 @@ newtype PStringType = PStringType ((Int,Int),String)
 newtype PAssignmEq = PAssignmEq ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
-newtype PAssignmPlus = PAssignmPlus ((Int,Int),String)
-  deriving (Eq, Ord, Show, Read)
-
 newtype PRef = PRef ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
@@ -129,6 +126,9 @@ newtype PEle = PEle ((Int,Int),String)
 newtype PEge = PEge ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
+newtype PAssignmPlus = PAssignmPlus ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
 newtype PIdent = PIdent ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
@@ -160,10 +160,10 @@ data DeclList
     = NoAssgmDec [PIdent] PColon Type
     | NoAssgmArrayFixDec [PIdent] PColon ArDecl
     | NoAssgmArrayDec [PIdent] PColon ArDecl Type
-    | AssgmTypeDec [PIdent] PColon Type PAssignmEq ExprDecl
-    | AssgmArrayTypeDec [PIdent] PColon ArDecl Type PAssignmEq ExprDecl
-    | AssgmArrayDec [PIdent] PColon ArDecl PAssignmEq ExprDecl
-    | AssgmDec [PIdent] PAssignmEq ExprDecl
+    | AssgmTypeDec [PIdent] PColon Type AssgnmOp ExprDecl
+    | AssgmArrayTypeDec [PIdent] PColon ArDecl Type AssgnmOp ExprDecl
+    | AssgmArrayDec [PIdent] PColon ArDecl AssgnmOp ExprDecl
+    | AssgmDec [PIdent] AssgnmOp ExprDecl
   deriving (Eq, Ord, Show, Read)
 
 data ExprDecl = ExprDecArray ArInit | ExprDec Exp

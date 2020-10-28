@@ -5,6 +5,8 @@ proc pippo (l:int) : char
 {
    l(3);
 
+        
+   var ji: real += 3.4;
    proc bella (m:string) : string
    {
       var bellaregazio:***int;

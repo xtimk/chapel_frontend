@@ -69,9 +69,6 @@ transPStringType x = case x of
 transPAssignmEq :: PAssignmEq -> Result
 transPAssignmEq x = case x of
   PAssignmEq string -> failure x
-transPAssignmPlus :: PAssignmPlus -> Result
-transPAssignmPlus x = case x of
-  PAssignmPlus string -> failure x
 transPRef :: PRef -> Result
 transPRef x = case x of
   PRef string -> failure x
@@ -135,6 +132,9 @@ transPEle x = case x of
 transPEge :: PEge -> Result
 transPEge x = case x of
   PEge string -> failure x
+transPAssignmPlus :: PAssignmPlus -> Result
+transPAssignmPlus x = case x of
+  PAssignmPlus string -> failure x
 transPIdent :: PIdent -> Result
 transPIdent x = case x of
   PIdent string -> failure x
@@ -168,10 +168,10 @@ transDeclList x = case x of
   NoAssgmDec pidents pcolon type_ -> failure x
   NoAssgmArrayFixDec pidents pcolon ardecl -> failure x
   NoAssgmArrayDec pidents pcolon ardecl type_ -> failure x
-  AssgmTypeDec pidents pcolon type_ passignmeq exprdecl -> failure x
-  AssgmArrayTypeDec pidents pcolon ardecl type_ passignmeq exprdecl -> failure x
-  AssgmArrayDec pidents pcolon ardecl passignmeq exprdecl -> failure x
-  AssgmDec pidents passignmeq exprdecl -> failure x
+  AssgmTypeDec pidents pcolon type_ assgnmop exprdecl -> failure x
+  AssgmArrayTypeDec pidents pcolon ardecl type_ assgnmop exprdecl -> failure x
+  AssgmArrayDec pidents pcolon ardecl assgnmop exprdecl -> failure x
+  AssgmDec pidents assgnmop exprdecl -> failure x
 transExprDecl :: ExprDecl -> Result
 transExprDecl x = case x of
   ExprDecArray arinit -> failure x

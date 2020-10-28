@@ -25,3 +25,4 @@ printDefinedError error = case error of
   ErrorCalledProcWrongArgs dim1 dim2 id-> "Function " ++ show id ++ " expect " ++ show dim2 ++ " arguments but found " ++ show dim1 ++ " arguments."
   ErrorCalledProcWithVariable id -> "Variable " ++ show id ++ " is not a procedure."
   ErrorNoPointerAddress ty id -> "Can only addressed a pointer but was found variable " ++ show id ++ " of type " ++ show ty ++ "."
+  ErrorAssignDecl -> "Cannot make implicit operation on declaration"

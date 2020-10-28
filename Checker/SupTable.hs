@@ -6,7 +6,7 @@ import AbsChapel
 
 --Infered 
 sup mode id loc Infered ty = DataChecker ty []
-sup mode id loc ty Infered= DataChecker ty []
+sup mode id loc ty Infered = DataChecker ty []
 --Pointer
 sup mode id loc (Pointer _p) Int = DataChecker (Pointer _p) []
 sup mode id loc (Pointer _p) ty = DataChecker (Error (Just _p)) [ErrorChecker loc $ ErrorCantOpToAddress ty]
@@ -17,18 +17,21 @@ sup mode id loc ty1@Int ty2@Int = case mode of
   SupBool -> DataChecker Bool []
   _ -> DataChecker Int []
 sup mode id loc ty1@Int ty2@Real = case mode of
+  SupMod ->  createIncompatible id loc ty1 ty2
   SupDecl -> createIncompatible id loc ty1 ty2
   SupFun -> createIncompatible id loc ty1 ty2
   SupBool -> DataChecker Bool []
   _ -> DataChecker Real []
-sup mode id loc ty1@Int ty2@Char =  createIncompatible id loc ty1 ty2
-sup mode id loc ty1@Int ty2@String =  createIncompatible id loc ty1 ty2
+sup mode id loc ty1@Int ty2@Char = DataChecker Int []
+sup mode id loc ty1@Int ty2@String = createIncompatible id loc ty1 ty2
 sup mode id loc ty1@Int ty2@Bool = createIncompatible id loc ty1 ty2
 --Real
 sup mode id loc ty1@Real ty2@Int = case mode of
+  SupMod ->  createIncompatible id loc ty1 ty2
   SupBool -> DataChecker Bool []
   _ -> DataChecker Real []
-sup mode id loc ty1@Real ty2@Real = case mode of 
+sup mode id loc ty1@Real ty2@Real = case mode of
+  SupMod ->  createIncompatible id loc ty1 ty2 
   SupBool -> DataChecker Bool []
   _ -> DataChecker Real []
 sup mode id loc ty1@Real ty2@Char = createIncompatible id loc ty1 ty2
@@ -36,7 +39,6 @@ sup mode id loc ty1@Real ty2@String =  createIncompatible id loc ty1 ty2
 sup mode id loc ty1@Real ty2@Bool = createIncompatible id loc ty1 ty2
 --Char
 sup mode id loc ty1@Char ty2@Int = case mode of
-  SupFun -> createIncompatible id loc ty1 ty2
   SupBool -> DataChecker Bool []
   _ -> DataChecker Char []
 sup mode id loc ty1@Char ty2@Real = createIncompatible id loc ty1 ty2
@@ -44,8 +46,10 @@ sup mode id loc ty1@Char ty2@Char = case mode of
   SupBool -> DataChecker Bool []
   _ -> DataChecker Char []
 sup mode id loc ty1@Char ty2@String = case mode of 
+  SupMod ->  createIncompatible id loc ty1 ty2
   SupFun -> createIncompatible id loc ty1 ty2
   SupDecl -> createIncompatible id loc ty1 ty2
+  SupArith -> createIncompatible id loc ty1 ty2
   SupBool -> DataChecker Bool []
   _ ->  DataChecker String []
 sup mode id loc ty1@Char ty2@Bool = createIncompatible id loc ty1 ty2
@@ -53,10 +57,13 @@ sup mode id loc ty1@Char ty2@Bool = createIncompatible id loc ty1 ty2
 sup mode id loc ty1@String ty2@Int = createIncompatible id loc ty1 ty2
 sup mode id loc ty1@String ty2@Real = createIncompatible id loc ty1 ty2
 sup mode id loc ty1@String ty2@Char = case mode of 
-  SupFun -> createIncompatible id loc ty1 ty2
+  SupMod ->  createIncompatible id loc ty1 ty2
+  SupArith -> createIncompatible id loc ty1 ty2
   SupBool -> DataChecker Bool []
   _ -> DataChecker String []
-sup mode id loc ty1@String ty2@String = case mode of 
+sup mode id loc ty1@String ty2@String = case mode of
+  SupMod ->  createIncompatible id loc ty1 ty2 
+  SupArith -> createIncompatible id loc ty1 ty2
   SupBool -> DataChecker Bool []
   _ ->  DataChecker String []
 sup mode id loc ty1@String ty2@Bool = createIncompatible id loc ty1 ty2
@@ -65,7 +72,11 @@ sup mode id loc ty1@Bool ty2@Int = createIncompatible id loc ty1 ty2
 sup mode id loc ty1@Bool ty2@Real = createIncompatible id loc ty1 ty2
 sup mode id loc ty1@Bool ty2@Char = createIncompatible id loc ty1 ty2
 sup mode id loc ty1@Bool ty2@String = createIncompatible id loc ty1 ty2
-sup mode id loc ty1@Bool ty2@Bool = DataChecker Bool []
+sup mode id loc ty1@Bool ty2@Bool = case mode of
+  SupMod ->  createIncompatible id loc ty1 ty2
+  SupPlus -> createIncompatible id loc ty1 ty2
+  SupArith -> createIncompatible id loc ty1 ty2
+  _ -> DataChecker Bool []
 --Error
 sup mode id loc (Error ty1) (Error ty2 ) = DataChecker Real []
 sup mode id loc e1@(Error _ ) _ =  DataChecker e1 []

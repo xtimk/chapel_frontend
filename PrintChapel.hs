@@ -148,9 +148,6 @@ instance Print AbsChapel.PStringType where
 instance Print AbsChapel.PAssignmEq where
   prt _ (AbsChapel.PAssignmEq (_,i)) = doc (showString i)
 
-instance Print AbsChapel.PAssignmPlus where
-  prt _ (AbsChapel.PAssignmPlus (_,i)) = doc (showString i)
-
 instance Print AbsChapel.PRef where
   prt _ (AbsChapel.PRef (_,i)) = doc (showString i)
 
@@ -214,6 +211,9 @@ instance Print AbsChapel.PEle where
 instance Print AbsChapel.PEge where
   prt _ (AbsChapel.PEge (_,i)) = doc (showString i)
 
+instance Print AbsChapel.PAssignmPlus where
+  prt _ (AbsChapel.PAssignmPlus (_,i)) = doc (showString i)
+
 instance Print AbsChapel.PIdent where
   prt _ (AbsChapel.PIdent (_,i)) = doc (showString i)
   prtList _ [x] = concatD [prt 0 x]
@@ -261,10 +261,10 @@ instance Print AbsChapel.DeclList where
     AbsChapel.NoAssgmDec pidents pcolon type_ -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 type_])
     AbsChapel.NoAssgmArrayFixDec pidents pcolon ardecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl])
     AbsChapel.NoAssgmArrayDec pidents pcolon ardecl type_ -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl, prt 0 type_])
-    AbsChapel.AssgmTypeDec pidents pcolon type_ passignmeq exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 type_, prt 0 passignmeq, prt 0 exprdecl])
-    AbsChapel.AssgmArrayTypeDec pidents pcolon ardecl type_ passignmeq exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl, prt 0 type_, prt 0 passignmeq, prt 0 exprdecl])
-    AbsChapel.AssgmArrayDec pidents pcolon ardecl passignmeq exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl, prt 0 passignmeq, prt 0 exprdecl])
-    AbsChapel.AssgmDec pidents passignmeq exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 passignmeq, prt 0 exprdecl])
+    AbsChapel.AssgmTypeDec pidents pcolon type_ assgnmop exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 type_, prt 0 assgnmop, prt 0 exprdecl])
+    AbsChapel.AssgmArrayTypeDec pidents pcolon ardecl type_ assgnmop exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl, prt 0 type_, prt 0 assgnmop, prt 0 exprdecl])
+    AbsChapel.AssgmArrayDec pidents pcolon ardecl assgnmop exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl, prt 0 assgnmop, prt 0 exprdecl])
+    AbsChapel.AssgmDec pidents assgnmop exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 assgnmop, prt 0 exprdecl])
   prtList _ [x] = concatD [prt 0 x]
   prtList _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
 
