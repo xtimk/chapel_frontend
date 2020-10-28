@@ -56,7 +56,8 @@ data DefinedError =
   ErrorReturnNotInsideAProcedure |
   ErrorCalledProcWithWrongTypeParam Int Type Type String|
   ErrorCalledProcWrongArgs Int Int String |
-  ErrorCalledProcWithVariable String  
+  ErrorCalledProcWithVariable String |
+  ErrorNoPointerAddress Type String 
   deriving (Show)
 
 data SupMode = SupDecl | SupFun | SupBool | Sup 

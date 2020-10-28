@@ -7,7 +7,7 @@ proc pippo (l:int) : char
 
    proc bella (m:string) : string
    {
-      a + 5 = l +4;
+      var bellaregazio:***int;
       return 4;
    };
    var hiu:char;
