@@ -120,9 +120,6 @@ PStringType literals are recognized by the regular expression
 PAssignmEq literals are recognized by the regular expression
 `````'='`````
 
-PAssignmPlus literals are recognized by the regular expression
-`````{"+="}`````
-
 PRef literals are recognized by the regular expression
 `````{"ref"}`````
 
@@ -186,6 +183,9 @@ PEle literals are recognized by the regular expression
 PEge literals are recognized by the regular expression
 `````{">="}`````
 
+PAssignmPlus literals are recognized by the regular expression
+`````{"+="}`````
+
 PIdent literals are recognized by the regular expression
 `````letter (letter | digit | '_' | ''')*`````
 
@@ -233,10 +233,10 @@ All other symbols are terminals.
   | //DeclList// | -> | //[PIdent]// //PColon// //Type//
   |  |  **|**  | //[PIdent]// //PColon// //ArDecl//
   |  |  **|**  | //[PIdent]// //PColon// //ArDecl// //Type//
-  |  |  **|**  | //[PIdent]// //PColon// //Type// //PAssignmEq// //ExprDecl//
-  |  |  **|**  | //[PIdent]// //PColon// //ArDecl// //Type// //PAssignmEq// //ExprDecl//
-  |  |  **|**  | //[PIdent]// //PColon// //ArDecl// //PAssignmEq// //ExprDecl//
-  |  |  **|**  | //[PIdent]// //PAssignmEq// //ExprDecl//
+  |  |  **|**  | //[PIdent]// //PColon// //Type// //AssgnmOp// //ExprDecl//
+  |  |  **|**  | //[PIdent]// //PColon// //ArDecl// //Type// //AssgnmOp// //ExprDecl//
+  |  |  **|**  | //[PIdent]// //PColon// //ArDecl// //AssgnmOp// //ExprDecl//
+  |  |  **|**  | //[PIdent]// //AssgnmOp// //ExprDecl//
   | //ExprDecl// | -> | //ArInit//
   |  |  **|**  | //Exp//
   | //ArInit// | -> | //POpenBracket// //[ExprDecl]// //PCloseBracket//

@@ -29,7 +29,6 @@ position token PBoolType ({"bool"});
 position token PStringType ({"string"});
 
 position token PAssignmEq ('=') ;
-position token PAssignmPlus ({"+="}) ;
 
 position token PRef ({"ref"});
 
@@ -57,7 +56,7 @@ position token PEeq ({"=="});
 position token PEneq ({"!="});
 position token PEle ({"<="});
 position token PEge ({">="});
-
+position token PAssignmPlus ({"+="}) ;
 
 position token PIdent (letter (letter|digit|'_'|'\'')*) ;
 position token PString ('"' ((char - ["\"\\"]) | ('\\' ["\"\\nt"]))* '"') ;
@@ -88,10 +87,10 @@ Decl.     Declaration ::= DecMode [DeclList] PSemicolon;
 NoAssgmDec.          DeclList ::= [PIdent] PColon Type ;
 NoAssgmArrayFixDec.  DeclList ::= [PIdent] PColon ArDecl ;
 NoAssgmArrayDec.     DeclList ::= [PIdent] PColon ArDecl Type ;
-AssgmTypeDec.        DeclList ::= [PIdent] PColon Type PAssignmEq ExprDecl ;
-AssgmArrayTypeDec.   DeclList ::= [PIdent] PColon ArDecl Type PAssignmEq ExprDecl ;
-AssgmArrayDec.       DeclList ::= [PIdent] PColon ArDecl PAssignmEq ExprDecl ;
-AssgmDec.            DeclList ::= [PIdent] PAssignmEq ExprDecl ;
+AssgmTypeDec.        DeclList ::= [PIdent] PColon Type AssgnmOp ExprDecl ;
+AssgmArrayTypeDec.   DeclList ::= [PIdent] PColon ArDecl Type AssgnmOp ExprDecl ;
+AssgmArrayDec.       DeclList ::= [PIdent] PColon ArDecl AssgnmOp ExprDecl ;
+AssgmDec.            DeclList ::= [PIdent] AssgnmOp ExprDecl ;
 
 ExprDecArray.        ExprDecl ::= ArInit;
 ExprDec.             ExprDecl ::= Exp;

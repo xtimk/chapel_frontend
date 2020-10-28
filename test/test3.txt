@@ -6,6 +6,7 @@ proc pluto (ref x : int, y, z: real) : int {
 
     do while
     {
+        var ji: real += 3.4;
         var z : real = pippo [pippo, po];
         return x;
     }  (x < 5)

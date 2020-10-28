@@ -68,8 +68,6 @@ s t r i n g
     { tok (\p s -> PT p (eitherResIdent (T_PStringType . share) s)) }
 \=
     { tok (\p s -> PT p (eitherResIdent (T_PAssignmEq . share) s)) }
-\+ \=
-    { tok (\p s -> PT p (eitherResIdent (T_PAssignmPlus . share) s)) }
 r e f
     { tok (\p s -> PT p (eitherResIdent (T_PRef . share) s)) }
 v a r
@@ -112,6 +110,8 @@ f a l s e
     { tok (\p s -> PT p (eitherResIdent (T_PEle . share) s)) }
 \> \=
     { tok (\p s -> PT p (eitherResIdent (T_PEge . share) s)) }
+\+ \=
+    { tok (\p s -> PT p (eitherResIdent (T_PAssignmPlus . share) s)) }
 $l ($l | $d | \_ | \')*
     { tok (\p s -> PT p (eitherResIdent (T_PIdent . share) s)) }
 \" ($u # [\" \\]| \\ [\" \\ n t]) * \"
@@ -165,7 +165,6 @@ data Tok =
  | T_PBoolType !String
  | T_PStringType !String
  | T_PAssignmEq !String
- | T_PAssignmPlus !String
  | T_PRef !String
  | T_PVar !String
  | T_PConst !String
@@ -187,6 +186,7 @@ data Tok =
  | T_PEneq !String
  | T_PEle !String
  | T_PEge !String
+ | T_PAssignmPlus !String
  | T_PIdent !String
  | T_PString !String
  | T_PChar !String
@@ -249,7 +249,6 @@ prToken t = case t of
   PT _ (T_PBoolType s) -> s
   PT _ (T_PStringType s) -> s
   PT _ (T_PAssignmEq s) -> s
-  PT _ (T_PAssignmPlus s) -> s
   PT _ (T_PRef s) -> s
   PT _ (T_PVar s) -> s
   PT _ (T_PConst s) -> s
@@ -271,6 +270,7 @@ prToken t = case t of
   PT _ (T_PEneq s) -> s
   PT _ (T_PEle s) -> s
   PT _ (T_PEge s) -> s
+  PT _ (T_PAssignmPlus s) -> s
   PT _ (T_PIdent s) -> s
   PT _ (T_PString s) -> s
   PT _ (T_PChar s) -> s

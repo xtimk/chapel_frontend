@@ -34,7 +34,6 @@ import ErrM
   L_PBoolType { PT _ (T_PBoolType _) }
   L_PStringType { PT _ (T_PStringType _) }
   L_PAssignmEq { PT _ (T_PAssignmEq _) }
-  L_PAssignmPlus { PT _ (T_PAssignmPlus _) }
   L_PRef { PT _ (T_PRef _) }
   L_PVar { PT _ (T_PVar _) }
   L_PConst { PT _ (T_PConst _) }
@@ -56,6 +55,7 @@ import ErrM
   L_PEneq { PT _ (T_PEneq _) }
   L_PEle { PT _ (T_PEle _) }
   L_PEge { PT _ (T_PEge _) }
+  L_PAssignmPlus { PT _ (T_PAssignmPlus _) }
   L_PIdent { PT _ (T_PIdent _) }
   L_PString { PT _ (T_PString _) }
   L_PChar { PT _ (T_PChar _) }
@@ -124,9 +124,6 @@ PStringType  : L_PStringType { PStringType (mkPosToken $1)}
 PAssignmEq :: { PAssignmEq}
 PAssignmEq  : L_PAssignmEq { PAssignmEq (mkPosToken $1)}
 
-PAssignmPlus :: { PAssignmPlus}
-PAssignmPlus  : L_PAssignmPlus { PAssignmPlus (mkPosToken $1)}
-
 PRef :: { PRef}
 PRef  : L_PRef { PRef (mkPosToken $1)}
 
@@ -190,6 +187,9 @@ PEle  : L_PEle { PEle (mkPosToken $1)}
 PEge :: { PEge}
 PEge  : L_PEge { PEge (mkPosToken $1)}
 
+PAssignmPlus :: { PAssignmPlus}
+PAssignmPlus  : L_PAssignmPlus { PAssignmPlus (mkPosToken $1)}
+
 PIdent :: { PIdent}
 PIdent  : L_PIdent { PIdent (mkPosToken $1)}
 
@@ -223,10 +223,10 @@ DeclList :: { DeclList }
 DeclList : ListPIdent PColon Type { AbsChapel.NoAssgmDec $1 $2 $3 }
          | ListPIdent PColon ArDecl { AbsChapel.NoAssgmArrayFixDec $1 $2 $3 }
          | ListPIdent PColon ArDecl Type { AbsChapel.NoAssgmArrayDec $1 $2 $3 $4 }
-         | ListPIdent PColon Type PAssignmEq ExprDecl { AbsChapel.AssgmTypeDec $1 $2 $3 $4 $5 }
-         | ListPIdent PColon ArDecl Type PAssignmEq ExprDecl { AbsChapel.AssgmArrayTypeDec $1 $2 $3 $4 $5 $6 }
-         | ListPIdent PColon ArDecl PAssignmEq ExprDecl { AbsChapel.AssgmArrayDec $1 $2 $3 $4 $5 }
-         | ListPIdent PAssignmEq ExprDecl { AbsChapel.AssgmDec $1 $2 $3 }
+         | ListPIdent PColon Type AssgnmOp ExprDecl { AbsChapel.AssgmTypeDec $1 $2 $3 $4 $5 }
+         | ListPIdent PColon ArDecl Type AssgnmOp ExprDecl { AbsChapel.AssgmArrayTypeDec $1 $2 $3 $4 $5 $6 }
+         | ListPIdent PColon ArDecl AssgnmOp ExprDecl { AbsChapel.AssgmArrayDec $1 $2 $3 $4 $5 }
+         | ListPIdent AssgnmOp ExprDecl { AbsChapel.AssgmDec $1 $2 $3 }
 ExprDecl :: { ExprDecl }
 ExprDecl : ArInit { AbsChapel.ExprDecArray $1 }
          | Exp { AbsChapel.ExprDec $1 }

@@ -191,24 +191,36 @@ typeCheckerDeclaration x = do
   environment <- get
   case x of
     NoAssgmDec ids _colon types -> typeCheckerIdentifiers ids (convertTypeSpecToTypeInferred types) Infered
-    AssgmDec ids assigment exp -> let DataChecker ty errors = typeCheckerDeclExpression environment exp in do
-      typeCheckerIdentifiers ids Infered ty
-      modify $ addErrorsCurrentNode errors
-      get
-    AssgmTypeDec ids _colon types assignment exp -> let DataChecker ty errors = typeCheckerDeclExpression environment exp in do
-       typeCheckerIdentifiers ids (convertTypeSpecToTypeInferred types) ty
-       modify $ addErrorsCurrentNode errors
-       get
+    AssgmDec ids assignment exp ->
+      let errorAsgn = typeCheckerAssignmentDecl assignment;
+          DataChecker ty errors = typeCheckerDeclExpression environment exp in do
+            typeCheckerIdentifiers ids Infered ty
+            modify $ addErrorsCurrentNode (errors ++ errorAsgn)
+            get
+    AssgmTypeDec ids _colon types assignment exp -> 
+      let errorAsgn = typeCheckerAssignmentDecl assignment;
+          DataChecker ty errors = typeCheckerDeclExpression environment exp in do
+            typeCheckerIdentifiers ids (convertTypeSpecToTypeInferred types) ty
+            modify $ addErrorsCurrentNode (errors ++ errorAsgn)
+            get
     NoAssgmArrayFixDec ids _colon array -> typeCheckerIdentifiersArray ids array Infered Infered
     NoAssgmArrayDec ids _colon array types -> typeCheckerIdentifiersArray ids array (convertTypeSpecToTypeInferred types) Infered
-    AssgmArrayTypeDec ids _colon array types assignment exp ->  let DataChecker ty errors = typeCheckerDeclExpression environment exp in do
-      typeCheckerIdentifiersArray ids array (convertTypeSpecToTypeInferred types) ty
-      modify $ addErrorsCurrentNode errors
-      get
-    AssgmArrayDec ids _colon array assignment exp ->  let DataChecker ty errors = typeCheckerDeclExpression environment exp in do
-       typeCheckerIdentifiersArray ids array Infered ty
-       modify $ addErrorsCurrentNode errors
-       get
+    AssgmArrayTypeDec ids _colon array types assignment exp ->  
+      let errorAsgn = typeCheckerAssignmentDecl assignment;
+          DataChecker ty errors = typeCheckerDeclExpression environment exp in do
+            typeCheckerIdentifiersArray ids array (convertTypeSpecToTypeInferred types) ty
+            modify $ addErrorsCurrentNode (errors ++ errorAsgn)
+            get
+    AssgmArrayDec ids _colon array assignment exp ->  
+      let errorAsgn = typeCheckerAssignmentDecl assignment;
+          DataChecker ty errors = typeCheckerDeclExpression environment exp in do
+            typeCheckerIdentifiersArray ids array Infered ty
+            modify $ addErrorsCurrentNode (errors ++ errorAsgn)
+            get
+       
+typeCheckerAssignmentDecl assgnm = case assgnm of
+  AssgnEq (PAssignmEq (loc,_)) -> []
+  AssgnPlEq (PAssignmPlus (loc,_)) -> [ErrorChecker loc ErrorAssignDecl]
 
 typeCheckerIdentifiersArray ids array typeLeft typeRight = do
   environment <- get
@@ -276,12 +288,19 @@ typeCheckerBuildArrayBound enviroment lBound rBound =
         Eint (PInteger (loc,dimension)) -> DataChecker (Fix $ read dimension) []
 
 typeCheckerExpression environment exp = case exp of
-    EAss e1 (AssgnEq (PAssignmEq ((l,c),_)) ) e2 -> typeCheckerExpression' environment SupDecl (l,c) e1 e2
-    Eplus e1 (PEplus ((l,c),_)) e2 -> typeCheckerExpression' environment Sup (l,c) e1 e2
-    Emod e1 (PEmod ((l,c),_)) e2 -> typeCheckerExpression' environment Sup (l,c) e1 e2
-    Eminus e1 (PEminus ((l,c),_)) e2 -> typeCheckerExpression' environment Sup (l,c) e1 e2
-    Ediv e1 (PEdiv ((l,c),_)) e2 -> typeCheckerExpression' environment Sup (l,c) e1 e2
-    Etimes e1 (PEtimes ((l,c),_)) e2 -> typeCheckerExpression' environment Sup (l,c) e1 e2
+    EAss e1 assign e2 -> case assign of
+      AssgnEq (PAssignmEq (loc,_)) -> typeCheckerExpression' environment SupDecl loc e1 e2
+      AssgnPlEq (PAssignmPlus (loc,_)) ->  
+        let DataChecker ty1 errors1 = typeCheckerExpression environment e1;
+            DataChecker ty2 errors2 = typeCheckerExpression environment e2;
+            DataChecker ty3 errors3 = sup SupPlus "" (getExpPos exp) ty1 ty2;
+            DataChecker ty errors = sup SupDecl "" (getExpPos exp) ty1 ty3 in  
+              DataChecker ty (errors1 ++ errors2 ++ errors3 ++ errors)
+    Eplus e1 (PEplus (loc,_)) e2 -> typeCheckerExpression' environment SupPlus loc e1 e2
+    Emod e1 (PEmod (loc,_)) e2 -> typeCheckerExpression' environment SupMod loc e1 e2
+    Eminus e1 (PEminus (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
+    Ediv e1 (PEdiv (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
+    Etimes e1 (PEtimes (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
     InnerExp _ e _ -> typeCheckerExpression environment e
     Elthen e1 pElthen e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
     Elor e1 pElor e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
