@@ -297,6 +297,7 @@ Type : PIntType { AbsChapel.Tint $1 }
      | PCharType { AbsChapel.Tchar $1 }
      | PStringType { AbsChapel.Tstring $1 }
      | PBoolType { AbsChapel.Tbool $1 }
+     | PEtimes Type { AbsChapel.TPointer $1 $2 }
 AssgnmOp :: { AssgnmOp }
 AssgnmOp : PAssignmEq { AbsChapel.AssgnEq $1 }
          | PAssignmPlus { AbsChapel.AssgnPlEq $1 }

@@ -24,3 +24,4 @@ printDefinedError error = case error of
   ErrorCalledProcWithWrongTypeParam pos ty1 ty2 id-> "Parameter in position " ++ show pos ++ " must be of type " ++ show ty1 ++ " but was found type "++ show ty2 ++ " on call function " ++ id ++ "."
   ErrorCalledProcWrongArgs dim1 dim2 id-> "Function " ++ show id ++ " expect " ++ show dim2 ++ " arguments but found " ++ show dim1 ++ " arguments."
   ErrorCalledProcWithVariable id -> "Variable " ++ show id ++ " is not a procedure."
+  ErrorNoPointerAddress ty id -> "Can only addressed a pointer but was found variable " ++ show id ++ " of type " ++ show ty ++ "."

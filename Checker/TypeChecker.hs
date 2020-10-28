@@ -283,12 +283,14 @@ typeCheckerExpression environment exp = case exp of
     Etimes e1 (PEtimes ((l,c),_)) e2 -> typeCheckerExpression' environment Sup (l,c) e1 e2
     InnerExp _ e _ -> typeCheckerExpression environment e
     Elthen e1 pElthen e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
+    Elor e1 pElor e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
+    Eland e1 pEland e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
     Eneq e1 pEneq e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
     Eeq e1 pEeq e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
     Egrthen e1 pEgrthen e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
     Ele e1 pEle e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
     Ege e1 pEge e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
-    Epreop (Indirection _) e1 -> typeCheckerExpression environment e1 -- todo: e' un pointer?
+    Epreop (Indirection _) e1 -> typeCheckerIndirection environment e1
     Epreop (Address _) e1 -> if isExpVar e1
       then let DataChecker ty errors = typeCheckerExpression environment e1 in DataChecker (Pointer ty) errors
       else DataChecker (Error Nothing) [ErrorChecker (-4,-4) ErrorCantAddressAnExpression]
@@ -302,6 +304,15 @@ typeCheckerExpression environment exp = case exp of
     Econst (ETrue _) -> DataChecker Bool []
     Econst (EFalse _) -> DataChecker Bool []
 -- todo: aggiungere tutti i casi degli operatori esistenti
+
+typeCheckerIndirection environment e1 = 
+  let newLoc = getExpPos e1 in 
+    if isExpVar e1 
+    then let DataChecker ty errors = typeCheckerExpression environment e1 in case ty of
+      Pointer tyPointed -> DataChecker tyPointed []
+      Error Nothing -> DataChecker ty errors
+      _ -> DataChecker (Error Nothing) $ ErrorChecker newLoc (ErrorNoPointerAddress ty "pippo"):errors
+    else DataChecker (Error Nothing)  [ErrorChecker newLoc ErrorCantAddressAnExpression]
 
 eFunTypeChecker funidentifier@(PIdent (loc,identifier)) passedparams environment = 
   case getEntry funidentifier environment of
