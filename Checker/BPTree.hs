@@ -151,7 +151,7 @@ getVarType (PIdent ((l,c), identifier)) (_,_,tree,currentNode) =
         case DMap.lookup identifier symtable of
             Just (_,Variable _ _ t) -> DataChecker t []
             Just (_,Function _ _ t) -> DataChecker t []
-            Nothing -> DataChecker (Checker.SymbolTable.Error Nothing ) [ErrorChecker (l,c) $ Checker.SymbolTable.ErrorVarNotDeclared identifier]
+            Nothing -> DataChecker Checker.SymbolTable.Error [ErrorChecker (l,c) $ Checker.SymbolTable.ErrorVarNotDeclared identifier]
 
 getFunParams (PIdent ((l,c), identifier)) (_,_,tree,currentNode) = 
     let symtable = uniteSymTables $ bpPathToList currentNode tree in

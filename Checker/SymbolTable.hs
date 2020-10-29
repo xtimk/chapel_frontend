@@ -32,7 +32,7 @@ data DataChecker a = DataChecker {
 } deriving (Show)
 
 
-data Type = Int | Real | Bool | Void | Char | String | Infered | Array Type (Bound , Bound) | Pointer Type | Error (Maybe Type)
+data Type = Int | Real | Bool | Void | Char | String | Infered | Array Type (Bound , Bound) | Pointer Type | Error
   deriving (Show)
 
 data ErrorChecker =  ErrorChecker Loc DefinedError
