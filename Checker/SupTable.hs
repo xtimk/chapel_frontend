@@ -13,13 +13,13 @@ sup mode id loc (Pointer _p1) (Pointer _p2) = let DataChecker ty errors = sup mo
 sup mode id loc point@(Pointer _p) Int = case mode of 
   SupPlus -> DataChecker (Pointer _p) []
   SupMinus -> DataChecker (Pointer _p) []
-  _ -> DataChecker (Error (Just point)) [ErrorChecker loc $ ErrorCantOpToAddress Int]
-sup mode id loc (Pointer _p) ty = DataChecker (Error (Just _p)) [ErrorChecker loc $ ErrorCantOpToAddress ty]
+  _ -> DataChecker point [ErrorChecker loc $ ErrorCantOpToAddress Int]
+sup mode id loc (Pointer _p) ty = DataChecker _p [ErrorChecker loc $ ErrorCantOpToAddress ty]
 sup mode id loc Int point@(Pointer _p) = case mode of 
   SupPlus -> DataChecker (Pointer _p) []
   SupMinus -> DataChecker (Pointer _p) []
-  _ -> DataChecker (Error (Just point)) [ErrorChecker loc $ ErrorCantOpToAddress Int]
-sup mode id loc ty (Pointer _p) = DataChecker (Error (Just _p)) [ErrorChecker loc $ ErrorCantOpToAddress ty]
+  _ -> DataChecker point [ErrorChecker loc $ ErrorCantOpToAddress Int]
+sup mode id loc ty (Pointer _p) = DataChecker _p [ErrorChecker loc $ ErrorCantOpToAddress ty]
 --Int 
 sup mode id loc ty1@Int ty2@Int = case mode of 
   SupBool -> DataChecker Bool []
@@ -86,17 +86,17 @@ sup mode id loc ty1@Bool ty2@Bool = case mode of
   SupArith -> createIncompatible id loc ty1 ty2
   _ -> DataChecker Bool []
 --Error
-sup mode id loc (Error ty1) (Error ty2 ) = DataChecker Real []
-sup mode id loc e1@(Error _ ) _ =  DataChecker e1 []
-sup mode id loc ty e1@(Error _ ) =  case mode of  
+sup mode id loc Error Error = DataChecker Real []
+sup mode id loc Error _ =  DataChecker Error []
+sup mode id loc ty Error =  case mode of  
   SupDecl -> DataChecker ty []
-  _ -> DataChecker e1 []
+  _ -> DataChecker Error []
 --Array
 sup mode id loc ar1@(Array typesFirst dimensionFirst) ar2@(Array typesSecond _) = 
   let DataChecker types errors = sup mode id  loc typesFirst typesSecond;
       errorConverted = map (errorIncompatibleTypesChange ar1 ar2) errors in 
   case types of 
-    err@(Error _ ) -> DataChecker err errorConverted
+    Error -> DataChecker Error errorConverted
     _ -> DataChecker (Array types dimensionFirst) errorConverted
 sup mode id loc ty1@(Array _ _) ty2 = case mode of
   SupDecl -> createIncompatible id loc ty1 ty2
@@ -105,7 +105,7 @@ sup mode id loc ty1 ty2@(Array _ _) = case mode of
   SupDecl -> createIncompatible id loc ty1 ty2
   _ -> createIncompatible id loc ty1 ty2
 
-createIncompatible id loc ty1 ty2 = DataChecker (Error (Just ty1)) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
+createIncompatible id loc ty1 ty2 = DataChecker ty1 [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
 
 errorIncompatibleTypesChange ty1 ty2 (ErrorChecker loc (ErrorIncompatibleDeclTypes id array types)) = 
   ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2
