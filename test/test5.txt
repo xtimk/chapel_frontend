@@ -5,7 +5,13 @@ proc pippo (l:int) : char
 {
    l(3);
 
-        
+   m[3] = 4;
+   l + l = "ciao";
+   var ffffss : string = "ass" - "ddd";
+   var ffff: *int = &z + 10;
+   var ffff2 = &ffff;
+   var test: int = 5 + *ffff + **ffff2;
+   var fff7: *int = &ffff2;
    var ji: real += 3.4;
    proc bella (m:string) : string
    {

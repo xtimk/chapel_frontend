@@ -26,3 +26,4 @@ printDefinedError error = case error of
   ErrorCalledProcWithVariable id -> "Variable " ++ show id ++ " is not a procedure."
   ErrorNoPointerAddress ty id -> "Can only addressed a pointer but was found variable " ++ show id ++ " of type " ++ show ty ++ "."
   ErrorAssignDecl -> "Cannot make implicit operation on declaration"
+  ErrorNotLeftExpression -> "Only left expression behind the assignment"

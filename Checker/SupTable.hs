@@ -8,9 +8,17 @@ import AbsChapel
 sup mode id loc Infered ty = DataChecker ty []
 sup mode id loc ty Infered = DataChecker ty []
 --Pointer
-sup mode id loc (Pointer _p) Int = DataChecker (Pointer _p) []
+sup mode id loc (Pointer _p1) (Pointer _p2) = let DataChecker ty errors = sup mode id loc _p1 _p2 in
+  DataChecker (Pointer ty) errors
+sup mode id loc point@(Pointer _p) Int = case mode of 
+  SupPlus -> DataChecker (Pointer _p) []
+  SupMinus -> DataChecker (Pointer _p) []
+  _ -> DataChecker (Error (Just point)) [ErrorChecker loc $ ErrorCantOpToAddress Int]
 sup mode id loc (Pointer _p) ty = DataChecker (Error (Just _p)) [ErrorChecker loc $ ErrorCantOpToAddress ty]
-sup mode id loc Int (Pointer _p) = DataChecker (Pointer _p) []
+sup mode id loc Int point@(Pointer _p) = case mode of 
+  SupPlus -> DataChecker (Pointer _p) []
+  SupMinus -> DataChecker (Pointer _p) []
+  _ -> DataChecker (Error (Just point)) [ErrorChecker loc $ ErrorCantOpToAddress Int]
 sup mode id loc ty (Pointer _p) = DataChecker (Error (Just _p)) [ErrorChecker loc $ ErrorCantOpToAddress ty]
 --Int 
 sup mode id loc ty1@Int ty2@Int = case mode of 
@@ -97,7 +105,7 @@ sup mode id loc ty1 ty2@(Array _ _) = case mode of
   SupDecl -> createIncompatible id loc ty1 ty2
   _ -> createIncompatible id loc ty1 ty2
 
-createIncompatible id loc ty1 ty2 = DataChecker (Error Nothing) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
+createIncompatible id loc ty1 ty2 = DataChecker (Error (Just ty1)) [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
 
 errorIncompatibleTypesChange ty1 ty2 (ErrorChecker loc (ErrorIncompatibleDeclTypes id array types)) = 
   ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2
