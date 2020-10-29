@@ -114,21 +114,16 @@ typeCheckerStatement statement = case statement of
     typeCheckerBody IfThenBlk (createId lIf cIf nameIf) bodyIf
     typeCheckerBody IfElseBlk (createId lElse cElse nameElse) bodyElse
     get
-  StExp exp@(EAss e1 eqsym e2) _semicolon ->
-    if isExpVar e1
-      then do
-        env <- get
-        case typeCheckerExpression env (EAss e1 eqsym e2) of
-          DataChecker (Error _ ) errors -> do
-            modify $ addErrorsCurrentNode errors
-            get
-          _ -> get -- se non ho errore non faccio nulla nello stato
-      else get
   StExp exp@(EFun funidentifier _ params _) _semicolon-> do
     environment <- get
     let DataChecker ty errors = eFunTypeChecker funidentifier params environment in
       modify $ addErrorsCurrentNode errors
     get
+  StExp exp _semicolon -> do
+    env <- get
+    let DataChecker _ errors = typeCheckerExpression env exp in do
+        modify $ addErrorsCurrentNode errors
+        get
   RetVal _return exp _semicolon -> do
     (_s,_e,tree,current_id) <- get
     case getBlkType tree current_id of
@@ -161,10 +156,6 @@ getFunRetType env@(_s,_e,tree,current_id) =
       ProcedureBlk -> getVarType (PIdent ((0,0), id)) env
       _otherwhise -> getFunRetType (_s,_e,tree,parID)
 
-isExpVar e = case e of
-  (Evar (PIdent ((l,c),indentifier))) -> True
-  _otherwhise -> False
-
 getVarPos (Evar (PIdent ((l,c),indentifier))) = (l,c)
 
 getVarId (Evar (PIdent ((l,c),indentifier))) = indentifier
@@ -180,12 +171,14 @@ getAssignOpTok op = case op of
 typeCheckerGuard (SGuard _ expression _) = do
   (_s,_e,tree,current_id) <- get
   case typeCheckerExpression (_s,_e,tree,current_id) expression of
-    DataChecker Bool errors-> get -- questo dovrebbe essere l'unico caso accettato, se expression non e' bool devo segnalarlo come errore
+    DataChecker Bool errors -> do
+      environment <- get 
+      modify $ addErrorsCurrentNode errors
+      get
     _otherwhise -> do
       let node = findNodeById current_id tree in
         modify (\(_s, _e, tree,_i) -> (_s, _e, updateTree (addErrorNode (ErrorChecker (getExpPos expression) ErrorGuardNotBoolean ) node) tree , _i ))
       get
-      
 
 typeCheckerDeclaration x = do
   environment <- get
@@ -237,11 +230,13 @@ typeCheckerIdentifier assgn typeLeft typeRight id@(PIdent (loc, identifier)) = d
   let DataChecker ty errors = sup SupDecl identifier loc typeLeft typeRight in do
     modify $ addErrorsCurrentNode (errors ++ typeCheckerAssignmentDecl assgn)
     case ty of
-      Error _ -> get
+      Error Nothing -> get
+      Error (Just tyFound) -> do
+        modify (\(_s,_e,tree,_i) -> (_s, _e, typeCheckerVariable id tree tyFound current_id, _i ))
+        get 
       _ -> do
         modify (\(_s,_e,tree,_i) -> (_s, _e, typeCheckerVariable id tree ty current_id, _i ))
         get
-
 
 typeCheckerAssignmentDecl assgnm = case assgnm of
   Nothing -> []
@@ -259,12 +254,13 @@ typeCheckerDeclExpression environment decExp = case decExp of
   ExprDec exp -> typeCheckerExpression environment exp
 
 typeCheckerDeclArrayExp environment types expression = case (typeCheckerDeclExpression environment expression, types) of
-  (DataChecker (Error ty1) er1, DataChecker (Error ty2 ) er2 ) -> DataChecker (Error ty1) (er1 ++ er2)
-  (err@(DataChecker (Error _ ) _), _ ) -> err
-  ( _, err@(DataChecker (Error _ ) _)) -> err
-  (DataChecker typesFound errorsExp, DataChecker (Array typesInfered (first, Fix n)) errorsTy) -> case sup SupDecl"array" (getExprDeclPos expression) typesInfered typesFound of
-    DataChecker (Error ty) e -> DataChecker (Error ty) $ modErrorsPos (getExprDeclPos expression) e ++ errorsExp ++ errorsTy
-    DataChecker typesChecked e -> DataChecker (Array typesChecked (first, Fix $ n + 1)) (e ++ errorsExp ++ errorsTy)
+  (DataChecker _ er1, DataChecker ty@(Error ty2 ) er2 ) -> case ty2 of
+    Nothing -> DataChecker ty (er1 ++ er2)
+    Just tyFound -> DataChecker tyFound (er1 ++ er2)
+  (DataChecker typesFound errorsExp, DataChecker (Array typesInfered (first, Fix n)) errorsTy) -> case sup SupDecl "array" (getExprDeclPos expression) typesInfered typesFound of
+    DataChecker err@(Error ty) e -> DataChecker (Array typesInfered (first, Fix $ n + 1)) $ modErrorsPos (getExprDeclPos expression) e ++ errorsExp ++ errorsTy
+    DataChecker typesChecked e -> DataChecker (Array typesChecked (first, Fix $ n + 1)) (e ++ errorsExp ++ errorsTy)  
+  (DataChecker _ err1, DataChecker ty err2 ) -> DataChecker ty (err1 ++ err2)
 
 typeCheckerBuildArrayParameter enviroment array = case array of
   ArrayDimSingle leftBound _ _ rightBound -> typeCheckerBuildArrayBound enviroment leftBound rightBound
@@ -286,15 +282,8 @@ typeCheckerBuildArrayBound enviroment lBound rBound =
         Eint (PInteger (loc,dimension)) -> DataChecker (Fix $ read dimension) []
 
 typeCheckerExpression environment exp = case exp of
-    EAss e1 assign e2 -> case assign of
-      AssgnEq (PAssignmEq (loc,_)) -> typeCheckerExpression' environment SupDecl loc e1 e2
-      AssgnPlEq (PAssignmPlus (loc,_)) ->  
-        let DataChecker ty1 errors1 = typeCheckerExpression environment e1;
-            DataChecker ty2 errors2 = typeCheckerExpression environment e2;
-            DataChecker ty3 errors3 = sup SupPlus "" (getExpPos exp) ty1 ty2;
-            DataChecker ty errors = sup SupDecl "" (getExpPos exp) ty1 ty3 in  
-              DataChecker ty (errors1 ++ errors2 ++ errors3 ++ errors)
-    Eplus e1 (PEplus (loc,_)) e2 -> typeCheckerExpression' environment SupPlus loc e1 e2
+    EAss e1 assign e2 -> typeCheckerAssignment environment e1 assign e2
+    Eplus e1 (PEplus (loc,_)) e2 -> typeCheckerExpression' environment SupMinus loc e1 e2
     Emod e1 (PEmod (loc,_)) e2 -> typeCheckerExpression' environment SupMod loc e1 e2
     Eminus e1 (PEminus (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
     Ediv e1 (PEdiv (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
@@ -309,9 +298,7 @@ typeCheckerExpression environment exp = case exp of
     Ele e1 pEle e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
     Ege e1 pEge e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
     Epreop (Indirection _) e1 -> typeCheckerIndirection environment e1
-    Epreop (Address _) e1 -> if isExpVar e1
-      then let DataChecker ty errors = typeCheckerExpression environment e1 in DataChecker (Pointer ty) errors
-      else DataChecker (Error Nothing) [ErrorChecker (-4,-4) ErrorCantAddressAnExpression]
+    Epreop (Address _) e1 ->  typeCheckerAddress environment e1
     Earray expIdentifier arDeclaration -> typeCheckerDeclarationArray  environment expIdentifier arDeclaration
     EFun funidentifier _ passedparams _ -> eFunTypeChecker funidentifier passedparams environment
     Evar identifier -> getVarType identifier environment
@@ -321,17 +308,38 @@ typeCheckerExpression environment exp = case exp of
     Econst (Echar _) -> DataChecker Char []
     Econst (ETrue _) -> DataChecker Bool []
     Econst (EFalse _) -> DataChecker Bool []
--- todo: aggiungere tutti i casi degli operatori esistenti
 
+typeCheckerAssignment environment e1 assign e2 =  
+  let DataChecker tyLeft errLeft = typeCheckerLeftExpression environment e1;
+      DataChecker tyRight errRight = typeCheckerExpression environment e2 in 
+        case assign of
+          AssgnEq (PAssignmEq (loc,_)) -> 
+            let DataChecker ty errors = sup SupDecl "" (getExpPos e1) tyLeft tyRight; in 
+                  DataChecker ty (errLeft ++ errRight ++ errors)
+          AssgnPlEq (PAssignmPlus (loc,_)) ->  
+            let DataChecker ty3 errors3 = sup SupPlus "" (getExpPos e1) tyLeft tyRight;
+                DataChecker ty errors = sup SupDecl "" (getExpPos e1) tyLeft ty3 in  
+                  DataChecker ty (errLeft ++ errRight ++ errors3 ++ errors)
+
+typeCheckerLeftExpression enviroment exp = case exp of
+  Evar {} -> typeCheckerExpression enviroment exp
+  Earray {} -> typeCheckerExpression enviroment exp
+  _ -> DataChecker (Error Nothing)  [ErrorChecker (getExpPos exp) ErrorNotLeftExpression ]
+
+typeCheckerAddress enviroment exp = if isExpVar exp
+  then let DataChecker ty errors = typeCheckerExpression enviroment exp in DataChecker (Pointer ty) errors
+  else DataChecker (Error Nothing) [ErrorChecker (-4,-4) ErrorCantAddressAnExpression]
 
 typeCheckerIndirection environment e1 = 
-  let newLoc = getExpPos e1 in 
-    if isExpVar e1 
-    then let DataChecker ty errors = typeCheckerExpression environment e1 in case ty of
+  let newLoc = getExpPos e1 in case e1 of
+    Epreop (Indirection (PEtimes (loc,identifier))) e1 -> let DataChecker ty errors = typeCheckerIndirection environment e1 in case ty of
+      Pointer tyPoint -> DataChecker tyPoint errors
+      ty ->  DataChecker (Error (Just ty)) $  ErrorChecker loc (ErrorNoPointerAddress ty "expression"):errors
+    Evar id@(PIdent (loc,identifier)) ->  let DataChecker ty errors = getVarType id environment; in case ty of
       Pointer tyPointed -> DataChecker tyPointed []
       Error Nothing -> DataChecker ty errors
-      _ -> DataChecker (Error Nothing) $ ErrorChecker newLoc (ErrorNoPointerAddress ty "pippo"):errors
-    else DataChecker (Error Nothing)  [ErrorChecker newLoc ErrorCantAddressAnExpression]
+      ty -> DataChecker (Error (Just ty)) $ ErrorChecker newLoc (ErrorNoPointerAddress ty identifier):errors
+    _ -> DataChecker (Error Nothing)  [ErrorChecker newLoc ErrorCantAddressAnExpression]
 
 eFunTypeChecker funidentifier@(PIdent (loc,identifier)) passedparams environment = 
   case getEntry funidentifier environment of
@@ -356,6 +364,12 @@ checkPassedParams funidentifier (p:passedParams) (e:expectedParams) environment 
 checkCorrectTypeOfParam actual (PIdent ((l,c), identifier)) (PassedPar exp) (Variable Normal (l1,c1) tyVar) environment = 
   let DataChecker tyExp errorsExp = typeCheckerExpression environment exp;
       DataChecker ty errorsVar = sup SupFun "" (getExpPos exp) tyExp tyVar in errorsIncompatibleTypesChangeToFun actual identifier (errorsVar ++ errorsExp)
+
+
+isExpVar e = case e of
+  (Evar (PIdent ((l,c),indentifier))) -> True
+  _otherwhise -> False
+
 
 errorsIncompatibleTypesChangeToFun pos id = map (errorIncompatibleTypesChangeToFun pos id)
 

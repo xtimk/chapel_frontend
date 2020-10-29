@@ -58,10 +58,11 @@ data DefinedError =
   ErrorCalledProcWrongArgs Int Int String |
   ErrorCalledProcWithVariable String |
   ErrorNoPointerAddress Type String |
-  ErrorAssignDecl
+  ErrorAssignDecl |
+  ErrorNotLeftExpression
   deriving (Show)
 
-data SupMode = SupDecl | SupFun | SupBool | SupPlus |  SupArith | SupMod | Sup 
+data SupMode = SupDecl | SupFun | SupBool | SupPlus | SupMinus |  SupArith | SupMod | Sup 
 
 type Loc = (Int,Int)
 
