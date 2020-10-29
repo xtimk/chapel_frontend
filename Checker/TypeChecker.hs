@@ -190,43 +190,35 @@ typeCheckerGuard (SGuard _ expression _) = do
 typeCheckerDeclaration x = do
   environment <- get
   case x of
-    NoAssgmDec ids _colon types -> typeCheckerIdentifiers ids (convertTypeSpecToTypeInferred types) Infered
+    NoAssgmDec ids _colon types -> typeCheckerIdentifiers ids Nothing (convertTypeSpecToTypeInferred types) Infered
     AssgmDec ids assignment exp ->
-      let errorAsgn = typeCheckerAssignmentDecl assignment;
-          DataChecker ty errors = typeCheckerDeclExpression environment exp in do
-            typeCheckerIdentifiers ids Infered ty
-            modify $ addErrorsCurrentNode (errors ++ errorAsgn)
+      let DataChecker ty errors = typeCheckerDeclExpression environment exp in do
+            typeCheckerIdentifiers ids (Just assignment) Infered ty
+            modify $ addErrorsCurrentNode errors
             get
     AssgmTypeDec ids _colon types assignment exp -> 
-      let errorAsgn = typeCheckerAssignmentDecl assignment;
-          DataChecker ty errors = typeCheckerDeclExpression environment exp in do
-            typeCheckerIdentifiers ids (convertTypeSpecToTypeInferred types) ty
-            modify $ addErrorsCurrentNode (errors ++ errorAsgn)
+      let DataChecker ty errors = typeCheckerDeclExpression environment exp in do
+            typeCheckerIdentifiers ids (Just assignment) (convertTypeSpecToTypeInferred types) ty
+            modify $ addErrorsCurrentNode errors
             get
-    NoAssgmArrayFixDec ids _colon array -> typeCheckerIdentifiersArray ids array Infered Infered
-    NoAssgmArrayDec ids _colon array types -> typeCheckerIdentifiersArray ids array (convertTypeSpecToTypeInferred types) Infered
+    NoAssgmArrayFixDec ids _colon array -> typeCheckerIdentifiersArray ids Nothing array Infered Infered
+    NoAssgmArrayDec ids _colon array types -> typeCheckerIdentifiersArray ids  Nothing array (convertTypeSpecToTypeInferred types) Infered
     AssgmArrayTypeDec ids _colon array types assignment exp ->  
-      let errorAsgn = typeCheckerAssignmentDecl assignment;
-          DataChecker ty errors = typeCheckerDeclExpression environment exp in do
-            typeCheckerIdentifiersArray ids array (convertTypeSpecToTypeInferred types) ty
-            modify $ addErrorsCurrentNode (errors ++ errorAsgn)
+      let DataChecker ty errors = typeCheckerDeclExpression environment exp in do
+            typeCheckerIdentifiersArray ids (Just assignment) array (convertTypeSpecToTypeInferred types) ty
+            modify $ addErrorsCurrentNode errors
             get
     AssgmArrayDec ids _colon array assignment exp ->  
-      let errorAsgn = typeCheckerAssignmentDecl assignment;
-          DataChecker ty errors = typeCheckerDeclExpression environment exp in do
-            typeCheckerIdentifiersArray ids array Infered ty
-            modify $ addErrorsCurrentNode (errors ++ errorAsgn)
+      let DataChecker ty errors = typeCheckerDeclExpression environment exp in do
+            typeCheckerIdentifiersArray ids (Just assignment) array Infered ty
+            modify $ addErrorsCurrentNode errors
             get
-       
-typeCheckerAssignmentDecl assgnm = case assgnm of
-  AssgnEq (PAssignmEq (loc,_)) -> []
-  AssgnPlEq (PAssignmPlus (loc,_)) -> [ErrorChecker loc ErrorAssignDecl]
 
-typeCheckerIdentifiersArray ids array typeLeft typeRight = do
+typeCheckerIdentifiersArray ids assgn array typeLeft typeRight = do
   environment <- get
   let DataChecker typeArray errors = typeCheckerBuildArrayType environment array typeLeft in do
     modify (addErrorsCurrentNode errors)
-    typeCheckerIdentifiers ids typeArray typeRight
+    typeCheckerIdentifiers ids assgn typeArray typeRight
   get
 
 typeCheckerBuildArrayType environment (ArrayDeclIndex _ array _) = typeCheckerBuildArrayType' environment array
@@ -236,19 +228,25 @@ typeCheckerBuildArrayType environment (ArrayDeclIndex _ array _) = typeCheckerBu
       let DataChecker bounds errors = typeCheckerBuildArrayParameter enviroment array; DataChecker typesFound othersErrors = typeCheckerBuildArrayType' enviroment arrays types in 
         DataChecker (Array typesFound bounds) (errors ++ othersErrors)
 
-typeCheckerIdentifiers identifiers typeLeft typeRight = do
-  mapM_ (typeCheckerIdentifier typeLeft typeRight) identifiers
+typeCheckerIdentifiers identifiers assgn typeLeft typeRight = do
+  mapM_ (typeCheckerIdentifier assgn typeLeft typeRight) identifiers
   get
 
-typeCheckerIdentifier typeLeft typeRight id@(PIdent (loc, identifier)) = do
+typeCheckerIdentifier assgn typeLeft typeRight id@(PIdent (loc, identifier)) = do
   (_s,_e,tree,current_id) <- get
   let DataChecker ty errors = sup SupDecl identifier loc typeLeft typeRight in do
-    modify $ addErrorsCurrentNode errors
+    modify $ addErrorsCurrentNode (errors ++ typeCheckerAssignmentDecl assgn)
     case ty of
       Error _ -> get
       _ -> do
         modify (\(_s,_e,tree,_i) -> (_s, _e, typeCheckerVariable id tree ty current_id, _i ))
         get
+
+
+typeCheckerAssignmentDecl assgnm = case assgnm of
+  Nothing -> []
+  Just (AssgnEq (PAssignmEq (loc,_))) -> []
+  Just (AssgnPlEq (PAssignmPlus (loc,_))) -> [ErrorChecker loc ErrorAssignDecl]
 
 typeCheckerVariable (PIdent ((l,c), identifier)) tree types currentIdNode = 
   let node = findNodeById currentIdNode tree in case DMap.lookup identifier (getSymbolTable node) of
@@ -324,6 +322,7 @@ typeCheckerExpression environment exp = case exp of
     Econst (ETrue _) -> DataChecker Bool []
     Econst (EFalse _) -> DataChecker Bool []
 -- todo: aggiungere tutti i casi degli operatori esistenti
+
 
 typeCheckerIndirection environment e1 = 
   let newLoc = getExpPos e1 in 
