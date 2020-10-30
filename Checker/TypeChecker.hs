@@ -10,7 +10,7 @@ import Data.Maybe
 import Debug.Trace
 
 
-startState = (DMap.empty, [], Checker.BPTree.Node {Checker.BPTree.id = "0", val = BP {symboltable = DMap.empty, statements = [], errors = [], blocktype = ExternalBlk}, parentID = Nothing, children = []}, "0")
+startState = (DMap.empty, [], Checker.BPTree.Node {Checker.BPTree.id = "0", position = ((-1,-1),(-1,-1)), val = BP {symboltable = DMap.empty, statements = [], errors = [], blocktype = ExternalBlk}, parentID = Nothing, children = []}, "0")
 
 typeChecker (Progr p) = typeCheckerModule p
 
@@ -76,10 +76,10 @@ typeCheckerParam' mode types (PIdent ((line,column),identifier)) =
     modify(\(sym,_e,_t,_i) -> (DMap.insert identifier (identifier, Variable mode (line,column) typefound) sym,_e,_t,_i))
 
   
-typeCheckerBody blkType identifier (BodyBlock  _ xs _  ) = do
+typeCheckerBody blkType identifier (BodyBlock  (POpenGraph (locStart,_)) xs (PCloseGraph (locEnd,_))  ) = do
   -- create new child for the blk and enter in it
   (sym, _e, tree, current_id) <- get
-  let actualNode = findNodeById current_id tree; child = createChild identifier blkType actualNode in
+  let actualNode = findNodeById current_id tree; child = createChild identifier blkType locStart locEnd actualNode in
      put (DMap.empty, _e, addChild actualNode (setSymbolTable sym child) tree, identifier)
   -- process body
   mapM_ (typeCheckerBody' blkType) xs
@@ -141,9 +141,9 @@ typeCheckerStatement statement = case statement of
   RetVoid {} -> get
 
 setReturnType (_s,_e,tree,current_id) (DataChecker ty _errs) = 
-  let n@(Node id (BP _ _ _ blkTy) (Just parID) _) = findNodeById current_id tree in
+  let n@(Node id _ (BP _ _ _ blkTy) (Just parID) _) = findNodeById current_id tree in
     case blkTy of
-      ProcedureBlk -> let node@(Node id (BP symbolTable _ _ blkTy) (Just parID) _) = findNodeById parID tree in
+      ProcedureBlk -> let node@(Node id _ (BP symbolTable _ _ blkTy) (Just parID) _) = findNodeById parID tree in
         do
           get
           modify (\(_s, _e, tree,_i) -> (_s, _e, updateTree (modFunRetType id ty node) tree , _i ))
@@ -151,7 +151,7 @@ setReturnType (_s,_e,tree,current_id) (DataChecker ty _errs) =
       _otherwhise -> setReturnType (_s,_e,tree,parID) (DataChecker ty _errs)
 
 getFunRetType env@(_s,_e,tree,current_id) = 
-  let n@(Node id (BP _ _ _ blkTy) (Just parID) _) = findNodeById current_id tree in
+  let n@(Node id _  (BP _ _ _ blkTy) (Just parID) _) = findNodeById current_id tree in
     case blkTy of
       ProcedureBlk -> getVarType (PIdent ((0,0), id)) env
       _otherwhise -> getFunRetType (_s,_e,tree,parID)
