@@ -1,5 +1,6 @@
 module Checker.SymbolTable where
 import Data.Map
+import AbsChapel hiding (Type, Mode)
 
 
 type SymbolTable = Map String (String, EnvEntry)
@@ -59,7 +60,7 @@ data DefinedError =
   ErrorCalledProcWithVariable String |
   ErrorNoPointerAddress Type String |
   ErrorAssignDecl |
-  ErrorNotLeftExpression
+  ErrorNotLeftExpression Exp AssgnmOp 
   deriving (Show)
 
 data SupMode = SupDecl | SupFun | SupBool | SupPlus | SupMinus |  SupArith | SupMod | Sup 
