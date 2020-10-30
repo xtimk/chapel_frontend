@@ -304,7 +304,7 @@ typeCheckerExpression environment exp = case exp of
     Econst (EFalse _) -> DataChecker Bool []
 
 typeCheckerAssignment environment e1 assign e2 =  
-  let DataChecker tyLeft errLeft = typeCheckerLeftExpression environment e1;
+  let DataChecker tyLeft errLeft = typeCheckerLeftExpression assign environment e1;
       DataChecker tyRight errRight = typeCheckerExpression environment e2 in 
         case assign of
           AssgnEq (PAssignmEq (loc,_)) -> 
@@ -315,10 +315,10 @@ typeCheckerAssignment environment e1 assign e2 =
                 DataChecker ty errors = sup SupDecl "" (getExpPos e1) tyLeft ty3 in  
                   DataChecker ty (errLeft ++ errRight ++ errors3 ++ errors)
 
-typeCheckerLeftExpression enviroment exp = case exp of
+typeCheckerLeftExpression assign enviroment exp = case exp of
   Evar {} -> typeCheckerExpression enviroment exp
   Earray {} -> typeCheckerExpression enviroment exp
-  _ -> DataChecker Error [ErrorChecker (getExpPos exp) ErrorNotLeftExpression ]
+  _ -> DataChecker Error [ErrorChecker (getExpPos exp) $ ErrorNotLeftExpression exp assign]
 
 typeCheckerAddress enviroment exp = if isExpVar exp
   then let DataChecker ty errors = typeCheckerExpression enviroment exp in DataChecker (Pointer ty) errors

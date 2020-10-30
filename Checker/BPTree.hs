@@ -84,6 +84,10 @@ getExpPos exp = case exp of
     InnerExp _ e1 _ -> getExpPos e1
     EFun (PIdent ((l,c),_)) _ _ _ -> (l,c)
 
+getAssignPos assgn = case assgn of 
+    AssgnEq (PAssignmEq (loc,_)) ->  loc
+    AssgnPlEq (PAssignmPlus (loc,_)) ->  loc
+
 modFunRetType identifier tye tree@(Node id pos (BP symboltable statements errors blocktype) parent children) = 
     Checker.BPTree.Node {Checker.BPTree.id = id,
     position = pos,
