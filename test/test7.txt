@@ -1,0 +1,11 @@
+proc pluto(x : int)
+{
+    {
+        return x;
+    }
+    return 4.4;
+}
+
+proc main(){
+    var f : string = pluto(4);
+}

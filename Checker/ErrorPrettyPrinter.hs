@@ -13,6 +13,7 @@ printDefinedError tokens error = case error of
   ErrorVarNotDeclared id -> "Variable " ++ show id ++  " not declared."
   ErrorIncompatibleTypes ty1 ty2 -> "Not compatible types " ++ show ty1 ++  " and "  ++ show ty2 ++ "."
   ErrorIncompatibleDeclTypes id ty1 ty2 -> "Variable " ++ show id ++ " of type " ++ show ty1 ++  " not compatible with type "  ++ show ty2 ++ "."
+  ErrorIncompatibleRetTypes id ty1 ty2 -> "Function " ++ show id ++ " returns type " ++ show ty1 ++  ", but exp in return statement is "  ++ show ty2 ++ "." 
   ErrorVarAlreadyDeclared (l,c) id -> "Variable " ++ show id ++" already declared in line " ++ show l ++ " and column " ++ show c ++ "."
   ErrorGuardNotBoolean -> "Guard must be boolean."
   ErrorDeclarationBoundNotCorrectType ty id -> "Variable " ++ show id ++ " is of type " ++ show ty ++ " instead of type array."
