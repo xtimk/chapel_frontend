@@ -43,6 +43,7 @@ data DefinedError =
   ErrorVarNotDeclared String | 
   ErrorIncompatibleTypes Type Type | 
   ErrorIncompatibleDeclTypes String Type Type | 
+  ErrorIncompatibleRetTypes String Type Type | 
   ErrorVarAlreadyDeclared Loc String |
   ErrorSignatureAlreadyDeclared Loc String |
   ErrorGuardNotBoolean |
@@ -64,7 +65,7 @@ data DefinedError =
   ErrorNotLeftExpression Exp AssgnmOp 
   deriving (Show)
 
-data SupMode = SupDecl | SupFun | SupBool | SupPlus | SupMinus |  SupArith | SupMod | Sup 
+data SupMode = SupDecl | SupFun | SupBool | SupPlus | SupMinus |  SupArith | SupMod | Sup | SupRet
 
 type Loc = (Int,Int)
 
