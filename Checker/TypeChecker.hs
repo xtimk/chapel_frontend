@@ -42,10 +42,21 @@ typeCheckerExt (x:xs) = case x of
 typeCheckerFunction (FunDec (PProc ((l,c),funname) ) signature body) = do
   typeCheckerSignature signature
   typeCheckerBody ProcedureBlk (createId' l c (getFunName signature)) body
+  env <- get
+  case getVarType (getFunNamePident signature) env of
+    DataChecker Infered e -> do
+      modify $ addErrorsCurrentNode (e ++ [ErrorChecker (l,c) (ErrorMissingReturn ((getFunName signature)))])
+      get    
+    _otherwhise -> do 
+      get
   get
 
 getFunName (SignNoRet (PIdent ((l,c),identifier)) (FunParams _ params _)) = identifier
 getFunName (SignWRet (PIdent ((l,c),identifier)) (FunParams _ params _) _ types) = identifier
+
+getFunNamePident (SignNoRet r@(PIdent ((l,c),identifier)) (FunParams _ params _)) = r
+getFunNamePident (SignWRet r@(PIdent ((l,c),identifier)) (FunParams _ params _) _ types) = r
+
 
 typeCheckerSignature signature = case signature of
   SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' identifier params Infered
@@ -133,7 +144,11 @@ typeCheckerStatement statement = case statement of
     case getBlkType tree current_id of
       ProcedureBlk -> do -- devo controllare quì che il tipo di ritorno nel return sia compatibile con il tipo di ritorno della funzione
         case getFunRetType (_s,_e,tree,current_id) of
-          DataChecker Infered e -> setReturnType (_s,_e,tree,current_id) $ typeCheckerExpression (_s,_e,tree,current_id) exp
+          DataChecker Infered e -> case typeCheckerExpression (_s,_e,tree,current_id) exp of
+            ty@(DataChecker t []) -> setReturnType (_s,_e,tree,current_id) $ ty
+            ty@(DataChecker t e) -> do
+              modify $ addErrorsCurrentNode e
+              get
           _oth -> let
             (DataChecker tyfun errs1) = getFunRetType (_s,_e,tree,current_id) ;
             (DataChecker tyret errs2) = typeCheckerExpression (_s,_e,tree,current_id) exp ; 
@@ -161,11 +176,14 @@ setReturnType (_s,_e,tree,current_id) (DataChecker ty _errs) =
           get
       _otherwhise -> setReturnType (_s,_e,tree,parID) (DataChecker ty _errs)
 
-getFunRetType env@(_s,_e,tree,current_id) = 
-  let n@(Node id _  (BP _ _ _ blkTy) (Just parID) _) = findNodeById current_id tree in
-    case blkTy of
-      ProcedureBlk -> getVarType (PIdent ((0,0), id)) env
-      _otherwhise -> getFunRetType (_s,_e,tree,parID)
+getFunRetType env@(s,e,tree,current_id) = 
+  let n@(Node id _  (BP _ _ _ blkTy) pId _) = findNodeById current_id tree in
+    case pId of
+      Just parID ->
+        case blkTy of
+          ProcedureBlk -> getVarType (PIdent ((0,0), id)) env
+          _otherwhise -> getFunRetType (s, e,tree,parID)
+      -- Nothing -> DataChecker Error [ErrorChecker (0,0) ErrorGuardNotBoolean]
 
 getFunNameFromEnv env@(_s,_e,tree,current_id) = 
   let n@(Node id _  (BP _ _ _ blkTy) (Just parID) _) = findNodeById current_id tree in

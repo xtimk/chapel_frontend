@@ -43,6 +43,7 @@ data DefinedError =
   ErrorVarNotDeclared String | 
   ErrorIncompatibleTypes Type Type | 
   ErrorIncompatibleDeclTypes String Type Type | 
+  ErrorMissingReturn String | 
   ErrorIncompatibleRetTypes String Type Type | 
   ErrorVarAlreadyDeclared Loc String |
   ErrorGuardNotBoolean |
