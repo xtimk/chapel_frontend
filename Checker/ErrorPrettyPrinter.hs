@@ -33,6 +33,7 @@ printDefinedError tokens error = case error of
     "Required left expression before the assignment but was found "  ++ printTokens (getTokens tokens expPos (l,c - 1)) ++ "."
   ErrorMissingReturn funname -> "In Function " ++ funname ++ ": Specify at least one return."
   ErrorSignatureAlreadyDeclared (l,c) id -> "Signature " ++ show id ++" with this parameter already declared in line " ++ show l ++ " and column " ++ show c ++ "."
+  ErrorOverloadingIncompatibleReturnType locStart (l,c) id ty1 ty2 -> "Overloading signature for function " ++ show id ++ " must be of type " ++ show ty1 ++ " but was found type " ++ show ty2 ++ " in " ++ printTokens (getTokens tokens locStart (l,c - 1)) ++ "."
 
 
 getTokens [] _ _ = []

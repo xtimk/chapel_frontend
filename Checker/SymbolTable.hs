@@ -63,7 +63,8 @@ data DefinedError =
   ErrorCalledProcWithVariable String |
   ErrorNoPointerAddress Type String |
   ErrorAssignDecl |
-  ErrorNotLeftExpression Exp AssgnmOp 
+  ErrorNotLeftExpression Exp AssgnmOp |
+  ErrorOverloadingIncompatibleReturnType Loc Loc String Type Type
   deriving (Show)
 
 data SupMode = SupDecl | SupFun | SupBool | SupPlus | SupMinus |  SupArith | SupMod | Sup | SupRet
