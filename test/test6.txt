@@ -1,4 +1,16 @@
-proc f(x : int)
+
+proc f(x : string, y : string, z : string)
 {
-    l + l = l;
+   
+}
+
+
+proc f(x : int, y : string)
+{
+   
+}
+
+proc pippo(x : int)
+{
+  f("ciao", "ciao", true);
 }
