@@ -31,11 +31,14 @@ sup mode id loc ty1@Int ty2@Real = case mode of
   SupFun -> createIncompatible id loc ty1 ty2
   SupBool -> DataChecker Bool []
   _ -> DataChecker Real []
-sup mode id loc ty1@Int ty2@Char = DataChecker Int []
+sup mode id loc ty1@Int ty2@Char = case mode of 
+  SupFun -> createIncompatible id loc ty1 ty2
+  _ -> DataChecker Int []
 sup mode id loc ty1@Int ty2@String = createIncompatible id loc ty1 ty2
 sup mode id loc ty1@Int ty2@Bool = createIncompatible id loc ty1 ty2
 --Real
 sup mode id loc ty1@Real ty2@Int = case mode of
+  SupFun -> createIncompatible id loc ty1 ty2
   SupMod ->  createIncompatible id loc ty1 ty2
   SupBool -> DataChecker Bool []
   _ -> DataChecker Real []
@@ -45,18 +48,22 @@ sup mode id loc ty1@Real ty2@Real = case mode of
   _ -> DataChecker Real []
 sup mode id loc ty1@Real ty2@Char = case mode of
   SupRet -> createIncompatibleRet id loc ty1 ty2
+  SupFun -> createIncompatible id loc ty1 ty2
   _otherwhise -> createIncompatible id loc ty1 ty2
 sup mode id loc ty1@Real ty2@String =  case mode of
   SupRet -> createIncompatibleRet id loc ty1 ty2
   _otherwhise -> createIncompatible id loc ty1 ty2
 sup mode id loc ty1@Real ty2@Bool = case mode of
   SupRet -> createIncompatibleRet id loc ty1 ty2
+  SupFun -> createIncompatible id loc ty1 ty2
   _otherwhise -> createIncompatible id loc ty1 ty2
 --Char
 sup mode id loc ty1@Char ty2@Int = case mode of
+  SupFun -> createIncompatible id loc ty1 ty2
   SupBool -> DataChecker Bool []
   _ -> DataChecker Char []
 sup mode id loc ty1@Char ty2@Real = case mode of
+  SupFun -> createIncompatible id loc ty1 ty2
   SupRet -> createIncompatibleRet id loc ty1 ty2
   _otherwhise -> createIncompatible id loc ty1 ty2
 sup mode id loc ty1@Char ty2@Char = case mode of 
@@ -71,16 +78,20 @@ sup mode id loc ty1@Char ty2@String = case mode of
   SupBool -> DataChecker Bool []
   _ ->  DataChecker String []
 sup mode id loc ty1@Char ty2@Bool = case mode of
+  SupFun -> createIncompatible id loc ty1 ty2
   SupRet -> createIncompatibleRet id loc ty1 ty2
   _otherwhise -> createIncompatible id loc ty1 ty2
 --String
 sup mode id loc ty1@String ty2@Int = case mode of
+  SupFun -> createIncompatible id loc ty1 ty2
   SupRet -> createIncompatibleRet id loc ty1 ty2
   _otherwhise -> createIncompatible id loc ty1 ty2
 sup mode id loc ty1@String ty2@Real = case mode of
+  SupFun -> createIncompatible id loc ty1 ty2
   SupRet -> createIncompatibleRet id loc ty1 ty2
   _otherwhise -> createIncompatible id loc ty1 ty2
 sup mode id loc ty1@String ty2@Char = case mode of 
+  SupFun -> createIncompatible id loc ty1 ty2
   SupMod ->  createIncompatible id loc ty1 ty2
   SupArith -> createIncompatible id loc ty1 ty2
   SupBool -> DataChecker Bool []
@@ -92,19 +103,24 @@ sup mode id loc ty1@String ty2@String = case mode of
   SupBool -> DataChecker Bool []
   _ ->  DataChecker String []
 sup mode id loc ty1@String ty2@Bool = case mode of
+  SupFun -> createIncompatible id loc ty1 ty2
   SupRet -> createIncompatibleRet id loc ty1 ty2
   _otherwhise -> createIncompatible id loc ty1 ty2
 --Bool
 sup mode id loc ty1@Bool ty2@Int = case mode of
+  SupFun -> createIncompatible id loc ty1 ty2
   SupRet -> createIncompatibleRet id loc ty1 ty2
   _otherwhise -> createIncompatible id loc ty1 ty2
 sup mode id loc ty1@Bool ty2@Real = case mode of
+  SupFun -> createIncompatible id loc ty1 ty2
   SupRet -> createIncompatibleRet id loc ty1 ty2
   _otherwhise -> createIncompatible id loc ty1 ty2
 sup mode id loc ty1@Bool ty2@Char = case mode of
+  SupFun -> createIncompatible id loc ty1 ty2
   SupRet -> createIncompatibleRet id loc ty1 ty2
   _otherwhise -> createIncompatible id loc ty1 ty2
 sup mode id loc ty1@Bool ty2@String = case mode of
+  SupFun -> createIncompatible id loc ty1 ty2
   SupRet -> createIncompatibleRet id loc ty1 ty2
   _otherwhise -> createIncompatible id loc ty1 ty2
 sup mode id loc ty1@Bool ty2@Bool = case mode of
@@ -138,9 +154,15 @@ createIncompatible id loc ty1 ty2 = DataChecker ty1 [ErrorChecker loc $ ErrorInc
 
 createIncompatibleRet id loc ty1 ty2 = DataChecker ty1 [ErrorChecker loc $ ErrorIncompatibleRetTypes id ty1 ty2]
 
+
 errorIncompatibleTypesChange ty1 ty2 (ErrorChecker loc (ErrorIncompatibleDeclTypes id array types)) = 
   ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2
 errorIncompatibleTypesChange ty1 ty2 error = error
+
+
+errorConvertOVerloadingReturn locStart locEnd (ErrorChecker loc (ErrorIncompatibleDeclTypes id ty1 ty2)) =
+  ErrorChecker loc $ ErrorOverloadingIncompatibleReturnType locStart locEnd id ty1 ty2
+
 
 convertTypeSpecToTypeInferred Tint {} = Int
 convertTypeSpecToTypeInferred Treal {} = Real
