@@ -27,6 +27,7 @@ typeCheckerModule (Mod m) = do
   get
 
 createId l c name = show l ++ "_" ++ show c ++ "_" ++ name
+createId' l c name = name
 
 typeCheckerExt [] = get
 
@@ -40,9 +41,12 @@ typeCheckerExt (x:xs) = case x of
 
 typeCheckerFunction (FunDec (PProc ((l,c),funname) ) signature body) = do
   typeCheckerSignature signature
-  typeCheckerBody ProcedureBlk (createId l c funname) body
+  typeCheckerBody ProcedureBlk (createId' l c (getFunName signature)) body
   get
-  
+
+getFunName (SignNoRet (PIdent ((l,c),identifier)) (FunParams _ params _)) = identifier
+getFunName (SignWRet (PIdent ((l,c),identifier)) (FunParams _ params _) _ types) = identifier
+
 typeCheckerSignature signature = case signature of
   SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' identifier params Infered
   SignWRet identifier (FunParams _ params _) _ types -> typeCheckerSignature' identifier params (convertTypeSpecToTypeInferred types)
@@ -160,7 +164,15 @@ typeCheckerStatement statement = case statement of
       ProcedureBlk -> do -- devo controllare quì che il tipo di ritorno nel return sia compatibile con il tipo di ritorno della funzione
         case getFunRetType (_s,_e,tree,current_id) of
           DataChecker Infered e -> setReturnType (_s,_e,tree,current_id) $ typeCheckerExpression (_s,_e,tree,current_id) exp
-          _oth -> get -- TODO: se non e' infered: devo controllare tutti i return successivi che siano compatibili
+          _oth -> let
+            (DataChecker tyfun errs1) = getFunRetType (_s,_e,tree,current_id) ;
+            (DataChecker tyret errs2) = typeCheckerExpression (_s,_e,tree,current_id) exp ; 
+            (DataChecker t errs) = sup SupRet (getFunNameFromEnv (_s,_e,tree,current_id)) (getExpPos exp) tyfun tyret in
+            do
+              get -- TODO: se non e' infered: devo controllare tutti i return successivi che siano compatibili
+              let node = findNodeById current_id tree ; errors = errs1 ++ errs2 ++ errs in
+                modify $ addErrorsCurrentNode errors
+              get
         get
       _otherwhise -> do -- caso in cui trovo un return che non e' dentro una procedura (ma si trova al livello esterno)
         get
@@ -173,9 +185,8 @@ typeCheckerStatement statement = case statement of
 setReturnType (_s,_e,tree,current_id) (DataChecker ty _errs) = 
   let n@(Node id _ (BP _ _ _ blkTy) (Just parID) _) = findNodeById current_id tree in
     case blkTy of
-      ProcedureBlk -> let node@(Node id _ (BP symbolTable _ _ blkTy) (Just parID) _) = findNodeById parID tree in
+      ProcedureBlk -> let node = findNodeById parID tree in
         do
-          get
           modify (\(_s, _e, tree,_i) -> (_s, _e, updateTree (modFunRetType id ty node) tree , _i ))
           get
       _otherwhise -> setReturnType (_s,_e,tree,parID) (DataChecker ty _errs)
@@ -185,6 +196,12 @@ getFunRetType env@(_s,_e,tree,current_id) =
     case blkTy of
       ProcedureBlk -> getVarType (PIdent ((0,0), id)) env
       _otherwhise -> getFunRetType (_s,_e,tree,parID)
+
+getFunNameFromEnv env@(_s,_e,tree,current_id) = 
+  let n@(Node id _  (BP _ _ _ blkTy) (Just parID) _) = findNodeById current_id tree in
+    case blkTy of
+      ProcedureBlk -> id
+      _otherwhise -> getFunNameFromEnv (_s,_e,tree,parID)
 
 getVarPos (Evar (PIdent ((l,c),indentifier))) = (l,c)
 
