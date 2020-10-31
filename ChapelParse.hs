@@ -91,9 +91,6 @@ parseTest filepath = do
                    putStrLn "\n\n ** TREE **"
                    print (getTree (evalState (typeChecker tree) startState))
 
-                   putStrLn "\n\n"
-                   print $ printTokens $ getTokens (tokens s) (1,1) (10,3) 
-
                    putStrLn "\n\n ** ERRORS **\n"
                    printErrors (tokens s) $ getTreeErrors $ getTree (evalState (typeChecker tree) startState)
 

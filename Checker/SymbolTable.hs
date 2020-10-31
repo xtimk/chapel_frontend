@@ -9,7 +9,7 @@ type SymbolTable = Map String (String, EnvEntry)
 data EnvEntry = 
   Variable Mode Loc Type
   | Assignm Loc Type
-  | Function Loc [EnvEntry] Type 
+  | Function Loc [[EnvEntry]] Type 
 --  | Constant Literal
  deriving (Show)
 
@@ -46,6 +46,7 @@ data DefinedError =
   ErrorMissingReturn String | 
   ErrorIncompatibleRetTypes String Type Type | 
   ErrorVarAlreadyDeclared Loc String |
+  ErrorSignatureAlreadyDeclared Loc String |
   ErrorGuardNotBoolean |
   ErrorDeclarationBoundNotCorrectType Type String |
   ErrorArrayCallExpression |
