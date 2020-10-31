@@ -31,7 +31,8 @@ printDefinedError tokens error = case error of
   ErrorAssignDecl -> "Cannot make implicit operation on declaration"
   ErrorNotLeftExpression exp assgn  -> let expPos = getExpPos exp; (l,c) = getAssignPos assgn in  
     "Required left expression before the assignment but was found "  ++ printTokens (getTokens tokens expPos (l,c - 1)) ++ "."
-
+  ErrorMissingReturn funname -> "In Function " ++ funname ++ ": Specify at least one return."
+  _otherwhise -> "ASDASDASDASD"
 
 getTokens [] _ _ = []
 getTokens (x@(PT (Pn _ l c ) _ ):xs) start@(lstart, cstart) end@(lend, cend) 
