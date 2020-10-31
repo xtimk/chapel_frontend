@@ -24,12 +24,13 @@ printDefinedError tokens error = case error of
   ErrorCantAddressAnExpression -> "An expression cannot address"
   ErrorReturnNotInsideAProcedure -> "Return can be write only in a procedure"
   ErrorCalledProcWithWrongTypeParam pos ty1 ty2 id-> "Parameter in position " ++ show pos ++ " must be of type " ++ show ty1 ++ " but was found type "++ show ty2 ++ " on call function " ++ id ++ "."
-  ErrorCalledProcWrongArgs dim1 dim2 id-> "Function " ++ show id ++ " expect " ++ show dim2 ++ " arguments but found " ++ show dim1 ++ " arguments."
+  ErrorCalledProcWrongArgs dim1 dim2 id-> "Function " ++ show id ++ " expect " ++ show dim1 ++ " arguments but found " ++ show dim2 ++ " arguments."
   ErrorCalledProcWithVariable id -> "Variable " ++ show id ++ " is not a procedure."
   ErrorNoPointerAddress ty id -> "Can only addressed a pointer but was found variable " ++ show id ++ " of type " ++ show ty ++ "."
   ErrorAssignDecl -> "Cannot make implicit operation on declaration"
   ErrorNotLeftExpression exp assgn  -> let expPos = getExpPos exp; (l,c) = getAssignPos assgn in  
     "Required left expression before the assignment but was found "  ++ printTokens (getTokens tokens expPos (l,c - 1)) ++ "."
+  ErrorSignatureAlreadyDeclared (l,c) id -> "Signature " ++ show id ++" with this parameter already declared in line " ++ show l ++ " and column " ++ show c ++ "."
 
 
 getTokens [] _ _ = []

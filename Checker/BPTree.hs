@@ -53,17 +53,19 @@ getParentID tree@(Node _ _ _ parent _) =
 
 modErrorsPos pos = map (modErrorPos pos)
 
-modErrorPos (l,c) (ErrorChecker _oldloc a) = ErrorChecker (l,c) a
+modErrorPos loc (ErrorChecker _oldloc a) = ErrorChecker loc a
 
 getExprDeclPos (ExprDecArray (ArrayInit _ (e:exps) _)) = getExprDeclPos e
 getExprDeclPos (ExprDec exp) = getExpPos exp 
 
 getExpPos exp = case exp of
-    Evar (PIdent ((l,c),_)) -> (l,c)
-    Econst (Estring (PString ((l,c),_))) -> (l,c)
-    Econst (Efloat (PDouble ((l,c),_))) -> (l,c)
-    Econst (Echar (PChar ((l,c),_))) -> (l,c)
-    Econst (Eint (PInteger ((l,c),_))) -> (l,c)
+    Evar (PIdent (loc,_)) -> loc
+    Econst (Estring (PString (loc,_))) -> loc
+    Econst (Efloat (PDouble (loc,_))) -> loc
+    Econst (Echar (PChar (loc,_))) -> loc
+    Econst (Eint (PInteger (loc,_))) -> loc
+    Econst (ETrue (PTrue (loc,_))) -> loc
+    Econst (EFalse (PFalse (loc,_))) -> loc
     EAss e1 _ _ -> getExpPos e1
     Elor e1 _ _ -> getExpPos e1
     Eland e1 _ _ -> getExpPos e1
@@ -95,7 +97,15 @@ modFunRetType identifier tye tree@(Node id pos (BP symboltable statements errors
     parentID = parent, 
     children = children}
 
+modFunAddOverloading identifier vars tree@(Node id pos (BP symboltable statements errors blocktype) parent children) = 
+    Checker.BPTree.Node {Checker.BPTree.id = id,
+    position = pos,
+    val = BP {symboltable = DMap.adjust (addFunVariables vars) identifier symboltable, statements = statements, errors = errors, blocktype = blocktype}, 
+    parentID = parent, 
+    children = children}
+
 alterRetType tye (s,(Function _a _b t1 )) = (s,(Function _a _b tye))
+addFunVariables vars (s,(Function _a varOfVar _t )) = (s,(Function _a (vars:varOfVar) _t))
 
 getSymbolTable tree@(Node _ _ (BP symboltable _ _ blocktype) _ _) =  symboltable
 setSymbolTable sym tree@(Node id pos (BP _ statements errors blocktype) parent children) = 
@@ -192,8 +202,3 @@ bp2list = bpttolist []
         bpttolist xs x@(Node _ _ _ _ []) = x:xs
         bpttolist xs x@(Node _ _ _ _ children) =  x : concatMap (bpttolist xs) children
 
-
-
-
-createVariable = Variable 
-addDefineFunction = Function 
