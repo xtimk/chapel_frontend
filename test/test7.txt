@@ -4,6 +4,7 @@ proc pluto(x : int)
 }
 
 proc main(){
-    var f : string = pluto(4);
-    return 1;
+    var f : int = pluto(4);
+    return;
+    return 5;
 }
