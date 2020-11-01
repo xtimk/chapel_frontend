@@ -49,7 +49,7 @@ typeCheckerFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBlo
         modify (\(_s, tree,_i) -> (_s, updateTree (modFunRetType (getFunName signature) Checker.SymbolTable.Void node) tree , _i ))
       get    
     _otherwhise -> do 
-      modify $ addErrorsCurrentNode ([ErrorChecker (l,c) (ErrorMissingReturn (getFunName signature))])
+      modify $ addErrorsCurrentNode [ErrorChecker (l,c) (ErrorMissingReturn (getFunName signature))]
       get
   get
 
@@ -152,35 +152,25 @@ typeCheckerBody' blkType x = do
     Block body@(BodyBlock (POpenGraph ((l,c), name)) _ _) -> typeCheckerBody SimpleBlk (createId l c name) body
   get
 
+typeCheckerSequenceStatement pos = do
+  (_,tree,current_id) <- get
+  case findSequenceControlGetBlkType tree current_id of
+    WhileBlk -> get
+    DoWhileBlk -> get
+    IfSimpleBlk -> get
+    IfThenBlk -> get
+    IfElseBlk -> get
+    _otherwhise -> do -- caso in cui trovo un break che non e' in while, dowhile ecc..
+      modify $ addErrorsCurrentNode [ErrorChecker pos ErrorBreakNotInsideAProcedure]
+      get
+
 typeCheckerStatement statement = case statement of
   Break (PBreak (pos@(l,c), name)) _semicolon -> do
-    (_s,tree,current_id) <- get
-    case findSequenceControlGetBlkType tree current_id of
-      WhileBlk -> get
-      DoWhileBlk -> get
-      IfSimpleBlk -> get
-      IfThenBlk -> get
-      IfElseBlk -> get
-      _otherwhise -> do -- caso in cui trovo un break che non e' in while, dowhile ecc..
-        get
-        let node = findNodeById current_id tree ; errors = ErrorChecker pos ErrorBreakNotInsideAProcedure in
-          modify (\(_s,tree,_i) -> (_s,updateTree (addErrorNode errors node) tree , _i ))
-        get
-
+    typeCheckerSequenceStatement pos
+    get
   Continue (PContinue (pos@(l,c), name)) _semicolon -> do
-    (_s,tree,current_id) <- get
-    case findSequenceControlGetBlkType tree current_id of
-      WhileBlk -> get
-      DoWhileBlk -> get
-      IfSimpleBlk -> get
-      IfThenBlk -> get
-      IfElseBlk -> get
-      _otherwhise -> do -- caso in cui trovo un break che non e' in while, dowhile ecc..
-        get
-        let node = findNodeById current_id tree ; errors = ErrorChecker pos ErrorContinueNotInsideAProcedure in
-          modify (\(_s, tree,_i) -> (_s, updateTree (addErrorNode errors node) tree , _i ))
-        get
-
+    typeCheckerSequenceStatement pos
+    get 
   DoWhile (Pdo ((l,c),name)) _while body guard -> do
     typeCheckerBody DoWhileBlk (createId l c name) body
     typeCheckerGuard guard
@@ -248,7 +238,7 @@ typeCheckerStatement statement = case statement of
             (DataChecker tyret errs2) = DataChecker Checker.SymbolTable.Void []; 
             (DataChecker t errs) = sup SupRet (getFunNameFromEnv (_s,tree,current_id)) pos tyfun tyret in
             do
-              get -- TODO: se non e' infered: devo controllare tutti i return successivi che siano compatibili
+              get
               let node = findNodeById current_id tree ; errors = errs1 ++ errs2 ++ errs in
                 modify $ addErrorsCurrentNode errors
               get
@@ -259,6 +249,8 @@ typeCheckerStatement statement = case statement of
           modify (\(_s, tree,_i) -> (_s, updateTree (addErrorNode errors node) tree , _i ))
         get
     get
+
+
 
 getVarPos (Evar (PIdent ((l,c),indentifier))) = (l,c)
 

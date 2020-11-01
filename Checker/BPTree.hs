@@ -56,10 +56,6 @@ getParentID tree@(Node _ _ parent _) =
     case parent of
         Just p -> p
         -- il caso nothing non serve, non e' mai raggiungibile dalla getBlkType
-        
-
-
--- getParentID (Node id val parentID children) = parentID
 
 modErrorsPos pos = map (modErrorPos pos)
 
@@ -190,7 +186,6 @@ getFunRetType env@(s,tree,current_id) =
         case blkTy of
           ProcedureBlk -> getVarType (PIdent ((0,0), id)) env
           _otherwhise -> getFunRetType (s,tree,parID)
-      -- Nothing -> DataChecker Error [ErrorChecker (0,0) ErrorGuardNotBoolean]
 
 getFunNameFromEnv env@(_s,tree,current_id) = 
   let n@(Node (id,_) (BP _ _ _ blkTy) (Just parID) _) = findNodeById current_id tree in
