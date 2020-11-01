@@ -1,23 +1,28 @@
- var ggs: string = 1 + a;
 
-proc f(x : string, y : string, z : string) :int
+proc pile(x : int, j : string)  :string
 {
-   return;
+if(cazzo)
+then
+{
+ return "ciao";  
+}
+else
+{
+
+}
 }
 
 
-proc f(x : int, x : string)  :string
-{
-proc pile(z:int, z:int){};
 
-   var ggs: string = 1 + a;
-   x = a + a;
-    x = a + a;
-   return 20;
+proc pile(z:int, a:int) : string{
+
+   var x = a + a;
+
+
+   return "ciao";
 }
 
-proc pippo(x : int)
+proc pippo ()
 {
-  f("ciao", "ciao", "ciao");
-  return;
+   var x :string = pile(2,2);
 }

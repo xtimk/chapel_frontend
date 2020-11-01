@@ -81,9 +81,9 @@ parseTest filepath = do
                    exitFailure
     Ok  tree -> do putStrLn "\nParse Successful!"
                    showTree 2 tree
+
                    --putStrLn "\n\n ** After Type Checker **\n\n"
                    --print (evalState (typeChecker tree) startState)
-                  
 
                    putStrLn "\n\n ** SYMBOL TABLE **"
                    print (getSymTable (evalState (typeChecker tree) startState))
@@ -100,7 +100,7 @@ parseTest filepath = do
                    exitSuccess
 
 
-getSymTable (x,_,_,_) = x
-getTree (_,_,x,_) = x
+getSymTable (x,_,_) = x
+getTree (_,x,_) = x
 
 

@@ -68,7 +68,7 @@ s t r i n g
     { tok (\p s -> PT p (eitherResIdent (T_PStringType . share) s)) }
 b r e a k
     { tok (\p s -> PT p (eitherResIdent (T_PBreak . share) s)) }
-b r e a k
+c o n t i n u e
     { tok (\p s -> PT p (eitherResIdent (T_PContinue . share) s)) }
 \=
     { tok (\p s -> PT p (eitherResIdent (T_PAssignmEq . share) s)) }
