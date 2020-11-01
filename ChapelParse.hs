@@ -17,6 +17,7 @@ import Checker.TypeChecker
 import Control.Monad.Trans.State
 import Checker.ErrorPrettyPrinter
 import Checker.BPTree
+import ThreeAddressCode.TACGenerator
 
 
 
@@ -85,19 +86,19 @@ parseTest filepath = do
                    --putStrLn "\n\n ** After Type Checker **\n\n"
                    --print (evalState (typeChecker tree) startState)
 
-                   putStrLn "\n\n ** SYMBOL TABLE **"
-                   print (getSymTable (evalState (typeChecker tree) startState))
+                   let bpTree = evalState (typeChecker tree) startState in do
 
-                   putStrLn "\n\n ** TREE **"
-                   print (getTree (evalState (typeChecker tree) startState))
+                    putStrLn "\n\n ** SYMBOL TABLE **"
+                    print (getSymTable bpTree)
 
-                   putStrLn "\n\n ** ERRORS **\n"
-                   printErrors (tokens s) $ getTreeErrors $ getTree (evalState (typeChecker tree) startState)
+                    putStrLn "\n\n ** TREE **"
+                    print (getTree bpTree)
 
-                   
+                    putStrLn "\n\n ** ERRORS **\n"
+                    printErrors (tokens s) $ getTreeErrors $ getTree bpTree
 
-
-                   exitSuccess
+                    let  tac = evalState (tacGenerator tree ) (startTacState bpTree) in 
+                      exitSuccess
 
 
 getSymTable (x,_,_) = x
