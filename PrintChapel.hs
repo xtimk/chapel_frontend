@@ -145,6 +145,12 @@ instance Print AbsChapel.PBoolType where
 instance Print AbsChapel.PStringType where
   prt _ (AbsChapel.PStringType (_,i)) = doc (showString i)
 
+instance Print AbsChapel.PBreak where
+  prt _ (AbsChapel.PBreak (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PContinue where
+  prt _ (AbsChapel.PContinue (_,i)) = doc (showString i)
+
 instance Print AbsChapel.PAssignmEq where
   prt _ (AbsChapel.PAssignmEq (_,i)) = doc (showString i)
 
@@ -367,6 +373,8 @@ instance Print AbsChapel.Statement where
     AbsChapel.IfElse pif guard pthen body1 pelse body2 -> prPrec i 0 (concatD [prt 0 pif, prt 0 guard, prt 0 pthen, prt 0 body1, prt 0 pelse, prt 0 body2])
     AbsChapel.RetVal preturn exp psemicolon -> prPrec i 0 (concatD [prt 0 preturn, prt 0 exp, prt 0 psemicolon])
     AbsChapel.RetVoid preturn psemicolon -> prPrec i 0 (concatD [prt 0 preturn, prt 0 psemicolon])
+    AbsChapel.Continue pcontinue psemicolon -> prPrec i 0 (concatD [prt 0 pcontinue, prt 0 psemicolon])
+    AbsChapel.Break pbreak psemicolon -> prPrec i 0 (concatD [prt 0 pbreak, prt 0 psemicolon])
     AbsChapel.StExp exp psemicolon -> prPrec i 0 (concatD [prt 0 exp, prt 0 psemicolon])
 
 instance Print AbsChapel.Guard where

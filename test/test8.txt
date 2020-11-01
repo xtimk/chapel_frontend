@@ -1,0 +1,8 @@
+proc pluto(x : int)
+{
+    do while
+    {
+        break;
+    } (x < 5) 
+    break;
+}

@@ -66,6 +66,10 @@ b o o l
     { tok (\p s -> PT p (eitherResIdent (T_PBoolType . share) s)) }
 s t r i n g
     { tok (\p s -> PT p (eitherResIdent (T_PStringType . share) s)) }
+b r e a k
+    { tok (\p s -> PT p (eitherResIdent (T_PBreak . share) s)) }
+b r e a k
+    { tok (\p s -> PT p (eitherResIdent (T_PContinue . share) s)) }
 \=
     { tok (\p s -> PT p (eitherResIdent (T_PAssignmEq . share) s)) }
 r e f
@@ -164,6 +168,8 @@ data Tok =
  | T_PCharType !String
  | T_PBoolType !String
  | T_PStringType !String
+ | T_PBreak !String
+ | T_PContinue !String
  | T_PAssignmEq !String
  | T_PRef !String
  | T_PVar !String
@@ -248,6 +254,8 @@ prToken t = case t of
   PT _ (T_PCharType s) -> s
   PT _ (T_PBoolType s) -> s
   PT _ (T_PStringType s) -> s
+  PT _ (T_PBreak s) -> s
+  PT _ (T_PContinue s) -> s
   PT _ (T_PAssignmEq s) -> s
   PT _ (T_PRef s) -> s
   PT _ (T_PVar s) -> s

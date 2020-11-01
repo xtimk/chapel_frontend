@@ -7,4 +7,5 @@ proc main(){
     var f : int = pluto(4);
     return;
     return 5;
+    break;
 }

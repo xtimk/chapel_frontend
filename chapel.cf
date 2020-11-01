@@ -28,6 +28,9 @@ position token PCharType ({"char"});
 position token PBoolType ({"bool"});
 position token PStringType ({"string"});
 
+position token PBreak ({"break"});
+position token PContinue ({"break"});
+
 position token PAssignmEq ('=') ;
 
 position token PRef ({"ref"});
@@ -168,6 +171,8 @@ IfElse.    Statement      ::= PIf Guard PThen Body PElse Body;
 RetVal.    Statement  ::= PReturn Exp PSemicolon ;
 RetVoid.   Statement  ::= PReturn PSemicolon ;
 
+Continue.  Statement  ::= PContinue PSemicolon;
+Break.     Statement  ::= PBreak PSemicolon;
 
 StExp.     Statement      ::= Exp PSemicolon;
 

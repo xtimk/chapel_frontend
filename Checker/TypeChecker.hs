@@ -180,6 +180,34 @@ typeCheckerBody' blkType x = do
   get
 
 typeCheckerStatement statement = case statement of
+  Break (PBreak (pos@(l,c), name)) _semicolon -> do
+    (_s,_e,tree,current_id) <- get
+    case findSequenceControlGetBlkType tree current_id of
+      WhileBlk -> get
+      DoWhileBlk -> get
+      IfSimpleBlk -> get
+      IfThenBlk -> get
+      IfElseBlk -> get
+      _otherwhise -> do -- caso in cui trovo un break che non e' in while, dowhile ecc..
+        get
+        let node = findNodeById current_id tree ; errors = ErrorChecker pos ErrorBreakNotInsideAProcedure in
+          modify (\(_s, _e, tree,_i) -> (_s, _e, updateTree (addErrorNode errors node) tree , _i ))
+        get
+
+  Continue (PContinue (pos@(l,c), name)) _semicolon -> do
+    (_s,_e,tree,current_id) <- get
+    case findSequenceControlGetBlkType tree current_id of
+      WhileBlk -> get
+      DoWhileBlk -> get
+      IfSimpleBlk -> get
+      IfThenBlk -> get
+      IfElseBlk -> get
+      _otherwhise -> do -- caso in cui trovo un break che non e' in while, dowhile ecc..
+        get
+        let node = findNodeById current_id tree ; errors = ErrorChecker pos ErrorContinueNotInsideAProcedure in
+          modify (\(_s, _e, tree,_i) -> (_s, _e, updateTree (addErrorNode errors node) tree , _i ))
+        get
+
   DoWhile (Pdo ((l,c),name)) _while body guard -> do
     typeCheckerBody DoWhileBlk (createId l c name) body
     typeCheckerGuard guard
@@ -209,7 +237,7 @@ typeCheckerStatement statement = case statement of
         get
   RetVal _return exp _semicolon -> do
     (_s,_e,tree,current_id) <- get
-    case getBlkType tree current_id of
+    case findProcedureGetBlkType tree current_id of
       ProcedureBlk -> do -- devo controllare quì che il tipo di ritorno nel return sia compatibile con il tipo di ritorno della funzione
         case getFunRetType (_s,_e,tree,current_id) of
           DataChecker Infered e -> case typeCheckerExpression (_s,_e,tree,current_id) exp of
@@ -235,7 +263,7 @@ typeCheckerStatement statement = case statement of
     get
   RetVoid (PReturn (pos, _ret)) _semicolon -> do
     (_s,_e,tree,current_id) <- get
-    case getBlkType tree current_id of
+    case findProcedureGetBlkType tree current_id of
       ProcedureBlk -> do -- devo controllare quì che il tipo di ritorno nel return sia compatibile con il tipo di ritorno della funzione
         case getFunRetType (_s,_e,tree,current_id) of
           DataChecker Infered e -> setReturnType (_s,_e,tree,current_id) $ DataChecker Checker.SymbolTable.Void []
