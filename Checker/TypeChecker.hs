@@ -42,13 +42,35 @@ typeCheckerExt (x:xs) = case x of
 typeCheckerFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBlock  (POpenGraph (locGraph,_)) _ _)) = do
   typeCheckerSignature loc locGraph signature
   typeCheckerBody ProcedureBlk (createId' l c (getFunName signature)) body
-  env <- get
+  env@(_s,_e,tree,current_id) <- get
   case getVarType (getFunNamePident signature) env of
     DataChecker Infered e -> do
-      modify $ addErrorsCurrentNode (e ++ [ErrorChecker (l,c) (ErrorMissingReturn (getFunName signature))])
+      -- setReturnType env $ DataChecker Checker.SymbolTable.Void []
+      let node = findNodeById current_id tree in
+        modify (\(_s, _e, tree,_i) -> (_s, _e, updateTree (modFunRetType (getFunName signature) Checker.SymbolTable.Void node) tree , _i ))
+      -- modify $ addErrorsCurrentNode (e ++ [ErrorChecker (l,c) (ErrorMissingReturn (getFunName signature))])
       get    
     _otherwhise -> get
   get
+
+-- setVarType (_s,_e,tree,current_id) (DataChecker ty _errs) = 
+-- modFunRetType identifier tye tree@(Node id pos (BP symboltable statements errors blocktype) parent children) = 
+
+    -- let symtable = uniteSymTables $ bpPathToList currentNode tree in
+    --     case DMap.lookup identifier symtable of
+    --         Just (_,Variable _ _ t) -> DataChecker t []
+    --         Just (_,Function _ _ t) -> DataChecker t []
+    --         Nothing -> DataChecker Checker.SymbolTable.Error [ErrorChecker (l,c) $ Checker.SymbolTable.ErrorVarNotDeclared identifier]
+
+
+-- setReturnTypeSimple (_s,_e,tree,current_id) (DataChecker ty _errs) = 
+--   let n@(Node id _ (BP _ _ _ blkTy) (Just parID) _) = findNodeById current_id tree in
+--     case blkTy of
+--       ProcedureBlk -> let node = findNodeById parID tree in
+--         do
+--           modify (\(_s, _e, tree,_i) -> (_s, _e, updateTree (modFunRetType id ty node) tree , _i ))
+--           get
+--       _otherwhise -> setReturnType (_s,_e,tree,parID) (DataChecker ty _errs)
 
 getFunName (SignNoRet (PIdent ((l,c),identifier)) (FunParams _ params _)) = identifier
 getFunName (SignWRet (PIdent ((l,c),identifier)) (FunParams _ params _) _ types) = identifier
@@ -137,6 +159,13 @@ typeCheckerBody blkType identifier (BodyBlock  (POpenGraph (locStart,_)) xs (PCl
      put (DMap.empty, _e, addChild actualNode (setSymbolTable sym child) tree, identifier)
   -- process body
   mapM_ (typeCheckerBody' blkType) xs
+  -- case getVarType (PIdent ((0,0),identifier)) (sym, _e, tree, current_id) of
+  --   DataChecker Infered e -> do
+  --     setReturnType (sym, _e, tree, current_id) $ DataChecker Checker.SymbolTable.Void []
+  --     --modify $ addErrorsCurrentNode (e ++ [ErrorChecker (l,c) (ErrorMissingReturn (getFunName signature))])
+  --     --get    
+  --   _otherwhise -> get
+
   modify(\(_s,_e,_t,_) -> (_s,_e,_t,current_id))
   get
 
@@ -204,7 +233,28 @@ typeCheckerStatement statement = case statement of
           modify (\(_s, _e, tree,_i) -> (_s, _e, updateTree (addErrorNode errors node) tree , _i ))
         get
     get
-  RetVoid {} -> get
+  RetVoid (PReturn (pos, _ret)) _semicolon -> do
+    (_s,_e,tree,current_id) <- get
+    case getBlkType tree current_id of
+      ProcedureBlk -> do -- devo controllare quì che il tipo di ritorno nel return sia compatibile con il tipo di ritorno della funzione
+        case getFunRetType (_s,_e,tree,current_id) of
+          DataChecker Infered e -> setReturnType (_s,_e,tree,current_id) $ DataChecker Checker.SymbolTable.Void []
+          _oth -> let
+            (DataChecker tyfun errs1) = getFunRetType (_s,_e,tree,current_id) ;
+            (DataChecker tyret errs2) = DataChecker Checker.SymbolTable.Void []; 
+            (DataChecker t errs) = sup SupRet (getFunNameFromEnv (_s,_e,tree,current_id)) pos tyfun tyret in
+            do
+              get -- TODO: se non e' infered: devo controllare tutti i return successivi che siano compatibili
+              let node = findNodeById current_id tree ; errors = errs1 ++ errs2 ++ errs in
+                modify $ addErrorsCurrentNode errors
+              get
+        get
+      _otherwhise -> do -- caso in cui trovo un return che non e' dentro una procedura (ma si trova al livello esterno)
+        get
+        let node = findNodeById current_id tree ; errors = ErrorChecker pos ErrorReturnNotInsideAProcedure in
+          modify (\(_s, _e, tree,_i) -> (_s, _e, updateTree (addErrorNode errors node) tree , _i ))
+        get
+    get
 
 setReturnType (_s,_e,tree,current_id) (DataChecker ty _errs) = 
   let n@(Node id _ (BP _ _ _ blkTy) (Just parID) _) = findNodeById current_id tree in
