@@ -48,7 +48,9 @@ typeCheckerFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBlo
       let node = findNodeById current_id tree in
         modify (\(_s, tree,_i) -> (_s, updateTree (modFunRetType (getFunName signature) Checker.SymbolTable.Void node) tree , _i ))
       get    
-    _otherwhise -> get
+    _otherwhise -> do 
+      modify $ addErrorsCurrentNode ([ErrorChecker (l,c) (ErrorMissingReturn (getFunName signature))])
+      get
   get
 
 getFunName (SignNoRet (PIdent ((l,c),identifier)) (FunParams _ params _)) = identifier
