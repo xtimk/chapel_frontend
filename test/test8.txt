@@ -1,4 +1,4 @@
-proc pluto(x : int)
+proc pluto(x : int) 
 {
     do while
     {

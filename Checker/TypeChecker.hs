@@ -50,7 +50,9 @@ typeCheckerFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBlo
         modify (\(_s, _e, tree,_i) -> (_s, _e, updateTree (modFunRetType (getFunName signature) Checker.SymbolTable.Void node) tree , _i ))
       -- modify $ addErrorsCurrentNode (e ++ [ErrorChecker (l,c) (ErrorMissingReturn (getFunName signature))])
       get    
-    _otherwhise -> get
+    _otherwhise -> do 
+      modify $ addErrorsCurrentNode ([ErrorChecker (l,c) (ErrorMissingReturn (getFunName signature))])
+      get
   get
 
 -- setVarType (_s,_e,tree,current_id) (DataChecker ty _errs) = 
