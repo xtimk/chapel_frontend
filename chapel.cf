@@ -29,7 +29,7 @@ position token PBoolType ({"bool"});
 position token PStringType ({"string"});
 
 position token PBreak ({"break"});
-position token PContinue ({"break"});
+position token PContinue ({"continue"});
 
 position token PAssignmEq ('=') ;
 

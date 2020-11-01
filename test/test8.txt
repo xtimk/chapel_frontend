@@ -1,8 +1,14 @@
 proc pluto(x : int)
 {
+
+
+    var m = [&x];
+    var h = m[1];
+    var l :int = *h;
     do while
     {
         break;
     } (x < 5) 
     break;
+    continue;
 }
