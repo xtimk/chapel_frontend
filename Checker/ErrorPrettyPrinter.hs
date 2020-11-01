@@ -34,7 +34,8 @@ printDefinedError tokens error = case error of
   ErrorMissingReturn funname -> "In Function " ++ funname ++ ": Specify at least one return."
   ErrorSignatureAlreadyDeclared (l,c) id -> "Signature " ++ show id ++" with this parameter already declared in line " ++ show l ++ " and column " ++ show c ++ "."
   ErrorOverloadingIncompatibleReturnType locStart (l,c) id ty1 ty2 -> "Overloading signature for function " ++ show id ++ " must be of type " ++ show ty1 ++ " but was found type " ++ show ty2 ++ " in " ++ printTokens (getTokens tokens locStart (l,c - 1)) ++ "."
-
+  ErrorBreakNotInsideAProcedure -> "Break command must be inside a while, dowhile, or if blocks."
+  ErrorContinueNotInsideAProcedure -> "Continue command must be inside a while, dowhile, or if blocks."
 
 getTokens [] _ _ = []
 getTokens (x@(PT (Pn _ l c ) _ ):xs) start@(lstart, cstart) end@(lend, cend) 

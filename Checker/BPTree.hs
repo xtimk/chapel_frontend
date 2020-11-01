@@ -33,14 +33,25 @@ findNodeById searchedId tree = findNode (bp2list tree)
             then actualNode
             else findNode xs
 
-getBlkType tree current_id = 
+findProcedureGetBlkType tree current_id = 
     let node = findNodeById current_id tree in
         case getBlkTypeSimple node of
             ProcedureBlk -> ProcedureBlk
             ExternalBlk -> ExternalBlk
-            _otherwhise -> getBlkType tree (getParentID node)
+            _otherwhise -> findProcedureGetBlkType tree (getParentID node)
 
 getBlkTypeSimple tree@(Node _ _ (BP _ _ _ blocktype) _ _) = blocktype
+
+findSequenceControlGetBlkType tree current_id = 
+    let node = findNodeById current_id tree in
+        case getBlkTypeSimple node of
+            WhileBlk -> WhileBlk
+            DoWhileBlk -> DoWhileBlk
+            IfSimpleBlk -> IfSimpleBlk
+            IfThenBlk -> IfThenBlk
+            IfElseBlk -> IfElseBlk
+            ExternalBlk -> ExternalBlk -- sono arrivato ricorsivamente fino al blocco esterno, lo restituisco, non vado in ricorsione
+            _otherwhise -> findSequenceControlGetBlkType tree (getParentID node)
 
 getParentID tree@(Node _ _ _ parent _) = 
     case parent of

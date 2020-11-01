@@ -58,6 +58,8 @@ data DefinedError =
   ErrorCantOpToAddress Type|
   ErrorCantAddressAnExpression |
   ErrorReturnNotInsideAProcedure |
+  ErrorBreakNotInsideAProcedure |
+  ErrorContinueNotInsideAProcedure |
   ErrorCalledProcWithWrongTypeParam Int Type Type String|
   ErrorCalledProcWrongArgs Int Int String |
   ErrorCalledProcWithVariable String |

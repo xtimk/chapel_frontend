@@ -66,6 +66,12 @@ transPBoolType x = case x of
 transPStringType :: PStringType -> Result
 transPStringType x = case x of
   PStringType string -> failure x
+transPBreak :: PBreak -> Result
+transPBreak x = case x of
+  PBreak string -> failure x
+transPContinue :: PContinue -> Result
+transPContinue x = case x of
+  PContinue string -> failure x
 transPAssignmEq :: PAssignmEq -> Result
 transPAssignmEq x = case x of
   PAssignmEq string -> failure x
@@ -228,6 +234,8 @@ transStatement x = case x of
   IfElse pif guard pthen body1 pelse body2 -> failure x
   RetVal preturn exp psemicolon -> failure x
   RetVoid preturn psemicolon -> failure x
+  Continue pcontinue psemicolon -> failure x
+  Break pbreak psemicolon -> failure x
   StExp exp psemicolon -> failure x
 transGuard :: Guard -> Result
 transGuard x = case x of

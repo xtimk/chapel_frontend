@@ -33,6 +33,8 @@ import ErrM
   L_PCharType { PT _ (T_PCharType _) }
   L_PBoolType { PT _ (T_PBoolType _) }
   L_PStringType { PT _ (T_PStringType _) }
+  L_PBreak { PT _ (T_PBreak _) }
+  L_PContinue { PT _ (T_PContinue _) }
   L_PAssignmEq { PT _ (T_PAssignmEq _) }
   L_PRef { PT _ (T_PRef _) }
   L_PVar { PT _ (T_PVar _) }
@@ -120,6 +122,12 @@ PBoolType  : L_PBoolType { PBoolType (mkPosToken $1)}
 
 PStringType :: { PStringType}
 PStringType  : L_PStringType { PStringType (mkPosToken $1)}
+
+PBreak :: { PBreak}
+PBreak  : L_PBreak { PBreak (mkPosToken $1)}
+
+PContinue :: { PContinue}
+PContinue  : L_PContinue { PContinue (mkPosToken $1)}
 
 PAssignmEq :: { PAssignmEq}
 PAssignmEq  : L_PAssignmEq { PAssignmEq (mkPosToken $1)}
@@ -288,6 +296,8 @@ Statement : Pdo PWhile Body Guard { AbsChapel.DoWhile $1 $2 $3 $4 }
           | PIf Guard PThen Body PElse Body { AbsChapel.IfElse $1 $2 $3 $4 $5 $6 }
           | PReturn Exp PSemicolon { AbsChapel.RetVal $1 $2 $3 }
           | PReturn PSemicolon { AbsChapel.RetVoid $1 $2 }
+          | PContinue PSemicolon { AbsChapel.Continue $1 $2 }
+          | PBreak PSemicolon { AbsChapel.Break $1 $2 }
           | Exp PSemicolon { AbsChapel.StExp $1 $2 }
 Guard :: { Guard }
 Guard : POpenParenthesis Exp PCloseParenthesis { AbsChapel.SGuard $1 $2 $3 }

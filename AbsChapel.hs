@@ -60,6 +60,12 @@ newtype PBoolType = PBoolType ((Int,Int),String)
 newtype PStringType = PStringType ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
+newtype PBreak = PBreak ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PContinue = PContinue ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
 newtype PAssignmEq = PAssignmEq ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
@@ -223,6 +229,8 @@ data Statement
     | IfElse PIf Guard PThen Body PElse Body
     | RetVal PReturn Exp PSemicolon
     | RetVoid PReturn PSemicolon
+    | Continue PContinue PSemicolon
+    | Break PBreak PSemicolon
     | StExp Exp PSemicolon
   deriving (Eq, Ord, Show, Read)
 
