@@ -97,7 +97,7 @@ parseTest filepath = do
                     putStrLn "\n\n ** ERRORS **\n"
                     printErrors (tokens s) $ getTreeErrors $ getTree bpTree
 
-                    let  tac = evalState (tacGenerator tree ) (startTacState bpTree) in do
+                    let tac = evalState (tacGenerator tree) (startTacState bpTree) in do
 
                       putStrLn "\n\n ** TAC **"
                       print (getTac tac)
@@ -107,6 +107,6 @@ parseTest filepath = do
 getSymTable (x,_,_) = x
 getTree (_,x,_) = x
 
-getTac (x,_,_) = x
+getTac (x,_,_,_) = x
 
 

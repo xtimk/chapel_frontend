@@ -28,7 +28,7 @@ data TACOperation =
     ReturnValue Temp 
     deriving (Show)
 
-data Temp = Temp String Loc
+data Temp = Temp String Loc TacType
     deriving (Show)
 data Bop = Bop TacType BopType 
     deriving (Show)
@@ -37,7 +37,19 @@ data Uop = Uoq TacType UopType
 data Rel = Rel TacType RelType
     deriving (Show)
 
-data TacType = Int | Float | Char | Bool
+tacSup Int Int = Int
+tacSup Int Float = Float
+tacSup Float Int = Float
+tacSup Char Int = Int
+tacSup Int Char = Int
+tacSup String Char = String
+tacSup Char String = String
+tacSup Char Char = Char
+tacSup String String = String
+tacSup Float Float = Float
+tacSup Bool Bool = Bool
+
+data TacType = Int | Float | Char | Bool | String
     deriving (Show)
 data UopType = Neg
     deriving (Show) 
