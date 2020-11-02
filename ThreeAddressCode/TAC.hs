@@ -5,8 +5,8 @@ type Label = Temp
 
 data TACEntry = TACEntry {
     label :: Maybe Label,
-    operationType :: TACOperation,
-    position :: Loc
+    position :: Loc,
+    operationType :: TACOperation
 } deriving (Show)
 
 data TACOperation =
@@ -46,5 +46,10 @@ data BopType = Plus | Minus | Times | Div
 data RelType = LT | GT | LTE | GTE | EQ | NEQ
     deriving (Show)
 
+data TacChecker a = TacChecker {
+  tacEntries :: [TACEntry],
+  datas :: a
+} deriving (Show)
 
 type Loc = (Int,Int)
+    

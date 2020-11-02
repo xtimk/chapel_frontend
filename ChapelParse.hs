@@ -89,19 +89,24 @@ parseTest filepath = do
                    let bpTree = evalState (typeChecker tree) startState in do
 
                     putStrLn "\n\n ** SYMBOL TABLE **"
-                    print (getSymTable bpTree)
+                    print $ getSymTable bpTree
 
                     putStrLn "\n\n ** TREE **"
-                    print (getTree bpTree)
+                    print $ getTree bpTree
 
                     putStrLn "\n\n ** ERRORS **\n"
                     printErrors (tokens s) $ getTreeErrors $ getTree bpTree
 
-                    let  tac = evalState (tacGenerator tree ) (startTacState bpTree) in 
+                    let  tac = evalState (tacGenerator tree ) (startTacState bpTree) in do
+
+                      putStrLn "\n\n ** TAC **"
+                      print (getTac tac)
                       exitSuccess
 
 
 getSymTable (x,_,_) = x
 getTree (_,x,_) = x
+
+getTac (x,_,_) = x
 
 
