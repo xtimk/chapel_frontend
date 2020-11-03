@@ -32,7 +32,7 @@ data Temp = Temp String Loc TacType
     deriving (Show)
 data Bop = Bop TacType BopType 
     deriving (Show)
-data Uop = Uoq TacType UopType
+data Uop = Uop TacType UopType
     deriving (Show)
 data Rel = Rel TacType RelType
     deriving (Show)

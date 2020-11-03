@@ -18,7 +18,7 @@ import Control.Monad.Trans.State
 import Checker.ErrorPrettyPrinter
 import Checker.BPTree
 import ThreeAddressCode.TACGenerator
-
+import ThreeAddressCode.TACPrettyPrinter
 
 
 
@@ -102,7 +102,7 @@ parseTest filepath = do
                     then let tac = evalState (tacGenerator tree) (startTacState (getTree bpTree)) in do
 
                       putStrLn "\n\n ** TAC **"
-                      print (getTac tac)
+                      printTacEntries (getTac tac)
                       exitSuccess
                     else 
                       exitSuccess
