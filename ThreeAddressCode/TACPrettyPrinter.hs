@@ -1,3 +1,45 @@
 module ThreeAddressCode.TACPrettyPrinter where
 import ThreeAddressCode.TAC
 
+printTacEntries ::(Foldable t0) => t0 TACEntry -> IO ()
+printTacEntries = mapM_ printTacEntry
+
+printTacEntry entry = putStrLn $ printTacEntry' entry
+
+printTacEntry' (TACEntry label pos operation) = case operation of
+    Binary temp1 temp2 (Bop _ bop) temp3 -> printTacTemp temp1 ++ " = " ++ printTacTemp temp2 ++  printTacBop bop ++ printTacTemp temp3
+    Unary temp1 (Uop _ uop)  temp2 -> printTacTemp temp1 ++ " = " ++ printTacUop uop ++ printTacTemp temp2
+    Nullary temp1 temp2 ->  printTacTemp temp1 ++ " = " ++ printTacTemp temp2
+    UnconJump label -> ""
+    BoolCondJump temp label -> ""
+    RelCondJump temp1 rel temp2 temp3 -> ""
+    IndexLeft temp1 temp2 temp3 ->  printTacTemp temp1 ++ "[" ++ printTacTemp temp2 ++ "]" ++ " = " ++ printTacTemp temp3
+    IndexRight temp1 temp2 temp3 -> printTacTemp temp1 ++ " = " ++  printTacTemp temp2 ++  "[" ++ printTacTemp temp3 ++ "]"
+    DeferenceRight temp1 temp2 -> ""
+    ReferenceLeft temp1 temp2 -> ""
+    RefereceneRight temp1 temp2 -> ""
+    SetParam temp -> ""
+    CallProc temp1 temp2 -> ""
+    CallFun temp1 temp2 temp3 -> ""
+    ReturnVoid -> ""
+    ReturnValue temp -> ""
+
+printTacTemp (Temp id (l,c) ty) = id ++ "@" ++ show l ++ "," ++ show c
+
+printTacBop bop = case bop of
+    Plus -> " + "
+    Minus -> " - "
+    Times -> " * "
+    Div -> " / "
+    Modul -> " % "
+
+printTacUop uop = case uop of
+    Neg -> " not "
+    
+--printTacRel rel = case rel of
+   -- LT -> " < "
+   -- GT -> " > "
+   -- LTE -> " >= "
+   -- GTE -> " <= "
+   -- EQ -> " = "
+    --NEQ -> " != "
