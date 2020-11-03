@@ -86,7 +86,8 @@ parseTest filepath = do
                    --putStrLn "\n\n ** After Type Checker **\n\n"
                    --print (evalState (typeChecker tree) startState)
 
-                   let bpTree = evalState (typeChecker tree) startState in do
+                   let bpTree = evalState (typeChecker tree) startState
+                       errors = getTreeErrors $ getTree bpTree in do
 
                     putStrLn "\n\n ** SYMBOL TABLE **"
                     print $ getSymTable bpTree
@@ -95,12 +96,15 @@ parseTest filepath = do
                     print $ getTree bpTree
 
                     putStrLn "\n\n ** ERRORS **\n"
-                    printErrors (tokens s) $ getTreeErrors $ getTree bpTree
+                    printErrors (tokens s) errors
 
-                    let tac = evalState (tacGenerator tree) (startTacState bpTree) in do
+                    if null errors 
+                    then let tac = evalState (tacGenerator tree) (startTacState (getTree bpTree)) in do
 
                       putStrLn "\n\n ** TAC **"
                       print (getTac tac)
+                      exitSuccess
+                    else 
                       exitSuccess
 
 
