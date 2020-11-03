@@ -30,14 +30,14 @@ tacGeneratorExt (x:xs) = case x of
 tacGeneratorDeclaration x =
   case x of
     NoAssgmDec {} -> get
-    AssgmDec ids _ exp -> tacGeneratorIdentifiers ids exp
-    AssgmTypeDec ids _ _ _ exp -> tacGeneratorIdentifiers ids exp
+    AssgmDec ids _ exp -> tacGeneratorDeclExpression ids exp
+    AssgmTypeDec ids _ _ _ exp -> tacGeneratorDeclExpression ids exp
     NoAssgmArrayFixDec {} -> get 
     NoAssgmArrayDec  {} -> get
-    AssgmArrayTypeDec ids _ _ _ _ exp -> tacGeneratorIdentifiers ids exp
-    AssgmArrayDec ids _ _ _ exp ->  tacGeneratorIdentifiers ids exp
+    AssgmArrayTypeDec ids _ _ _ _ exp -> tacGeneratorDeclExpression ids exp
+    AssgmArrayDec ids _ _ _ exp ->  tacGeneratorDeclExpression ids exp
 
-tacGeneratorIdentifiers= tacGeneratorDeclExpression 0 0
+tacGeneratorDeclExpression = tacGeneratorDeclExpression' 0 0
 
 addTacEntries tacEntry env@(tac,_te, _t, _b ) =
     (tacEntry ++ tac,_te, _t,_b)
@@ -45,29 +45,25 @@ addTacEntries tacEntry env@(tac,_te, _t, _b ) =
 addTacEntry tacEntry env@(tac,_te, _t, _b ) =
     (tacEntry:tac,_te, _t,_b)
 
-tacGeneratorDeclExpression depth length ids decExp = case decExp of
-  ExprDecArray arrays@(ArrayInit _ (x:xs) _ ) -> do 
-    tacGeneratorDeclExpression (depth + 1) length ids x
-    mapM_ (tacGeneratorDeclExpression depth (length + 1) ids) xs
-    get
-  ExprDec exp -> do
-    (tacEntry, temp) <- tacGeneratorExpression exp
-    modify $ addTacEntries tacEntry
-    if depth == 0
-      then do
-        mapM_ (tacGeneratorIdentifier temp) ids
-        get
-      else 
-        mapM_ (tacGeneratorArrayIdentifier temp (getExpPos exp) depth) ids
-        get
-    get
+tacGeneratorDeclExpression' depth length ids decExp = do
+  case decExp of 
+    ExprDecArray arrays@(ArrayInit _ (x:xs) _ ) -> do 
+      tacGeneratorDeclExpression' (depth + 1) length ids x
+      mapM_ (tacGeneratorDeclExpression' depth (length + 1) ids) xs
+    ExprDec exp -> do
+      (tacEntry, temp) <- tacGeneratorExpression exp
+      modify $ addTacEntries tacEntry
+      if depth == 0
+        then mapM_ (tacGeneratorIdentifier temp) ids
+        else mapM_ (tacGeneratorArrayIdentifier temp (getExpPos exp) depth) ids
+  get
 
 
-tacGeneratorIdentifier temp@(Temp _ _ ty) id@(PIdent (loc, identifier)) = do
+tacGeneratorIdentifier temp@(Temp _ _ ty) (PIdent (loc, identifier)) = do
   modify $ addTacEntry $ TACEntry Nothing loc $ Nullary (Temp identifier loc ty) temp 
   get
 
-tacGeneratorArrayIdentifier temp@(Temp _ _ ty) expLoc actual id@(PIdent (loc, identifier)) = do
+tacGeneratorArrayIdentifier temp@(Temp _ _ ty) expLoc actual (PIdent (loc, identifier)) = do
   modify $ addTacEntry $ TACEntry Nothing expLoc $ IndexLeft (Temp identifier loc ty) (Temp (show actual) loc Int) temp
   get
 
