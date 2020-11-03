@@ -28,14 +28,27 @@ data TACOperation =
     ReturnValue Temp 
     deriving (Show)
 
-data Temp = Temp String Loc TacType
+data Temp = Temp TempMode String Loc TacType
     deriving (Show)
-data Bop = Bop TacType BopType 
+data Bop =  Plus | Minus | Times | Div | Modul
     deriving (Show)
-data Uop = Uop TacType UopType
+data Uop = Neg
     deriving (Show)
-data Rel = Rel TacType RelType
+data Rel =  LT | GT | LTE | GTE | EQ | NEQ
     deriving (Show)
+
+data TempMode = Fix | Var
+    deriving (Show)
+
+data TacType = Int | Float | Char | Bool | String
+    deriving (Show)
+
+data TacChecker a = TacChecker {
+  tacEntries :: [TACEntry],
+  datas :: a
+} deriving (Show)
+
+type Loc = (Int,Int)
 
 tacSup Int Int = Int
 tacSup Int Float = Float
@@ -49,19 +62,8 @@ tacSup String String = String
 tacSup Float Float = Float
 tacSup Bool Bool = Bool
 
-data TacType = Int | Float | Char | Bool | String
-    deriving (Show)
-data UopType = Neg
-    deriving (Show) 
-data BopType = Plus | Minus | Times | Div | Modul
-    deriving (Show)
-data RelType = LT | GT | LTE | GTE | EQ | NEQ
-    deriving (Show)
-
-data TacChecker a = TacChecker {
-  tacEntries :: [TACEntry],
-  datas :: a
-} deriving (Show)
-
-type Loc = (Int,Int)
-    
+sizeof ty = case ty of
+    Int -> 4
+    Float -> 8 
+    Char -> 1
+    Bool -> 1

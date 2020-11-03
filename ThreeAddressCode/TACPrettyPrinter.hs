@@ -7,8 +7,8 @@ printTacEntries = mapM_ printTacEntry
 printTacEntry entry = putStrLn $ printTacEntry' entry
 
 printTacEntry' (TACEntry label pos operation) = case operation of
-    Binary temp1 temp2 (Bop _ bop) temp3 -> printTacTemp temp1 ++ " = " ++ printTacTemp temp2 ++  printTacBop bop ++ printTacTemp temp3
-    Unary temp1 (Uop _ uop)  temp2 -> printTacTemp temp1 ++ " = " ++ printTacUop uop ++ printTacTemp temp2
+    Binary temp1 temp2 bop temp3 -> printTacTemp temp1 ++ " = " ++ printTacTemp temp2 ++  printTacBop bop ++ printTacTemp temp3
+    Unary temp1 uop  temp2 -> printTacTemp temp1 ++ " = " ++ printTacUop uop ++ printTacTemp temp2
     Nullary temp1 temp2 ->  printTacTemp temp1 ++ " = " ++ printTacTemp temp2
     UnconJump label -> ""
     BoolCondJump temp label -> ""
@@ -24,7 +24,9 @@ printTacEntry' (TACEntry label pos operation) = case operation of
     ReturnVoid -> ""
     ReturnValue temp -> ""
 
-printTacTemp (Temp id (l,c) ty) = id ++ "@" ++ show l ++ "," ++ show c
+printTacTemp (Temp mode id (l,c) ty) = case mode of
+    Var -> id ++ "@" ++ show l ++ "," ++ show c
+    Fix -> id
 
 printTacBop bop = case bop of
     Plus -> " + "
