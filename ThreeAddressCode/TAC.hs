@@ -53,7 +53,7 @@ data TacType = Int | Float | Char | Bool | String
     deriving (Show)
 data UopType = Neg
     deriving (Show) 
-data BopType = Plus | Minus | Times | Div 
+data BopType = Plus | Minus | Times | Div | Modul
     deriving (Show)
 data RelType = LT | GT | LTE | GTE | EQ | NEQ
     deriving (Show)

@@ -198,59 +198,36 @@ typeCheckerStatement statement = case statement of
     let DataChecker _ errors = typeCheckerExpression env exp in do
         modify $ addErrorsCurrentNode errors
         get
-  RetVal _return exp _semicolon -> do
+  RetVal return exp _semicolon -> do
     (_s,tree,current_id) <- get
-    case findProcedureGetBlkType tree current_id of
-      ProcedureBlk -> do -- devo controllare quì che il tipo di ritorno nel return sia compatibile con il tipo di ritorno della funzione
-        case getFunRetType (_s,tree,current_id) of
-          DataChecker Infered e -> case typeCheckerExpression (_s,tree,current_id) exp of
-            ty@(DataChecker t []) -> do
-              modify $ setReturnType t
-              get
-            ty@(DataChecker t e) -> do
-              modify $ addErrorsCurrentNode e
-              get
-          _oth -> let
-            (DataChecker tyfun errs1) = getFunRetType (_s,tree,current_id) ;
-            (DataChecker tyret errs2) = typeCheckerExpression (_s,tree,current_id) exp ; 
-            (DataChecker t errs) = sup SupRet (getFunNameFromEnv (_s,tree,current_id)) (getExpPos exp) tyfun tyret in
-            do
-              let node = findNodeById current_id tree ; errors = errs1 ++ errs2 ++ errs in
-                modify $ addErrorsCurrentNode errors
-              get
-        get
-      _otherwhise -> do -- caso in cui trovo un return che non e' dentro una procedura (ma si trova al livello esterno)
-        get
-        let node = findNodeById current_id tree ; errors = ErrorChecker (getExpPos exp) ErrorReturnNotInsideAProcedure in
-          modify (\(_s, tree,_i) -> (_s, updateTree (addErrorNode errors node) tree , _i ))
-        get
-    get
-  RetVoid (PReturn (pos, _ret)) _semicolon -> do
-    (_s,tree,current_id) <- get
-    case findProcedureGetBlkType tree current_id of
-      ProcedureBlk -> do -- devo controllare quì che il tipo di ritorno nel return sia compatibile con il tipo di ritorno della funzione
-        case getFunRetType (_s,tree,current_id) of
-          DataChecker Infered e -> do
-             modify $ setReturnType Checker.SymbolTable.Void
-             get
-          _oth -> let
-            (DataChecker tyfun errs1) = getFunRetType (_s,tree,current_id) ;
-            (DataChecker tyret errs2) = DataChecker Checker.SymbolTable.Void []; 
-            (DataChecker t errs) = sup SupRet (getFunNameFromEnv (_s,tree,current_id)) pos tyfun tyret in
-            do
-              get
-              let node = findNodeById current_id tree ; errors = errs1 ++ errs2 ++ errs in
-                modify $ addErrorsCurrentNode errors
-              get
-        get
-      _otherwhise -> do -- caso in cui trovo un return che non e' dentro una procedura (ma si trova al livello esterno)
-        get
-        let node = findNodeById current_id tree ; errors = ErrorChecker pos ErrorReturnNotInsideAProcedure in
-          modify (\(_s, tree,_i) -> (_s, updateTree (addErrorNode errors node) tree , _i ))
-        get
-    get
+    let DataChecker tyret errs2 = typeCheckerExpression (_s,tree,current_id) exp in do
+      modify $ addErrorsCurrentNode errs2
+      typeCheckerReturn return tyret
+  RetVoid return _semicolon -> typeCheckerReturn return Checker.SymbolTable.Void
 
-
+typeCheckerReturn (PReturn (pos, _ret)) tyret = do 
+  (_s,tree,current_id) <- get
+  case findProcedureGetBlkType tree current_id of
+    ProcedureBlk -> do -- devo controllare quì che il tipo di ritorno nel return sia compatibile con il tipo di ritorno della funzione
+      case getFunRetType (_s,tree,current_id) of
+        DataChecker Infered e -> do
+            modify $ setReturnType tyret
+            get
+        _oth -> let
+          (DataChecker tyfun errs1) = getFunRetType (_s,tree,current_id);
+          (DataChecker t errs) = sup SupRet (getFunNameFromEnv (_s,tree,current_id)) pos tyfun tyret in
+          do
+            get
+            let node = findNodeById current_id tree ; errors = errs1 ++ errs in
+              modify $ addErrorsCurrentNode errors
+            get
+      get
+    _otherwhise -> do -- caso in cui trovo un return che non e' dentro una procedura (ma si trova al livello esterno)
+      get
+      let node = findNodeById current_id tree ; errors = ErrorChecker pos ErrorReturnNotInsideAProcedure in
+        modify (\(_s, tree,_i) -> (_s, updateTree (addErrorNode errors node) tree , _i ))
+      get
+  get
 
 getVarPos (Evar (PIdent ((l,c),indentifier))) = (l,c)
 
