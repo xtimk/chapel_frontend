@@ -8,6 +8,7 @@ import Checker.BPTree
 import Checker.SupTable
 import Data.Maybe
 import Debug.Trace
+import Utils.AbsUtils
 
 
 startState = (DMap.empty, Checker.BPTree.Node {Checker.BPTree.id = ("0", ((0::Int,0::Int),(0::Int,0::Int))), val = BP {symboltable = DMap.empty, statements = [], errors = [], blocktype = ExternalBlk}, parentID = Nothing, children = []}, ("0", ((0::Int,0::Int),(0::Int,0::Int))))

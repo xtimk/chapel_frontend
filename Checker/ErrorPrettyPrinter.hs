@@ -2,6 +2,7 @@ module Checker.ErrorPrettyPrinter where
 import LexChapel
 import Checker.SymbolTable
 import Checker.BPTree
+import Utils.AbsUtils
 
 printErrors ::(Foldable t0) => [Token] -> t0 ErrorChecker -> IO ()
 printErrors tokens = mapM_ (printError tokens)
@@ -10,30 +11,30 @@ printError tokens (ErrorChecker (l,c) error) =
     putStrLn $ "Error in line " ++ show l ++ " and column " ++ show c ++ ": " ++ printDefinedError tokens error
 
 printDefinedError tokens error = case error of
-  ErrorVarNotDeclared id -> "Variable " ++ show id ++  " not declared."
+  ErrorVarNotDeclared id -> "Variable " ++ id ++  " not declared."
   ErrorIncompatibleTypes ty1 ty2 -> "Not compatible types " ++ show ty1 ++  " and "  ++ show ty2 ++ "."
-  ErrorIncompatibleDeclTypes id ty1 ty2 -> "Variable " ++ show id ++ " of type " ++ show ty1 ++  " not compatible with type "  ++ show ty2 ++ "."
-  ErrorIncompatibleRetTypes id ty1 ty2 -> "Function " ++ show id ++ " returns type " ++ show ty1 ++  ", but exp in return statement is "  ++ show ty2 ++ "." 
-  ErrorVarAlreadyDeclared (l,c) id -> "Variable " ++ show id ++" already declared in line " ++ show l ++ " and column " ++ show c ++ "."
+  ErrorIncompatibleDeclTypes id ty1 ty2 -> "Variable " ++ id ++ " of type " ++ show ty1 ++  " not compatible with type "  ++ show ty2 ++ "."
+  ErrorIncompatibleRetTypes id ty1 ty2 -> "Function " ++ id ++ " returns type " ++ show ty1 ++  ", but exp in return statement is "  ++ show ty2 ++ "." 
+  ErrorVarAlreadyDeclared (l,c) id -> "Variable " ++ id ++" already declared in line " ++ show l ++ " and column " ++ show c ++ "."
   ErrorGuardNotBoolean -> "Guard must be boolean."
-  ErrorDeclarationBoundNotCorrectType ty id -> "Variable " ++ show id ++ " is of type " ++ show ty ++ " instead of type array."
+  ErrorDeclarationBoundNotCorrectType ty id -> "Variable " ++ id ++ " is of type " ++ show ty ++ " instead of type array."
   ErrorArrayCallExpression -> "Must be call array reference []."
   ErrorDeclarationBoundArray ty const -> "Bound of array must be an Int but was found " ++ show  const ++ " of type " ++ show ty ++ "."
-  ErrorWrongDimensionArray arDim callDim id -> "Array variable " ++ show id ++ " is declared of " ++ show arDim ++ " dimensions but is called to keep " ++ show callDim ++ " dimensions."
+  ErrorWrongDimensionArray arDim callDim id -> "Array variable " ++ id ++ " is declared of " ++ show arDim ++ " dimensions but is called to keep " ++ show callDim ++ " dimensions."
   ErrorArrayExpressionRequest -> "Must be call array reference []."
   ErrorCantOpToAddress ty -> "Operation with pointer must be with Int or Pointer but was found type "++ show ty ++ "."
   ErrorCantAddressAnExpression -> "An expression cannot address"
   ErrorReturnNotInsideAProcedure -> "Return can be write only in a procedure"
   ErrorCalledProcWithWrongTypeParam pos ty1 ty2 id-> "Parameter in position " ++ show pos ++ " must be of type " ++ show ty1 ++ " but was found type "++ show ty2 ++ " on call function " ++ id ++ "."
-  ErrorCalledProcWrongArgs dim1 dim2 id-> "Function " ++ show id ++ " expect " ++ show dim1 ++ " arguments but found " ++ show dim2 ++ " arguments."
-  ErrorCalledProcWithVariable id -> "Variable " ++ show id ++ " is not a procedure."
-  ErrorNoPointerAddress ty id -> "Can only addressed a pointer but was found variable " ++ show id ++ " of type " ++ show ty ++ "."
+  ErrorCalledProcWrongArgs dim1 dim2 id-> "Function " ++ id ++ " expect " ++ show dim1 ++ " arguments but found " ++ show dim2 ++ " arguments."
+  ErrorCalledProcWithVariable id -> "Variable " ++ id ++ " is not a procedure."
+  ErrorNoPointerAddress ty id -> "Can only addressed a pointer but was found variable " ++ id ++ " of type " ++ show ty ++ "."
   ErrorAssignDecl -> "Cannot make implicit operation on declaration"
   ErrorNotLeftExpression exp assgn  -> let expPos = getExpPos exp; (l,c) = getAssignPos assgn in  
     "Required left expression before the assignment but was found "  ++ printTokens (getTokens tokens expPos (l,c - 1)) ++ "."
   ErrorMissingReturn funname -> "In Function " ++ funname ++ ": Specify at least one return."
-  ErrorSignatureAlreadyDeclared (l,c) id -> "Signature " ++ show id ++" with this parameter already declared in line " ++ show l ++ " and column " ++ show c ++ "."
-  ErrorOverloadingIncompatibleReturnType locStart (l,c) id ty1 ty2 -> "Overloading signature for function " ++ show id ++ " must be of type " ++ show ty1 ++ " but was found type " ++ show ty2 ++ " in " ++ printTokens (getTokens tokens locStart (l,c - 1)) ++ "."
+  ErrorSignatureAlreadyDeclared (l,c) id -> "Signature " ++ id ++" with this parameter already declared in line " ++ show l ++ " and column " ++ show c ++ "."
+  ErrorOverloadingIncompatibleReturnType locStart (l,c) id ty1 ty2 -> "Overloading signature for function " ++ id ++ " must be of type " ++ show ty1 ++ " but was found type " ++ show ty2 ++ " in " ++ printTokens (getTokens tokens locStart (l,c - 1)) ++ "."
   ErrorBreakNotInsideAProcedure -> "Break command must be inside a while, dowhile, or if blocks."
   ErrorContinueNotInsideAProcedure -> "Continue command must be inside a while, dowhile, or if blocks."
 
