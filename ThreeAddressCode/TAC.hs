@@ -4,7 +4,7 @@ import Utils.AbsUtils
 import Utils.Type
 
 type TAC = [TACEntry]
-type Label = Temp
+type Label = (String, Loc)
 
 data TACEntry = TACEntry {
     label :: Maybe Label,
