@@ -181,6 +181,7 @@ convertTypeCheckerToTACType Checker.SymbolTable.Real = ThreeAddressCode.TAC.Floa
 convertTypeCheckerToTACType Checker.SymbolTable.Char = ThreeAddressCode.TAC.Char
 convertTypeCheckerToTACType Checker.SymbolTable.String = ThreeAddressCode.TAC.String
 convertTypeCheckerToTACType Checker.SymbolTable.Bool = ThreeAddressCode.TAC.Bool
+convertTypeCheckerToTACType (Checker.SymbolTable.Array _ (_ , _)) = ThreeAddressCode.TAC.Int
 
 tacGeneratorConstant (loc, id) ty = return ([], Temp ThreeAddressCode.TAC.Fix id loc ty)
 
