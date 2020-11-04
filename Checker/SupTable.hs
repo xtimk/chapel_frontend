@@ -7,6 +7,20 @@ import Utils.AbsUtils
 
 data SupMode = SupDecl | SupFun | SupBool | SupPlus | SupMinus |  SupArith | SupMod | Sup | SupRet
 
+
+
+supTac Int Int = Int
+supTac Int Real = Real
+supTac Real Int = Real
+supTac Char Int = Int
+supTac Int Char = Int
+supTac String Char = String
+supTac Char String = String
+supTac Char Char = Char
+supTac String String = String
+supTac Real Real = Real
+supTac Bool Bool = Bool
+
 --Infered 
 sup mode id loc Infered ty = DataChecker ty []
 sup mode id loc ty Infered = DataChecker ty []

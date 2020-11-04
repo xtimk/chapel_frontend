@@ -1,13 +1,13 @@
 module ThreeAddressCode.TAC where
 
 import Utils.AbsUtils
+import Utils.Type
 
 type TAC = [TACEntry]
 type Label = Temp
 
 data TACEntry = TACEntry {
     label :: Maybe Label,
-    position :: Loc,
     operationType :: TACOperation
 } deriving (Show)
 
@@ -30,7 +30,7 @@ data TACOperation =
     ReturnValue Temp 
     deriving (Show)
 
-data Temp = Temp TempMode String Loc TacType
+data Temp = Temp TempMode String Loc Type
     deriving (Show)
 data Bop =  Plus | Minus | Times | Div | Modul
     deriving (Show)
@@ -41,32 +41,17 @@ data Rel =  LT | GT | LTE | GTE | EQ | NEQ | AND | OR
 
 data TempMode = Fix | Var
     deriving (Show)
-
-data TacType = Int | Float | Char | Bool | String
-    deriving (Show)
-
+    
 data TacChecker a = TacChecker {
   tacEntries :: [TACEntry],
   datas :: a
 } deriving (Show)
 
 
-tacSup Int Int = Int
-tacSup Int Float = Float
-tacSup Float Int = Float
-tacSup Char Int = Int
-tacSup Int Char = Int
-tacSup String Char = String
-tacSup Char String = String
-tacSup Char Char = Char
-tacSup String String = String
-tacSup Float Float = Float
-tacSup Bool Bool = Bool
-
-addLabelToEntry label (TACEntry _ position operationType) = TACEntry label position operationType
+addLabelToEntry label (TACEntry _  operationType) = TACEntry label operationType
 
 sizeof ty = case ty of
     Int -> 4
-    Float -> 8 
+    Real -> 8 
     Char -> 1
     Bool -> 1

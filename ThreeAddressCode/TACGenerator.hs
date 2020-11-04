@@ -9,11 +9,12 @@ import Utils.AbsUtils
 import Checker.BPTree
 import Checker.SymbolTable
 import Utils.Type
+import Checker.SupTable
 
 type TacMonad a = State ([TACEntry], Temp, Int, BPTree BP) a
 
 
-startTacState bpTree = ([], Temp ThreeAddressCode.TAC.Fix "" (0::Int,0::Int) ThreeAddressCode.TAC.Int,  0, bpTree)
+startTacState bpTree = ([], Temp ThreeAddressCode.TAC.Fix "" (0::Int,0::Int) Int,  0, bpTree)
 
 addTacEntries tacEntry env@(tac,_te, _t, _b ) =
     (tacEntry ++ tac,_te, _t,_b)
@@ -69,11 +70,11 @@ tacGeneratorDeclExpression'' depth length ids (x:xs) = do
 
 
 tacGeneratorIdentifier temp@(Temp _ _ _ ty) (PIdent (loc, identifier)) = do
-  modify $ addTacEntry $ TACEntry Nothing loc $ Nullary (Temp ThreeAddressCode.TAC.Var identifier loc ty) temp 
+  modify $ addTacEntry $ TACEntry Nothing $ Nullary (Temp ThreeAddressCode.TAC.Var identifier loc ty) temp 
   get
 
 tacGeneratorArrayIdentifier temp@(Temp _ _ _ ty) expLoc depth lenght (PIdent (loc, identifier)) = do
-  modify $ addTacEntry $ TACEntry Nothing expLoc $ IndexLeft (Temp ThreeAddressCode.TAC.Var identifier loc ty) (Temp ThreeAddressCode.TAC.Fix (show lenght) loc ThreeAddressCode.TAC.Int) temp
+  modify $ addTacEntry $ TACEntry Nothing $ IndexLeft (Temp ThreeAddressCode.TAC.Var identifier loc ty) (Temp ThreeAddressCode.TAC.Fix (show lenght) loc Int) temp
   get
 
 tacGeneratorFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBlock  (POpenGraph (locGraph,_)) _ _)) = 
@@ -162,32 +163,26 @@ tacGeneratorExpression exp env@(_a,_b,_c,bptree) = case exp of
        return ([], temp)
     -- EFun funidentifier _ passedparams _ -> TacChecker [] $ Temp "pippo" (0,0) Bool--eFunTypeChecker funidentifier passedparams environment
     Evar identifier@(PIdent (loc, id)) -> 
-      let ty = convertTypeCheckerToTACType $ getVarTypeTAC identifier (_a,bptree,(getCurIdOfTokenPos loc bptree)) in
+      let ty = getVarTypeTAC identifier (_a,bptree,(getCurIdOfTokenPos loc bptree)) in
         return ([], Temp ThreeAddressCode.TAC.Var id loc ty)
-    Econst (Estring (PString desc)) ->tacGeneratorConstant desc ThreeAddressCode.TAC.String
-    Econst (Eint (PInteger desc)) -> tacGeneratorConstant desc ThreeAddressCode.TAC.Int
-    Econst (Efloat (PDouble desc)) -> tacGeneratorConstant desc ThreeAddressCode.TAC.Float
-    Econst (Echar (PChar desc)) -> tacGeneratorConstant desc ThreeAddressCode.TAC.Char
-    Econst (ETrue (PTrue desc)) -> tacGeneratorConstant desc ThreeAddressCode.TAC.Bool
-    Econst (EFalse (PFalse desc)) -> tacGeneratorConstant desc ThreeAddressCode.TAC.Bool
+    Econst (Estring (PString desc)) ->tacGeneratorConstant desc String
+    Econst (Eint (PInteger desc)) -> tacGeneratorConstant desc Int
+    Econst (Efloat (PDouble desc)) -> tacGeneratorConstant desc Real
+    Econst (Echar (PChar desc)) -> tacGeneratorConstant desc Char
+    Econst (ETrue (PTrue desc)) -> tacGeneratorConstant desc Bool
+    Econst (EFalse (PFalse desc)) -> tacGeneratorConstant desc Bool
 
-convertTypeCheckerToTACType Utils.Type.Int = ThreeAddressCode.TAC.Int
-convertTypeCheckerToTACType Utils.Type.Real = ThreeAddressCode.TAC.Float
-convertTypeCheckerToTACType Utils.Type.Char = ThreeAddressCode.TAC.Char
-convertTypeCheckerToTACType Utils.Type.String = ThreeAddressCode.TAC.String
-convertTypeCheckerToTACType Utils.Type.Bool = ThreeAddressCode.TAC.Bool
-convertTypeCheckerToTACType (Utils.Type.Array _ (_ , _)) = ThreeAddressCode.TAC.Int
 
 tacGeneratorConstant (loc, id) ty = return ([], Temp ThreeAddressCode.TAC.Fix id loc ty)
 
-tacCheckerBinaryBoolean loc e1 op e2 = return ([], Temp ThreeAddressCode.TAC.Fix "pippo" (0,0) ThreeAddressCode.TAC.Int)
+tacCheckerBinaryBoolean loc e1 op e2 = return ([], Temp ThreeAddressCode.TAC.Fix "pippo" (0,0) Int)
 
 tacGeneratorArrayIndexing tempId exp (ArrayInit _ xs _ ) env = do
   id <- newtemp 
-  (tac,temp) <- tacGeneratorArrayIndexing' 0 (Temp ThreeAddressCode.TAC.Var id (getExpPos exp) ThreeAddressCode.TAC.Int) xs env
+  (tac,temp) <- tacGeneratorArrayIndexing' 0 (Temp ThreeAddressCode.TAC.Var id (getExpPos exp) Int) xs env
   id <- newtemp 
-  let indexTemp = (Temp ThreeAddressCode.TAC.Var id (getExpPos exp) ThreeAddressCode.TAC.Int)
-      newEntry = TACEntry Nothing (-1,-1) $ IndexRight indexTemp tempId temp in do
+  let indexTemp = (Temp ThreeAddressCode.TAC.Var id (getExpPos exp) Int)
+      newEntry = TACEntry Nothing $ IndexRight indexTemp tempId temp in do
         modify $ addTacEntry newEntry
         return ([], indexTemp )
 
@@ -200,8 +195,8 @@ tacGeneratorArrayIndexing' depht temp ((ExprDec exp):xs) env = do
       tacGeneratorArrayIndexing' (depht + 1) tempId xs env
     else do
       id <- newtemp 
-      let addTemp = Temp ThreeAddressCode.TAC.Var id (getExpPos exp) ThreeAddressCode.TAC.Int
-          newEntry = TACEntry Nothing (-1,-1) $ Binary addTemp tempId Plus temp in do
+      let addTemp = Temp ThreeAddressCode.TAC.Var id (getExpPos exp) Int
+          newEntry = TACEntry Nothing $ Binary addTemp tempId Plus temp in do
             modify $ addTacEntry newEntry
             tacGeneratorArrayIndexing' (depht + 1) addTemp xs env
 
@@ -214,17 +209,17 @@ tacGeneratorAssignment leftExp assign rightExp env = do
   let temp = Temp ThreeAddressCode.TAC.Var idTemp locLeft tyLeft in do
     case operation of 
       Nullary temp1 temp2 -> case assign of
-        AssgnEq (PAssignmEq (loc,_)) ->  modify $ addTacEntry $ TACEntry Nothing loc operation
+        AssgnEq (PAssignmEq (loc,_)) ->  modify $ addTacEntry $ TACEntry Nothing operation
         AssgnPlEq (PAssignmPlus (loc,_)) ->
-          let entryAdd = TACEntry Nothing loc $ Binary temp temp1 Plus temp2 in modify $ addTacEntry entryAdd
+          let entryAdd = TACEntry Nothing $ Binary temp temp1 Plus temp2 in modify $ addTacEntry entryAdd
       IndexLeft variable@(Temp _ _ locLeft ty) index tempRight -> case assign of 
-        AssgnEq (PAssignmEq (loc,_)) -> modify $ addTacEntry $ TACEntry Nothing loc operation
+        AssgnEq (PAssignmEq (loc,_)) -> modify $ addTacEntry $ TACEntry Nothing operation
         AssgnPlEq (PAssignmPlus (loc,_)) -> do
           idTempAdd <- newtemp
           let tempAdd = Temp ThreeAddressCode.TAC.Var idTempAdd locLeft ty
-              entryArrayValue = TACEntry Nothing loc $ IndexRight temp variable index
-              entryadd = TACEntry Nothing loc $ Binary tempAdd temp Plus tempRight 
-              entryFinal = TACEntry Nothing loc $ IndexLeft variable index tempAdd in 
+              entryArrayValue = TACEntry Nothing $ IndexRight temp variable index
+              entryadd = TACEntry Nothing $ Binary tempAdd temp Plus tempRight 
+              entryFinal = TACEntry Nothing $ IndexLeft variable index tempAdd in 
                 modify $ addTacEntries $ entryArrayValue:entryadd:entryFinal:[]
     return ([], temp)
                 
@@ -242,8 +237,8 @@ tacGeneratorExpression' e1 op e2 loc env = do
   (tac1,temp1@(Temp _ _ _ ty1)) <- tacGeneratorExpression e1 env
   (tac2,temp2@(Temp _ _ _ ty2)) <- tacGeneratorExpression e2 env
   idTemp <- newtemp
-  let temp = Temp ThreeAddressCode.TAC.Var idTemp loc (tacSup ty1 ty2)
-      newEntry = TACEntry Nothing loc (Binary temp temp1 op temp2)
+  let temp = Temp ThreeAddressCode.TAC.Var idTemp loc (supTac ty1 ty2)
+      newEntry = TACEntry Nothing (Binary temp temp1 op temp2)
       tac = newEntry:(tac1 ++ tac2) in 
         return (tac, temp)
 
