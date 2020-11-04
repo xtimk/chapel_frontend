@@ -1,11 +1,12 @@
-var a: int;
-var i: real;
-var j = 5 + 5 * i + a * a - 20.5;
-var h,l = [1 + 1.2,2,3,4];
-var k = [[3,4]];
-
-
-proc pippo(x: int)
+proc main()
 {
-    l[i] += i + a + k[1, 2] + 6;
+    var jj = 4;
+    var hh = 4;
+    if (5 < 4) then
+    {
+        hh = 5 + 6 * 3;
+        var g = 1;
+    }
+    var z = 4;
+    var zx = 4;
 }
