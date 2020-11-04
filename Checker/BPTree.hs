@@ -139,6 +139,13 @@ getVarType (PIdent ((l,c), identifier)) (_,tree,currentNode) =
             Just (_,Function _ _ t) -> DataChecker t []
             Nothing -> DataChecker Checker.SymbolTable.Error [ErrorChecker (l,c) $ Checker.SymbolTable.ErrorVarNotDeclared identifier]
 
+getVarTypeTAC (PIdent ((l,c), identifier)) (_,tree,currentNode) = 
+    let symtable = uniteSymTables $ bpPathToList currentNode tree in
+        case DMap.lookup identifier symtable of
+            Just (_,Variable _ _ t) -> t
+            Just (_,Function _ _ t) -> t
+            -- Nothing -> DataChecker Checker.SymbolTable.Error [ErrorChecker (l,c) $ Checker.SymbolTable.ErrorVarNotDeclared identifier]
+
 getFunParams (PIdent ((l,c), identifier)) (_,tree,currentNode) = 
     let symtable = uniteSymTables $ bpPathToList currentNode tree in
         case DMap.lookup identifier symtable of
@@ -190,3 +197,42 @@ bp2list = bpttolist []
         bpttolist xs x@(Node _ _ _ []) = x:xs
         bpttolist xs x@(Node _ _ _ children) =  x : concatMap (bpttolist xs) children
 
+
+getCurIdOfTokenPos loc tree@(Node id@(_,((lstart,cstart),(lend,cend))) _ _ children) = 
+  let r = filter (isIdInTree loc) children in
+    if null r
+      then id
+      else getCurIdOfTokenPos loc (head r)
+
+-- getSymTable loc tree = 
+--   let currentNode = getCurIdOfTokenPos loc tree in
+--     uniteSymTables $ bpPathToList currentNode tree
+-- getVarType (PIdent (loc,identifier)) (_,tree,currentNode)
+
+
+isIdInTree loc@(l,c)  (Node (_,((lstart,cstart),(lend,cend))) _ _ _) --  start@(lstart, cstart) end@(lend, cend)
+  | l < lstart = False
+  -- a
+  --{
+  --}
+  | l == lstart && l < lend && c < cstart =  False
+  -- a {
+  --}
+  | l == lstart && l < lend && c >= cstart =  True
+  --{ a
+  --}
+  | l > lstart && l < lend = True
+  --{
+  -- a
+  --}
+  | l > lstart && l == lend && c <= cend = True
+  --{
+  --
+  -- a }
+  | l == lstart && l == lend && c >= cstart  && c <= cend = True
+  --{  a }
+  | l == lstart && l == lend && c < cstart = False
+  --{   } a
+  | otherwise = False
+  --{   }
+  --a

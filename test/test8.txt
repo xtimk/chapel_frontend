@@ -1,10 +1,2 @@
-var a: int;
-var i: real;
-var j = 5 + 5 * i + a * a - 20.5;
-var h,l = [1 + 1.2,2,3,4];
-
-
-proc pippo(x: int)
-{
-    l[i] += i + a + j + 6;
-}
+var k : real;
+var x : real = k + 2 + 3;
