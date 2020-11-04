@@ -102,6 +102,8 @@ parseTest filepath = do
                     then let tac = evalState (tacGenerator tree) (startTacState (getTree bpTree)) in do
 
                       putStrLn "\n\n ** TAC **"
+                      putStrLn $ show tac
+                      putStrLn "\n\n ** Pretty TAC **"
                       printTacEntries (getTac tac)
                       exitSuccess
                     else 
