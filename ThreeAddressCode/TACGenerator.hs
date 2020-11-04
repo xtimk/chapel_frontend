@@ -72,12 +72,9 @@ tacGeneratorArrayIdentifier temp@(Temp _ _ _ ty) expLoc depth lenght (PIdent (lo
   modify $ addTacEntry $ TACEntry Nothing expLoc $ IndexLeft (Temp Var identifier loc ty) (Temp Fix (show lenght) loc Int) temp
   get
 
-
 tacGeneratorFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBlock  (POpenGraph (locGraph,_)) _ _)) = 
   tacGeneratorBody  body
-  --tacGeneratorBody ProcedureBlk (createId' l c (getFunName signature)) body
 
---tacGeneratorBody blkType identifier (BodyBlock  (POpenGraph (locStart,_)) xs (PCloseGraph (locEnd,_))  ) = do
 tacGeneratorBody (BodyBlock  (POpenGraph (locStart,_)) xs (PCloseGraph (locEnd,_))  ) = do
   mapM_ tacGeneratorBody' xs
   get
@@ -90,7 +87,6 @@ tacGeneratorBody' x =
       mapM_ tacGeneratorDeclaration declList
       get
     Block body@(BodyBlock (POpenGraph ((l,c), name)) _ _) -> tacGeneratorBody body
-
 
 tacGeneratorStatement statement = case statement of
   Break (PBreak (pos@(l,c), name)) _semicolon -> --do
@@ -193,9 +189,6 @@ tacGeneratorArrayIndexing' depht temp ((ExprDec exp):xs) = do
           newEntry = TACEntry Nothing (-1,-1) $ Binary addTemp tempId Plus temp in do
             modify $ addTacEntry newEntry
             tacGeneratorArrayIndexing' (depht + 1) addTemp xs
-            
-
-  
 
 tacGeneratorAssignment leftExp assign rightExp = do
   (tacRight,tempRight) <- tacGeneratorExpression rightExp
@@ -228,7 +221,6 @@ tacGeneratorLeftExpression leftExp assign tempRight = case leftExp of
     (_, tempLeft) <- tacGeneratorExpression expIdentifier
     --Index da vedere 
     return ([], IndexLeft tempLeft tempLeft tempRight, tempLeft)
-  
 
 tacGeneratorExpression' :: Exp -> Bop -> Exp -> Loc ->  TacMonad ([TACEntry], Temp) 
 tacGeneratorExpression' e1 op e2 loc = do
