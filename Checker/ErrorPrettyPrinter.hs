@@ -1,8 +1,46 @@
 module Checker.ErrorPrettyPrinter where
 import LexChapel
-import Checker.SymbolTable
-import Checker.BPTree
 import Utils.AbsUtils
+import Utils.Type
+import AbsChapel hiding (Type, Mode)
+
+data DataChecker a = DataChecker {
+  datas :: a,
+  checkerErrors :: [ErrorChecker]
+} deriving (Show)
+
+data DefinedError = 
+  ErrorVarNotDeclared String | 
+  ErrorIncompatibleTypes Type Type | 
+  ErrorIncompatibleDeclTypes String Type Type | 
+  ErrorMissingReturn String | 
+  ErrorIncompatibleRetTypes String Type Type | 
+  ErrorVarAlreadyDeclared Loc String |
+  ErrorSignatureAlreadyDeclared Loc String |
+  ErrorGuardNotBoolean |
+  ErrorDeclarationBoundNotCorrectType Type String |
+  ErrorArrayCallExpression |
+  ErrorArrayIdentifierType Type String |
+  ErrorDeclarationBoundArray Type String |
+  ErrorDimensionArray Int Loc Int | 
+  ErrorWrongDimensionArray Int Int String |
+  ErrorArrayExpressionRequest |
+  ErrorCantOpToAddress Type|
+  ErrorCantAddressAnExpression |
+  ErrorReturnNotInsideAProcedure |
+  ErrorBreakNotInsideAProcedure |
+  ErrorContinueNotInsideAProcedure |
+  ErrorCalledProcWithWrongTypeParam Int Type Type String|
+  ErrorCalledProcWrongArgs Int Int String |
+  ErrorCalledProcWithVariable String |
+  ErrorNoPointerAddress Type String |
+  ErrorAssignDecl |
+  ErrorNotLeftExpression Exp AssgnmOp |
+  ErrorOverloadingIncompatibleReturnType Loc Loc String Type Type
+  deriving (Show)
+
+data ErrorChecker =  ErrorChecker Loc DefinedError
+ deriving (Show)
 
 printErrors ::(Foldable t0) => [Token] -> t0 ErrorChecker -> IO ()
 printErrors tokens = mapM_ (printError tokens)

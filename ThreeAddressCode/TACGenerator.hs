@@ -2,13 +2,13 @@ module ThreeAddressCode.TACGenerator where
 import ThreeAddressCode.TAC
 
 import AbsChapel
-import Checker.BPTree
 import Control.Monad.Trans.State
 import qualified Data.Map as DMap
 import Utils.AbsUtils
 
 import Checker.BPTree
 import Checker.SymbolTable
+import Utils.Type
 
 type TacMonad a = State ([TACEntry], Temp, Int, BPTree BP) a
 
@@ -137,7 +137,6 @@ tacGeneratorStatement statement = case statement of
      -- typeCheckerReturn return tyret
   RetVoid return _semicolon -> get --typeCheckerReturn return Checker.SymbolTable.Void
 
--- tacGeneratorExpression :: Exp -> TacMonad ([TACEntry], Temp) 
 tacGeneratorExpression exp env@(_a,_b,_c,bptree) = case exp of
     EAss e1 assign e2 -> tacGeneratorAssignment e1 assign e2 env
     Eplus e1 (PEplus (loc,_)) e2 -> tacGeneratorExpression' e1 Plus e2 loc env
@@ -146,16 +145,16 @@ tacGeneratorExpression exp env@(_a,_b,_c,bptree) = case exp of
     Ediv e1 (PEdiv (loc,_)) e2 ->  tacGeneratorExpression' e1 Div e2 loc env
     Etimes e1 (PEtimes (loc,_)) e2 -> tacGeneratorExpression' e1 Times e2 loc env
     InnerExp _ e _ -> tacGeneratorExpression e env
-    -- Elthen e1 pElthen e2 -> TacChecker [] $ Temp "pippo" (0,0) Bool-- typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
-    -- Elor e1 pElor e2 -> TacChecker [] $ Temp "pippo" (0,0) Bool--typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
-    -- Eland e1 pEland e2 -> TacChecker [] $ Temp "pippo" (0,0) Bool--typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
-    -- Eneq e1 pEneq e2 -> TacChecker [] $ Temp "pippo" (0,0) Bool--typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
-    -- Eeq e1 pEeq e2 -> TacChecker [] $ Temp "pippo" (0,0) Bool-- typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
-    -- Egrthen e1 pEgrthen e2 -> TacChecker [] $ Temp "pippo" (0,0) Bool-- typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
-    -- Ele e1 pEle e2 -> TacChecker [] $ Temp "pippo" (0,0) Bool--typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
-    -- Ege e1 pEge e2 -> TacChecker [] $ Temp "pippo" (0,0) Bool--typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
-    -- Epreop (Indirection _) e1 -> TacChecker [] $ Temp "pippo" (0,0) Bool-- typeCheckerIndirection environment e1
-    -- Epreop (Address _) e1 -> TacChecker [] $ Temp "pippo" (0,0) Bool-- typeCheckerAddress environment e1
+    Elthen e1 (PElthen (loc,_)) e2 -> tacCheckerBinaryBoolean loc e1 ThreeAddressCode.TAC.LT e2
+    Elor e1 (PElor (loc,_)) e2 -> tacCheckerBinaryBoolean loc e1 ThreeAddressCode.TAC.OR e2
+    Eland e1 (PEland (loc,_)) e2 -> tacCheckerBinaryBoolean loc e1 ThreeAddressCode.TAC.AND e2
+    Eneq e1 (PEneq (loc,_)) e2 -> tacCheckerBinaryBoolean loc e1 ThreeAddressCode.TAC.NEQ e2
+    Eeq e1 (PEeq (loc,_)) e2 -> tacCheckerBinaryBoolean loc e1 ThreeAddressCode.TAC.EQ e2
+    Egrthen e1 (PEgrthen (loc,_)) e2 -> tacCheckerBinaryBoolean loc e1 ThreeAddressCode.TAC.GT e2
+    Ele e1 (PEle (loc,_)) e2 -> tacCheckerBinaryBoolean loc e1 ThreeAddressCode.TAC.LTE e2
+    Ege e1 (PEge (loc,_)) e2 -> tacCheckerBinaryBoolean loc e1 ThreeAddressCode.TAC.GTE e2
+    --Epreop (Indirection _) e1 -> TacChecker [] $ Temp "pippo" (0,0) Bool-- typeCheckerIndirection environment e1
+    --Epreop (Address _) e1 -> TacChecker [] $ Temp "pippo" (0,0) Bool-- typeCheckerAddress environment e1
     Earray expIdentifier arDeclaration -> do
        (tacId, tempId) <- tacGeneratorExpression expIdentifier env
        (tac, temp) <- tacGeneratorArrayIndexing tempId expIdentifier arDeclaration env
@@ -172,14 +171,16 @@ tacGeneratorExpression exp env@(_a,_b,_c,bptree) = case exp of
     Econst (ETrue (PTrue desc)) -> tacGeneratorConstant desc ThreeAddressCode.TAC.Bool
     Econst (EFalse (PFalse desc)) -> tacGeneratorConstant desc ThreeAddressCode.TAC.Bool
 
-convertTypeCheckerToTACType Checker.SymbolTable.Int = ThreeAddressCode.TAC.Int
-convertTypeCheckerToTACType Checker.SymbolTable.Real = ThreeAddressCode.TAC.Float
-convertTypeCheckerToTACType Checker.SymbolTable.Char = ThreeAddressCode.TAC.Char
-convertTypeCheckerToTACType Checker.SymbolTable.String = ThreeAddressCode.TAC.String
-convertTypeCheckerToTACType Checker.SymbolTable.Bool = ThreeAddressCode.TAC.Bool
-convertTypeCheckerToTACType (Checker.SymbolTable.Array _ (_ , _)) = ThreeAddressCode.TAC.Int
+convertTypeCheckerToTACType Utils.Type.Int = ThreeAddressCode.TAC.Int
+convertTypeCheckerToTACType Utils.Type.Real = ThreeAddressCode.TAC.Float
+convertTypeCheckerToTACType Utils.Type.Char = ThreeAddressCode.TAC.Char
+convertTypeCheckerToTACType Utils.Type.String = ThreeAddressCode.TAC.String
+convertTypeCheckerToTACType Utils.Type.Bool = ThreeAddressCode.TAC.Bool
+convertTypeCheckerToTACType (Utils.Type.Array _ (_ , _)) = ThreeAddressCode.TAC.Int
 
 tacGeneratorConstant (loc, id) ty = return ([], Temp ThreeAddressCode.TAC.Fix id loc ty)
+
+tacCheckerBinaryBoolean loc e1 op e2 = return ([], Temp ThreeAddressCode.TAC.Fix "pippo" (0,0) ThreeAddressCode.TAC.Int)
 
 tacGeneratorArrayIndexing tempId exp (ArrayInit _ xs _ ) env = do
   id <- newtemp 
@@ -204,7 +205,7 @@ tacGeneratorArrayIndexing' depht temp ((ExprDec exp):xs) env = do
             modify $ addTacEntry newEntry
             tacGeneratorArrayIndexing' (depht + 1) addTemp xs env
 
-            
+
 tacGeneratorAssignment leftExp assign rightExp env = do
   (tacRight,tempRight) <- tacGeneratorExpression rightExp env
   (tacLeft, operation, (Temp _ _ locLeft tyLeft)) <- tacGeneratorLeftExpression leftExp assign tempRight env
@@ -237,8 +238,6 @@ tacGeneratorLeftExpression leftExp assign tempRight env = case leftExp of
     --Index da vedere 
     return ([], IndexLeft tempLeft tempLeft tempRight, tempLeft)
 
-
--- tacGeneratorExpression' :: Exp -> Bop -> Exp -> ThreeAddressCode.TAC.Loc ->  TacMonad ([TACEntry], Temp) 
 tacGeneratorExpression' e1 op e2 loc env = do
   (tac1,temp1@(Temp _ _ _ ty1)) <- tacGeneratorExpression e1 env
   (tac2,temp2@(Temp _ _ _ ty2)) <- tacGeneratorExpression e2 env

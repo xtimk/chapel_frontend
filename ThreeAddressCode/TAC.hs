@@ -1,5 +1,7 @@
 module ThreeAddressCode.TAC where
 
+import Utils.AbsUtils
+
 type TAC = [TACEntry]
 type Label = Temp
 
@@ -34,7 +36,7 @@ data Bop =  Plus | Minus | Times | Div | Modul
     deriving (Show)
 data Uop = Neg
     deriving (Show)
-data Rel =  LT | GT | LTE | GTE | EQ | NEQ
+data Rel =  LT | GT | LTE | GTE | EQ | NEQ | AND | OR
     deriving (Show)
 
 data TempMode = Fix | Var
@@ -48,7 +50,6 @@ data TacChecker a = TacChecker {
   datas :: a
 } deriving (Show)
 
-type Loc = (Int,Int)
 
 tacSup Int Int = Int
 tacSup Int Float = Float
@@ -61,6 +62,8 @@ tacSup Char Char = Char
 tacSup String String = String
 tacSup Float Float = Float
 tacSup Bool Bool = Bool
+
+addLabelToEntry label (TACEntry _ position operationType) = TACEntry label position operationType
 
 sizeof ty = case ty of
     Int -> 4

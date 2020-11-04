@@ -9,6 +9,8 @@ import Checker.SupTable
 import Data.Maybe
 import Debug.Trace
 import Utils.AbsUtils
+import Utils.Type
+import Checker.ErrorPrettyPrinter
 
 
 startState = (DMap.empty, Checker.BPTree.Node {Checker.BPTree.id = ("0", ((0::Int,0::Int),(0::Int,0::Int))), val = BP {symboltable = DMap.empty, statements = [], errors = [], blocktype = ExternalBlk}, parentID = Nothing, children = []}, ("0", ((0::Int,0::Int),(0::Int,0::Int))))
@@ -16,14 +18,14 @@ startState = (DMap.empty, Checker.BPTree.Node {Checker.BPTree.id = ("0", ((0::In
 typeChecker (Progr p) = typeCheckerModule p
 
 typeCheckerModule (Mod m) = do
-  modify (addFunctionOnCurrentNode "writeInt" (-1,-1) [[Variable Normal (-1,-1) Int]] Checker.SymbolTable.Void)
-  modify (addFunctionOnCurrentNode "writeReal" (-1,-1) [[Variable Normal (-1,-1) Real]] Checker.SymbolTable.Void)
-  modify (addFunctionOnCurrentNode "writeChar" (-1,-1) [[Variable Normal (-1,-1) Char]] Checker.SymbolTable.Void)
-  modify (addFunctionOnCurrentNode "writeString" (-1,-1) [[Variable Normal (-1,-1) String]] Checker.SymbolTable.Void)
-  modify (addFunctionOnCurrentNode "readInt" (-1,-1) [] Checker.SymbolTable.Int)
-  modify (addFunctionOnCurrentNode "readReal" (-1,-1) [] Checker.SymbolTable.Real)
-  modify (addFunctionOnCurrentNode "readChar" (-1,-1) [] Checker.SymbolTable.Char)
-  modify (addFunctionOnCurrentNode "readString" (-1,-1) [] Checker.SymbolTable.String)
+  modify (addFunctionOnCurrentNode "writeInt" (-1,-1) [[Variable Normal (-1,-1) Int]] Utils.Type.Void)
+  modify (addFunctionOnCurrentNode "writeReal" (-1,-1) [[Variable Normal (-1,-1) Real]] Utils.Type.Void)
+  modify (addFunctionOnCurrentNode "writeChar" (-1,-1) [[Variable Normal (-1,-1) Char]] Utils.Type.Void)
+  modify (addFunctionOnCurrentNode "writeString" (-1,-1) [[Variable Normal (-1,-1) String]] Utils.Type.Void)
+  modify (addFunctionOnCurrentNode "readInt" (-1,-1) [] Utils.Type.Int)
+  modify (addFunctionOnCurrentNode "readReal" (-1,-1) [] Utils.Type.Real)
+  modify (addFunctionOnCurrentNode "readChar" (-1,-1) [] Utils.Type.Char)
+  modify (addFunctionOnCurrentNode "readString" (-1,-1) [] Utils.Type.String)
   typeCheckerExt m
   get
 
@@ -47,7 +49,7 @@ typeCheckerFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBlo
   case getVarType (getFunNamePident signature) env of
     DataChecker Infered e -> do
       let node = findNodeById current_id tree in
-        modify (\(_s, tree,_i) -> (_s, updateTree (modFunRetType (getFunName signature) Checker.SymbolTable.Void node) tree , _i ))
+        modify (\(_s, tree,_i) -> (_s, updateTree (modFunRetType (getFunName signature) Utils.Type.Void node) tree , _i ))
       get    
     _otherwhise -> do 
       modify $ addErrorsCurrentNode [ErrorChecker (l,c) (ErrorMissingReturn (getFunName signature))]
@@ -204,7 +206,7 @@ typeCheckerStatement statement = case statement of
     let DataChecker tyret errs2 = typeCheckerExpression (_s,tree,current_id) exp in do
       modify $ addErrorsCurrentNode errs2
       typeCheckerReturn return tyret
-  RetVoid return _semicolon -> typeCheckerReturn return Checker.SymbolTable.Void
+  RetVoid return _semicolon -> typeCheckerReturn return Utils.Type.Void
 
 typeCheckerReturn (PReturn (pos, _ret)) tyret = do 
   (_s,tree,current_id) <- get
