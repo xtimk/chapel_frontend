@@ -55,7 +55,7 @@ tacGeneratorDeclExpression' depth length ids decExp =
     ExprDecArray (ArrayInit _ expressions _ ) -> tacGeneratorDeclExpression'' depth length ids expressions
     ExprDec exp -> do
       env <- get
-      (tacEntry, temp) <- tacGeneratorExpression exp env
+      (tacEntry, temp) <- tacGeneratorExpression exp
       modify $ addTacEntries tacEntry
       if depth == 0
         then mapM_ (tacGeneratorIdentifier temp) ids
@@ -124,7 +124,7 @@ tacGeneratorStatement statement = case statement of
     get
   StExp exp _semicolon -> do
     env <- get
-    (tacEntry, temp) <- tacGeneratorExpression exp env
+    (tacEntry, temp) <- tacGeneratorExpression exp
     modify $ addTacEntries tacEntry
     get
     --env <- get
@@ -138,14 +138,14 @@ tacGeneratorStatement statement = case statement of
      -- typeCheckerReturn return tyret
   RetVoid return _semicolon -> get --typeCheckerReturn return Checker.SymbolTable.Void
 
-tacGeneratorExpression exp env@(_a,_b,_c,bptree) = case exp of
-    EAss e1 assign e2 -> tacGeneratorAssignment e1 assign e2 env
-    Eplus e1 (PEplus (loc,_)) e2 -> tacGeneratorExpression' e1 Plus e2 loc env
-    Emod e1 (PEmod (loc,_)) e2 -> tacGeneratorExpression' e1 Modul e2 loc env
-    Eminus e1 (PEminus (loc,_)) e2 -> tacGeneratorExpression' e1 Minus e2 loc env
-    Ediv e1 (PEdiv (loc,_)) e2 ->  tacGeneratorExpression' e1 Div e2 loc env
-    Etimes e1 (PEtimes (loc,_)) e2 -> tacGeneratorExpression' e1 Times e2 loc env
-    InnerExp _ e _ -> tacGeneratorExpression e env
+tacGeneratorExpression exp = case exp of
+    EAss e1 assign e2 -> tacGeneratorAssignment e1 assign e2
+    Eplus e1 (PEplus (loc,_)) e2 -> tacGeneratorExpression' e1 Plus e2 loc
+    Emod e1 (PEmod (loc,_)) e2 -> tacGeneratorExpression' e1 Modul e2 loc
+    Eminus e1 (PEminus (loc,_)) e2 -> tacGeneratorExpression' e1 Minus e2 loc
+    Ediv e1 (PEdiv (loc,_)) e2 ->  tacGeneratorExpression' e1 Div e2 loc
+    Etimes e1 (PEtimes (loc,_)) e2 -> tacGeneratorExpression' e1 Times e2 loc
+    InnerExp _ e _ -> tacGeneratorExpression e
     Elthen e1 (PElthen (loc,_)) e2 -> tacCheckerBinaryBoolean loc e1 ThreeAddressCode.TAC.LT e2
     Elor e1 (PElor (loc,_)) e2 -> tacCheckerBinaryBoolean loc e1 ThreeAddressCode.TAC.OR e2
     Eland e1 (PEland (loc,_)) e2 -> tacCheckerBinaryBoolean loc e1 ThreeAddressCode.TAC.AND e2
@@ -157,13 +157,14 @@ tacGeneratorExpression exp env@(_a,_b,_c,bptree) = case exp of
     --Epreop (Indirection _) e1 -> TacChecker [] $ Temp "pippo" (0,0) Bool-- typeCheckerIndirection environment e1
     --Epreop (Address _) e1 -> TacChecker [] $ Temp "pippo" (0,0) Bool-- typeCheckerAddress environment e1
     Earray expIdentifier arDeclaration -> do
-       (tacId, tempId) <- tacGeneratorExpression expIdentifier env
-       (tac, temp) <- tacGeneratorArrayIndexing tempId expIdentifier arDeclaration env
+       (tacId, tempId) <- tacGeneratorExpression expIdentifier
+       (tac, temp) <- tacGeneratorArrayIndexing tempId expIdentifier arDeclaration
        modify $ addTacEntries (tacId ++ tac)
        return ([], temp)
     -- EFun funidentifier _ passedparams _ -> TacChecker [] $ Temp "pippo" (0,0) Bool--eFunTypeChecker funidentifier passedparams environment
-    Evar identifier@(PIdent (loc, id)) -> 
-      let ty = getVarTypeTAC identifier (_a,bptree,(getCurIdOfTokenPos loc bptree)) in
+    Evar identifier@(PIdent (loc, id)) -> do
+      (_,_,_,bptree) <- get
+      let ty = getVarTypeTAC identifier (bptree,(getCurIdOfTokenPos loc bptree)) in
         return ([], Temp ThreeAddressCode.TAC.Var id loc ty)
     Econst (Estring (PString desc)) ->tacGeneratorConstant desc String
     Econst (Eint (PInteger desc)) -> tacGeneratorConstant desc Int
@@ -177,33 +178,33 @@ tacGeneratorConstant (loc, id) ty = return ([], Temp ThreeAddressCode.TAC.Fix id
 
 tacCheckerBinaryBoolean loc e1 op e2 = return ([], Temp ThreeAddressCode.TAC.Fix "pippo" (0,0) Int)
 
-tacGeneratorArrayIndexing tempId exp (ArrayInit _ xs _ ) env = do
+tacGeneratorArrayIndexing tempId exp (ArrayInit _ xs _ ) = do
   id <- newtemp 
-  (tac,temp) <- tacGeneratorArrayIndexing' 0 (Temp ThreeAddressCode.TAC.Var id (getExpPos exp) Int) xs env
+  (tac,temp) <- tacGeneratorArrayIndexing' 0 (Temp ThreeAddressCode.TAC.Var id (getExpPos exp) Int) xs
   id <- newtemp 
   let indexTemp = (Temp ThreeAddressCode.TAC.Var id (getExpPos exp) Int)
       newEntry = TACEntry Nothing $ IndexRight indexTemp tempId temp in do
         modify $ addTacEntry newEntry
         return ([], indexTemp )
 
-tacGeneratorArrayIndexing' _ temp [] env = return ([],temp) 
-tacGeneratorArrayIndexing' depht temp ((ExprDec exp):xs) env = do
-  (tacId, tempId) <- tacGeneratorExpression exp env
+tacGeneratorArrayIndexing' _ temp [] = return ([],temp) 
+tacGeneratorArrayIndexing' depht temp ((ExprDec exp):xs) = do
+  (tacId, tempId) <- tacGeneratorExpression exp
   modify $ addTacEntries tacId
   if depht == 0
     then 
-      tacGeneratorArrayIndexing' (depht + 1) tempId xs env
+      tacGeneratorArrayIndexing' (depht + 1) tempId xs
     else do
       id <- newtemp 
       let addTemp = Temp ThreeAddressCode.TAC.Var id (getExpPos exp) Int
           newEntry = TACEntry Nothing $ Binary addTemp tempId Plus temp in do
             modify $ addTacEntry newEntry
-            tacGeneratorArrayIndexing' (depht + 1) addTemp xs env
+            tacGeneratorArrayIndexing' (depht + 1) addTemp xs
 
 
-tacGeneratorAssignment leftExp assign rightExp env = do
-  (tacRight,tempRight) <- tacGeneratorExpression rightExp env
-  (tacLeft, operation, (Temp _ _ locLeft tyLeft)) <- tacGeneratorLeftExpression leftExp assign tempRight env
+tacGeneratorAssignment leftExp assign rightExp = do
+  (tacRight,tempRight) <- tacGeneratorExpression rightExp
+  (tacLeft, operation, (Temp _ _ locLeft tyLeft)) <- tacGeneratorLeftExpression leftExp assign tempRight
   modify $ addTacEntries (tacLeft ++ tacRight)
   idTemp <- newtemp
   let temp = Temp ThreeAddressCode.TAC.Var idTemp locLeft tyLeft in do
@@ -224,18 +225,18 @@ tacGeneratorAssignment leftExp assign rightExp env = do
     return ([], temp)
                 
 
-tacGeneratorLeftExpression leftExp assign tempRight env = case leftExp of
+tacGeneratorLeftExpression leftExp assign tempRight = case leftExp of
   Evar {} -> do
-    (_, tempLeft) <- tacGeneratorExpression leftExp env
+    (_, tempLeft) <- tacGeneratorExpression leftExp
     return ([], Nullary tempLeft tempRight, tempLeft)
   Earray expIdentifier arDeclaration -> do
-    (_, tempLeft) <- tacGeneratorExpression expIdentifier env
+    (_, tempLeft) <- tacGeneratorExpression expIdentifier
     --Index da vedere 
     return ([], IndexLeft tempLeft tempLeft tempRight, tempLeft)
 
-tacGeneratorExpression' e1 op e2 loc env = do
-  (tac1,temp1@(Temp _ _ _ ty1)) <- tacGeneratorExpression e1 env
-  (tac2,temp2@(Temp _ _ _ ty2)) <- tacGeneratorExpression e2 env
+tacGeneratorExpression' e1 op e2 loc = do
+  (tac1,temp1@(Temp _ _ _ ty1)) <- tacGeneratorExpression e1
+  (tac2,temp2@(Temp _ _ _ ty2)) <- tacGeneratorExpression e2
   idTemp <- newtemp
   let temp = Temp ThreeAddressCode.TAC.Var idTemp loc (supTac ty1 ty2)
       newEntry = TACEntry Nothing (Binary temp temp1 op temp2)
