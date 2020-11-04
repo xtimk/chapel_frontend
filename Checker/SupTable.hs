@@ -1,8 +1,11 @@
 module Checker.SupTable where
 
-import Checker.SymbolTable
+import Checker.ErrorPrettyPrinter
 import AbsChapel
+import Utils.Type
+import Utils.AbsUtils
 
+data SupMode = SupDecl | SupFun | SupBool | SupPlus | SupMinus |  SupArith | SupMod | Sup | SupRet
 
 --Infered 
 sup mode id loc Infered ty = DataChecker ty []

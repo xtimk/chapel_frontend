@@ -1,9 +1,12 @@
 module Checker.BPTree where
 
 import Checker.SymbolTable
+import Utils.Type
+import Utils.AbsUtils
 import AbsChapel
 import Prelude hiding (id)
 import qualified Data.Map as DMap
+import Checker.ErrorPrettyPrinter
 
 import Data.List
 
@@ -21,6 +24,17 @@ data BP = BP {
     blocktype :: BlkType
 } deriving (Show)
 
+
+data BlkType = 
+  DoWhileBlk |
+  WhileBlk |
+  ProcedureBlk |
+  ExternalBlk |
+  SimpleBlk |
+  IfSimpleBlk |
+  IfThenBlk |
+  IfElseBlk
+  deriving (Show)
 
 getTreeErrors tree = foldr (\tree errors -> getErrors tree ++ errors ) [] (bp2list tree)
 
@@ -130,14 +144,14 @@ getEntry (PIdent ((l,c), identifier)) (_,tree,currentNode) =
     let symtable = uniteSymTables $ bpPathToList currentNode tree in
         case DMap.lookup identifier symtable of
             Just (_, entry) -> DataChecker (Just entry) []
-            Nothing -> DataChecker Nothing [ErrorChecker (l,c) $ Checker.SymbolTable.ErrorVarNotDeclared identifier]
+            Nothing -> DataChecker Nothing [ErrorChecker (l,c) $ ErrorVarNotDeclared identifier]
             
 getVarType (PIdent ((l,c), identifier)) (_,tree,currentNode) = 
     let symtable = uniteSymTables $ bpPathToList currentNode tree in
         case DMap.lookup identifier symtable of
             Just (_,Variable _ _ t) -> DataChecker t []
             Just (_,Function _ _ t) -> DataChecker t []
-            Nothing -> DataChecker Checker.SymbolTable.Error [ErrorChecker (l,c) $ Checker.SymbolTable.ErrorVarNotDeclared identifier]
+            Nothing -> DataChecker Error [ErrorChecker (l,c) $ ErrorVarNotDeclared identifier]
 
 getVarTypeTAC (PIdent ((l,c), identifier)) (_,tree,currentNode) = 
     let symtable = uniteSymTables $ bpPathToList currentNode tree in
