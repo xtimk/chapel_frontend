@@ -6,7 +6,7 @@ printTacEntries = mapM_ printTacEntry
 
 printTacEntry entry = putStrLn $ printTacEntry' entry
 
-printTacEntry' (TACEntry label pos operation) = case operation of
+printTacEntry' (TACEntry label operation) = case operation of
     Binary temp1 temp2 bop temp3 -> printTacTemp temp1 ++ " = " ++ printTacTemp temp2 ++  printTacBop bop ++ printTacTemp temp3
     Unary temp1 uop  temp2 -> printTacTemp temp1 ++ " = " ++ printTacUop uop ++ printTacTemp temp2
     Nullary temp1 temp2 ->  printTacTemp temp1 ++ " = " ++ printTacTemp temp2
