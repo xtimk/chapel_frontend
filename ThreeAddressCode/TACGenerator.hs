@@ -108,20 +108,21 @@ tacGeneratorFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBl
 tacGeneratorBody (BodyBlock  (POpenGraph (locStart,_)) xs (PCloseGraph (locEnd,_))  ) = tacGeneratorBody' xs
 
 tacGeneratorBody' [] = return []
-tacGeneratorBody' (x:xs) =
-  case x of
-    Stm statement -> do
-        (tacs, label) <- tacGeneratorStatement statement
-        tacs2 <- tacGeneratorBody' xs
-        -- attacco l'eventuale label che mi viene passata al prossimo blocco di tac
-        return $ tacs ++ (attachLabelToFirstElem label tacs2)
-    Fun fun _ -> 
-      tacGeneratorFunction fun
-    DeclStm (Decl decMode declList _ ) -> do
-      res <- mapM tacGeneratorDeclaration declList
-      res2 <- tacGeneratorBody' xs
-      return $ (concat res) ++ res2
-    Block body@(BodyBlock (POpenGraph ((l,c), name)) _ _) -> tacGeneratorBody body
+tacGeneratorBody' (x:xs) = do
+  res1 <- tacGeneratorBody'' x
+  res2 <- tacGeneratorBody' xs
+  return (res1 ++ res2)
+
+tacGeneratorBody'' x = case x of
+  Stm statement -> do
+      (tacs, label) <- tacGeneratorStatement statement
+      -- attacco l'eventuale label che mi viene passata al prossimo blocco di tac
+      return $ tacs ++ (attachLabelToFirstElem label tacs)
+  Fun fun _ -> tacGeneratorFunction fun
+  DeclStm (Decl _ declList _ ) -> do
+    result <- mapM tacGeneratorDeclaration declList
+    return (concat result)
+  Block body@(BodyBlock (POpenGraph ((l,c), name)) _ _) -> tacGeneratorBody body
 
 
 -- ritorno una coppia (tacs, eventuale label da attaccare al tac successivo)
@@ -314,3 +315,5 @@ newlabel = do
   (_tac, _temp , k , _bp) <- get
   put (_tac, _temp , k + 1 , _bp)
   return $ int2Label k
+
+
