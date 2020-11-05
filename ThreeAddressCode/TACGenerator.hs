@@ -110,21 +110,22 @@ calculateBound (boundLeft, boundRight) =
                   Utils.Type.Fix lenght -> lenght
                   Utils.Type.Var _ -> 0
 
-tacGeneratorFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBlock  (POpenGraph (locGraph,_)) _ _)) = tacGeneratorBody body
+tacGeneratorFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBlock  (POpenGraph (locGraph,_)) _ _)) = tacGeneratorBody body 
 
-tacGeneratorBody (BodyBlock  (POpenGraph (locStart,_)) xs (PCloseGraph (locEnd,_))  ) = tacGeneratorBody' xs
+tacGeneratorBody (BodyBlock  _ xs _  ) = do
+  label <- popLabel
+  res <- tacGeneratorBody' xs
+  return $ attachLabelToFirstElem label res
 
 tacGeneratorBody' [] = return []
 tacGeneratorBody' (x:xs) = do
   res1 <- tacGeneratorBody'' x
+  label <- popLabel 
   res2 <- tacGeneratorBody' xs
-  return (res1 ++ res2)
+  return (res1 ++ attachLabelToFirstElem label res2)
 
 tacGeneratorBody'' x = case x of
-  Stm statement -> do
-      (tacs, label) <- tacGeneratorStatement statement
-      -- attacco l'eventuale label che mi viene passata al prossimo blocco di tac
-      return $ tacs ++ (attachLabelToFirstElem label tacs)
+  Stm statement -> tacGeneratorStatement statement
   Fun fun _ -> tacGeneratorFunction fun
   DeclStm (Decl _ declList _ ) -> do
     result <- mapM tacGeneratorDeclaration declList
@@ -136,60 +137,59 @@ tacGeneratorBody'' x = case x of
 tacGeneratorStatement statement = case statement of
   Break (PBreak (pos@(l,c), name)) _semicolon -> --do
     --typeCheckerSequenceStatement pos
-    return ([], Nothing)
+    return []
   Continue (PContinue (pos@(l,c), name)) _semicolon -> --do
     --typeCheckerSequenceStatement pos
-    return ([], Nothing) 
+    return [] 
   DoWhile (Pdo ((l,c),name)) _while body guard -> --do
     --typeCheckerBody DoWhileBlk (createId l c name) body
     --typeCheckerGuard guard
-    return ([], Nothing)
+    return []
   While (PWhile ((l,c), name)) guard body -> --do
     --typeCheckerGuard guard
     --typeCheckerBody WhileBlk (createId l c name) body
-    return ([], Nothing)
-  If (PIf ((l,c), name)) (SGuard _ guard _) _then body -> do
-    labelTrue <- newlabel (l,c)
-    labelFalse <- newlabel (l,c)
+    return []
+  If (PIf _) (SGuard _ guard _) _then body@(BodyBlock(POpenGraph (locStart,_)) _ (PCloseGraph (locEnd,_))  ) -> do
+    labelTrue <- newlabel locStart
+    labelFalse <- newlabel locEnd
     (resg,_) <- tacGeneratorGuard guard labelTrue labelFalse
+    pushLabel labelTrue
     res <- tacGeneratorBody body
-
-    return $ (resg ++ (attachLabelToFirstElem labelTrue res), labelFalse ) --uncomment
-    -- return []
+    pushLabel labelFalse
+    return (resg ++ res) 
   IfElse (PIf ((lIf,cIf), nameIf)) guard _then bodyIf (PElse ((lElse,cElse), nameElse)) bodyElse -> --do
     --typeCheckerGuard guard
     --typeCheckerBody IfThenBlk (createId lIf cIf nameIf) bodyIf
     --typeCheckerBody IfElseBlk (createId lElse cElse nameElse) bodyElse
-    return ([], Nothing)
+    return []
   StExp exp@(EFun funidentifier _ params _) _semicolon-> --do
     --environment <- get
     --let DataChecker ty errors = eFunTypeChecker funidentifier params environment in
      -- modify $ addErrorsCurrentNode errors
-    return ([], Nothing)
+    return []
   StExp exp _semicolon -> do
     env <- get
     (tacEntry, temp) <- tacGeneratorExpression exp
     -- modify $ addTacEntries (tacEntry)
-    return $ (reverse tacEntry, Nothing) --uncomment
+    return $ reverse tacEntry --uncomment
     -- return []
     --env <- get
    -- let DataChecker _ errors = typeCheckerExpression env exp in do
        -- modify $ addErrorsCurrentNode errors
        -- get
-  RetVal ret exp _semicolon -> return ([], Nothing) --do
+  RetVal ret exp _semicolon -> return [] --do
     --(_s,tree,current_id) <- get
     --let DataChecker tyret errs2 = typeCheckerExpression (_s,tree,current_id) exp in do
      -- modify $ addErrorsCurrentNode errs2
      -- typeCheckerReturn return tyret
-  RetVoid ret _semicolon -> return ([], Nothing)  --typeCheckerReturn return Checker.SymbolTable.Void
+  RetVoid ret _semicolon -> return [] --typeCheckerReturn return Checker.SymbolTable.Void
 
+attachLabelToFirstElem _ [] = []
 attachLabelToFirstElem (Just label) ((TACEntry _l _e):xs) = (TACEntry (Just label) _e):xs
 attachLabelToFirstElem Nothing xs = xs
 
--- attachLabelToFirstElem label [] = []
-tacGeneratorGuard guard labelTrue labelFalse = do
-  res <- tacGeneratorExpression guard
-  return res
+
+tacGeneratorGuard guard labelTrue labelFalse = tacGeneratorExpression guard
 
 tacGeneratorExpression exp = case exp of
     EAss e1 assign e2 -> tacGeneratorAssignment e1 assign e2
@@ -326,3 +326,13 @@ newlabel pos = do
   (_tac, _temp , k , _bp, _labels, _label) <- get
   put (_tac, _temp , k + 1 , _bp, _labels, _label)
   return $ Just ((int2Label k),pos)
+
+popLabel :: TacMonad (Maybe Label)
+popLabel = do
+  (_tac, _temp , k , _bp, _labels, label) <- get
+  put (_tac, _temp , k , _bp, _labels, Nothing)
+  return label
+
+pushLabel label = do
+  (_tac, _temp , k , _bp, _labels, _) <- get
+  put (_tac, _temp , k , _bp, _labels, label)
