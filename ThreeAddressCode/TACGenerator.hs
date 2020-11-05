@@ -44,9 +44,7 @@ tacGeneratorExt (x:xs) = case x of
 tacGeneratorDeclaration x =
   case x of
     NoAssgmDec {} -> return []
-    AssgmDec ids _ exp -> do
-      res <- tacGeneratorDeclExpression ids exp
-      return res
+    AssgmDec ids _ exp -> tacGeneratorDeclExpression ids exp
     AssgmTypeDec ids _ _ _ exp -> tacGeneratorDeclExpression ids exp
     NoAssgmArrayFixDec {} -> return [] 
     NoAssgmArrayDec  {} -> return []
@@ -104,14 +102,9 @@ calculateBound (Array ty (boundLeft, boundRight)) =
                   Utils.Type.Fix lenght -> lenght
                   Utils.Type.Var _ -> 0
 
-tacGeneratorFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBlock  (POpenGraph (locGraph,_)) _ _)) = do
-  res <- tacGeneratorBody body
---modify $ addTacEntries res
-  return res
+tacGeneratorFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBlock  (POpenGraph (locGraph,_)) _ _)) = tacGeneratorBody body
 
-tacGeneratorBody (BodyBlock  (POpenGraph (locStart,_)) xs (PCloseGraph (locEnd,_))  ) = do
-  res <- tacGeneratorBody' xs
-  return res
+tacGeneratorBody (BodyBlock  (POpenGraph (locStart,_)) xs (PCloseGraph (locEnd,_))  ) = tacGeneratorBody' xs
 
 tacGeneratorBody' [] = return []
 tacGeneratorBody' (x:xs) =
