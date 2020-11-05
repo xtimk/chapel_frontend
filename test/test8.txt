@@ -4,7 +4,7 @@ proc main()
     var hh = 4;
     if (5 < 4) then
     {
-        var x = 5 + 6 * 3;
+        var x = 1 + 2 * 3 + 4;
         var g = 1;
     }
     var z = 4;

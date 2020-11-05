@@ -44,7 +44,9 @@ tacGeneratorExt (x:xs) = case x of
 tacGeneratorDeclaration x =
   case x of
     NoAssgmDec {} -> return []
-    AssgmDec ids _ exp -> tacGeneratorDeclExpression ids exp
+    AssgmDec ids _ exp -> do
+      res <- tacGeneratorDeclExpression ids exp
+      return res
     AssgmTypeDec ids _ _ _ exp -> tacGeneratorDeclExpression ids exp
     NoAssgmArrayFixDec {} -> return [] 
     NoAssgmArrayDec  {} -> return []
@@ -62,10 +64,10 @@ tacGeneratorDeclExpression' depth length ids decExp =
       if depth == 0
         then do
           res <- mapM (tacGeneratorIdentifier temp) ids
-          return $ (tacEntry ++ res)
+          return $ reverse (res ++ tacEntry)
         else do
           res<- mapM (tacGeneratorArrayIdentifier temp (getExpPos exp) depth length ) ids
-          return $ (tacEntry ++ res)
+          return $ reverse (res ++ tacEntry)
       
 
 tacGeneratorDeclExpression'' _ _ _ [] = get
