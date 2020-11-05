@@ -102,6 +102,8 @@ f a l s e
     { tok (\p s -> PT p (eitherResIdent (T_PEmod . share) s)) }
 \&
     { tok (\p s -> PT p (eitherResIdent (T_PDef . share) s)) }
+\!
+    { tok (\p s -> PT p (eitherResIdent (T_PNeg . share) s)) }
 \| \|
     { tok (\p s -> PT p (eitherResIdent (T_PElor . share) s)) }
 \& \&
@@ -186,6 +188,7 @@ data Tok =
  | T_PEdiv !String
  | T_PEmod !String
  | T_PDef !String
+ | T_PNeg !String
  | T_PElor !String
  | T_PEland !String
  | T_PEeq !String
@@ -272,6 +275,7 @@ prToken t = case t of
   PT _ (T_PEdiv s) -> s
   PT _ (T_PEmod s) -> s
   PT _ (T_PDef s) -> s
+  PT _ (T_PNeg s) -> s
   PT _ (T_PElor s) -> s
   PT _ (T_PEland s) -> s
   PT _ (T_PEeq s) -> s

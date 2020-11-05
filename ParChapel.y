@@ -51,6 +51,7 @@ import ErrM
   L_PEdiv { PT _ (T_PEdiv _) }
   L_PEmod { PT _ (T_PEmod _) }
   L_PDef { PT _ (T_PDef _) }
+  L_PNeg { PT _ (T_PNeg _) }
   L_PElor { PT _ (T_PElor _) }
   L_PEland { PT _ (T_PEland _) }
   L_PEeq { PT _ (T_PEeq _) }
@@ -176,6 +177,9 @@ PEmod  : L_PEmod { PEmod (mkPosToken $1)}
 
 PDef :: { PDef}
 PDef  : L_PDef { PDef (mkPosToken $1)}
+
+PNeg :: { PNeg}
+PNeg  : L_PNeg { PNeg (mkPosToken $1)}
 
 PElor :: { PElor}
 PElor  : L_PElor { PElor (mkPosToken $1)}
@@ -357,7 +361,8 @@ Exp16 : POpenParenthesis Exp PCloseParenthesis { AbsChapel.InnerExp $1 $2 $3 }
       | PIdent { AbsChapel.Evar $1 }
       | Constant { AbsChapel.Econst $1 }
 UnaryOperator :: { UnaryOperator }
-UnaryOperator : PDef { AbsChapel.Address $1 }
+UnaryOperator : PNeg { AbsChapel.Negation $1 }
+              | PDef { AbsChapel.Address $1 }
               | PEtimes { AbsChapel.Indirection $1 }
 Constant :: { Constant }
 Constant : PString { AbsChapel.Estring $1 }

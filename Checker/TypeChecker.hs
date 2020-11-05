@@ -369,6 +369,7 @@ typeCheckerExpression environment exp = case exp of
     Ege e1 pEge e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
     Epreop (Indirection _) e1 -> typeCheckerIndirection environment e1
     Epreop (Address _) e1 ->  typeCheckerAddress environment e1
+    Epreop (Negation (PNeg (loc,_))) e1 ->  typeCheckerExpression' environment SupBool (getExpPos e1) e1 (Econst (ETrue (PTrue (loc,"true"))))
     Earray expIdentifier arDeclaration -> typeCheckerDeclarationArray  environment expIdentifier arDeclaration
     EFun funidentifier _ passedparams _ -> eFunTypeChecker funidentifier passedparams environment
     Evar identifier -> getVarType identifier environment
