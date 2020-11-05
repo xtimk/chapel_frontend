@@ -25,41 +25,48 @@ addTacEntry tacEntry env@(tac,_te, _t, _b ) =
 tacGenerator (Progr p) = tacGeneratorModule p
 
 tacGeneratorModule (Mod m) = do
-  tacGeneratorExt m
+  res <- tacGeneratorExt m
+  modify $ addTacEntries $ concat res
   get
 
-tacGeneratorExt [] = get
+tacGeneratorExt [] = return []
 tacGeneratorExt (x:xs) = case x of
     ExtDecl (Decl decMode declList _ ) -> do
-        mapM_ tacGeneratorDeclaration declList
-        tacGeneratorExt xs
+        res <- mapM tacGeneratorDeclaration declList
+        res2 <- tacGeneratorExt xs
+        return $ res ++ res2
     ExtFun fun -> do
-        tacGeneratorFunction fun
-        tacGeneratorExt xs
+        tacGeneratorFunction fun -- todo
+        res <- tacGeneratorExt xs
+        return res
 
 
 tacGeneratorDeclaration x =
   case x of
-    NoAssgmDec {} -> get
+    NoAssgmDec {} -> return []
     AssgmDec ids _ exp -> tacGeneratorDeclExpression ids exp
     AssgmTypeDec ids _ _ _ exp -> tacGeneratorDeclExpression ids exp
-    NoAssgmArrayFixDec {} -> get 
-    NoAssgmArrayDec  {} -> get
+    NoAssgmArrayFixDec {} -> return [] 
+    NoAssgmArrayDec  {} -> return []
     AssgmArrayTypeDec ids _ _ _ _ exp -> tacGeneratorDeclExpression ids exp
-    AssgmArrayDec ids _ _ _ exp ->  tacGeneratorDeclExpression ids exp
+    AssgmArrayDec ids _ _ _ exp -> tacGeneratorDeclExpression ids exp
 
 tacGeneratorDeclExpression = tacGeneratorDeclExpression' 0 0
 
 tacGeneratorDeclExpression' depth length ids decExp = 
   case decExp of 
-    ExprDecArray (ArrayInit _ expressions _ ) -> tacGeneratorDeclExpression'' depth length ids expressions
+    -- ExprDecArray (ArrayInit _ expressions _ ) -> tacGeneratorDeclExpression'' depth length ids expressions
     ExprDec exp -> do
       (tacEntry, temp) <- tacGeneratorExpression exp
-      modify $ addTacEntries $ tacEntry
+      -- modify $ addTacEntries $ tacEntry
       if depth == 0
-        then mapM_ (tacGeneratorIdentifier temp) ids
-        else mapM_ (tacGeneratorArrayIdentifier temp (getExpPos exp) depth length ) ids
-      get
+        then do
+          res <- mapM (tacGeneratorIdentifier temp) ids
+          return $ (tacEntry ++ res)
+        else do
+          res<- mapM (tacGeneratorArrayIdentifier temp (getExpPos exp) depth length ) ids
+          return $ (tacEntry ++ res)
+      
 
 tacGeneratorDeclExpression'' _ _ _ [] = get
 tacGeneratorDeclExpression'' depth length ids (x:xs) = do
@@ -69,12 +76,12 @@ tacGeneratorDeclExpression'' depth length ids (x:xs) = do
 
 
 tacGeneratorIdentifier temp@(Temp _ _ _ ty) (PIdent (loc, identifier)) = do
-  modify $ addTacEntry $ TACEntry Nothing $ Nullary (Temp ThreeAddressCode.TAC.Var identifier loc ty) temp 
-  get
+  -- modify $ addTacEntry $ TACEntry Nothing $ Nullary (Temp ThreeAddressCode.TAC.Var identifier loc ty) temp 
+  return $ TACEntry Nothing $ Nullary (Temp ThreeAddressCode.TAC.Var identifier loc ty) temp
 
 tacGeneratorArrayIdentifier temp@(Temp _ _ _ ty) expLoc depth lenght (PIdent (loc, identifier)) = do
-  modify $ addTacEntry $ TACEntry Nothing $ IndexLeft (Temp ThreeAddressCode.TAC.Var identifier loc ty) (Temp ThreeAddressCode.TAC.Fix (show lenght) loc Int) temp
-  get
+  -- modify $ addTacEntry $ TACEntry Nothing $ IndexLeft (Temp ThreeAddressCode.TAC.Var identifier loc ty) (Temp ThreeAddressCode.TAC.Fix (show lenght) loc Int) temp
+  return $ TACEntry Nothing $ IndexLeft (Temp ThreeAddressCode.TAC.Var identifier loc ty) (Temp ThreeAddressCode.TAC.Fix (show lenght) loc Int) temp
 
 tacGeneratorFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBlock  (POpenGraph (locGraph,_)) _ _)) = do
   res <- tacGeneratorBody body
@@ -91,14 +98,18 @@ tacGeneratorBody' (x:xs) =
     Stm statement -> do
         (tacs, label) <- tacGeneratorStatement statement
         tacs2 <- tacGeneratorBody' xs
+        -- attacco l'eventuale label che mi viene passata al prossimo blocco di tac
         return $ tacs ++ (attachLabelToFirstElem label tacs2)
     Fun fun _ -> do 
       tacGeneratorFunction fun
     DeclStm (Decl decMode declList _ ) -> do
-      mapM_ tacGeneratorDeclaration declList
-      return []
+      res <- mapM tacGeneratorDeclaration declList
+      res2 <- tacGeneratorBody' xs
+      return $ (concat res) ++ res2
     Block body@(BodyBlock (POpenGraph ((l,c), name)) _ _) -> tacGeneratorBody body
 
+
+-- ritorno una coppia (tacs, eventuale label da attaccare al tac successivo)
 tacGeneratorStatement statement = case statement of
   Break (PBreak (pos@(l,c), name)) _semicolon -> --do
     --typeCheckerSequenceStatement pos
