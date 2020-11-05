@@ -3,12 +3,9 @@ var b = 2;
 
 proc main()
 {
-    a = 3 + 3 * 5;
-    b = 4;
-    if (a < b) then
+    
     {
-        a = b;
-        b = 1;
     }
+    
     a = 66;
 }
