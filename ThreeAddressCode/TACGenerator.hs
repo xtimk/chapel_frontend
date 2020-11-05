@@ -82,15 +82,18 @@ tacGeneratorFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBl
   return []
 
 tacGeneratorBody (BodyBlock  (POpenGraph (locStart,_)) xs (PCloseGraph (locEnd,_))  ) = do
-  res <- mapM tacGeneratorBody' xs
-  return $ concat res
+  res <- tacGeneratorBody' xs
+  return res
 
-tacGeneratorBody' x =
+tacGeneratorBody' [] = return []
+tacGeneratorBody' (x:xs) =
   case x of
     Stm statement -> do
         (tacs, label) <- tacGeneratorStatement statement
-        return $ attachLabelToFirstElem label tacs
-    Fun fun _ -> tacGeneratorFunction fun
+        tacs2 <- tacGeneratorBody' xs
+        return $ tacs ++ (attachLabelToFirstElem label tacs2)
+    Fun fun _ -> do 
+      tacGeneratorFunction fun
     DeclStm (Decl decMode declList _ ) -> do
       mapM_ tacGeneratorDeclaration declList
       return []
