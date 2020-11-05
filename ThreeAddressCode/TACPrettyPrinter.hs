@@ -40,6 +40,11 @@ printTacBop bop = case bop of
 
 printTacUop uop = case uop of
     Neg -> " not "
+
+
+
+int2AddrTempName k = "t" ++ show k
+int2Label k = "L" ++ show k
     
 --printTacRel rel = case rel of
    -- LT -> " < "
