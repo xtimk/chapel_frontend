@@ -12,16 +12,23 @@ import Checker.SymbolTable
 import Utils.Type
 import Checker.SupTable
 
-type TacMonad a = State ([TACEntry], Temp, Int, BPTree BP) a
+type TacMonad a = State ([TACEntry], Temp, Int, BPTree BP, [Label], Maybe Label) a
 
 
-startTacState bpTree = ([], Temp ThreeAddressCode.TAC.Fix "" (0::Int,0::Int) Int,  0, bpTree)
+startTacState bpTree = ([], Temp ThreeAddressCode.TAC.Fix "" (0::Int,0::Int) Int,  0, bpTree, [], Nothing)
 
-addTacEntries tacEntry (tac,_te, _t, _b ) =
-    (tacEntry ++ tac,_te, _t,_b)
+addTacEntries tacEntry (tac,_te, _t, _b, _labels, _label ) =
+    (tacEntry ++ tac,_te, _t,_b, _labels, _label)
 
-addTacEntry tacEntry (tac,_te, _t, _b ) =
-    (tacEntry:tac,_te, _t,_b)
+addTacEntry tacEntry (tac,_te, _t, _b, _labels, _label ) =
+    (tacEntry:tac,_te, _t,_b, _labels, _label)
+
+addBTrueJmpLabel tacEntry (_tac,_te, _t, _b, _labels, _label ) =
+    (_tac,_te, _t,_b, _labels, _label)
+
+addBFalseJmpLabel tacEntry (_tac,_te, _t, _b, _labels, _label ) =
+    (_tac,_te, _t,_b, _labels, _label)
+
 
 tacGenerator (Progr p) = tacGeneratorModule p
 
@@ -141,11 +148,13 @@ tacGeneratorStatement statement = case statement of
     --typeCheckerGuard guard
     --typeCheckerBody WhileBlk (createId l c name) body
     return ([], Nothing)
-  If (PIf ((l,c), name)) guard _then body -> do
+  If (PIf ((l,c), name)) (SGuard _ guard _) _then body -> do
+    labelTrue <- newlabel (l,c)
+    labelFalse <- newlabel (l,c)
+    (resg,_) <- tacGeneratorGuard guard labelTrue labelFalse
     res <- tacGeneratorBody body
-    label <- newlabel
-    label2 <- newlabel
-    return $ ((attachLabelToFirstElem (Just (label, (l,c))) res), (Just (label2,(l,c)))) --uncomment
+
+    return $ (resg ++ (attachLabelToFirstElem labelTrue res), labelFalse ) --uncomment
     -- return []
   IfElse (PIf ((lIf,cIf), nameIf)) guard _then bodyIf (PElse ((lElse,cElse), nameElse)) bodyElse -> --do
     --typeCheckerGuard guard
@@ -178,7 +187,9 @@ attachLabelToFirstElem (Just label) ((TACEntry _l _e):xs) = (TACEntry (Just labe
 attachLabelToFirstElem Nothing xs = xs
 
 -- attachLabelToFirstElem label [] = []
-
+tacGeneratorGuard guard labelTrue labelFalse = do
+  res <- tacGeneratorExpression guard
+  return res
 
 tacGeneratorExpression exp = case exp of
     EAss e1 assign e2 -> tacGeneratorAssignment e1 assign e2
@@ -306,14 +317,12 @@ tacGeneratorExpression' e1 op e2 loc = do
 
 newtemp :: TacMonad String
 newtemp = do
-  (_tac, _temp , k , _bp) <- get
-  put (_tac, _temp , k + 1 , _bp)
+  (_tac, _temp , k , _bp, _labels, _label) <- get
+  put (_tac, _temp , k + 1 , _bp, _labels, _label)
   return $ int2AddrTempName k
 
-newlabel :: TacMonad String
-newlabel = do
-  (_tac, _temp , k , _bp) <- get
-  put (_tac, _temp , k + 1 , _bp)
-  return $ int2Label k
-
-
+--newlabel :: Loc -> TacMonad Label
+newlabel pos = do
+  (_tac, _temp , k , _bp, _labels, _label) <- get
+  put (_tac, _temp , k + 1 , _bp, _labels, _label)
+  return $ Just ((int2Label k),pos)
