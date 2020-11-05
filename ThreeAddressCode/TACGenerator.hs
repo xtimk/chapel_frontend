@@ -36,9 +36,9 @@ tacGeneratorExt (x:xs) = case x of
         res2 <- tacGeneratorExt xs
         return $ res ++ res2
     ExtFun fun -> do
-        tacGeneratorFunction fun -- todo
+        resfun <- tacGeneratorFunction fun -- todo
         res <- tacGeneratorExt xs
-        return res
+        return (resfun:res)
 
 
 tacGeneratorDeclaration x =
@@ -87,8 +87,8 @@ tacGeneratorArrayIdentifier temp@(Temp _ _ _ ty) expLoc depth lenght (PIdent (lo
 
 tacGeneratorFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBlock  (POpenGraph (locGraph,_)) _ _)) = do
   res <- tacGeneratorBody body
-  modify $ addTacEntries res
-  return []
+--modify $ addTacEntries res
+  return res
 
 tacGeneratorBody (BodyBlock  (POpenGraph (locStart,_)) xs (PCloseGraph (locEnd,_))  ) = do
   res <- tacGeneratorBody' xs
@@ -216,7 +216,7 @@ tacGeneratorArrayIndexing tempId exp (ArrayInit _ xs _ ) = do
 tacGeneratorArrayIndexing' tacs _ temp [] = return (tacs,temp) 
 tacGeneratorArrayIndexing' tacs depht temp ((ExprDec exp):xs) = do
   (tacId, tempId) <- tacGeneratorExpression exp
-  modify $ addTacEntries tacId
+  modify $ addTacEntries tacId -- DA ELIMINARE!!!
   if depht == 0
     then 
       tacGeneratorArrayIndexing' (tacs ++ tacId) (depht + 1) tempId xs
