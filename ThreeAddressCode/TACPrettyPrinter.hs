@@ -4,7 +4,7 @@ import ThreeAddressCode.TAC
 printTacEntries ::(Foldable t0) => t0 TACEntry -> IO ()
 printTacEntries = mapM_ printTacEntry
 
-printTacEntry (TACEntry label operation) = putStrLn $ (printLabel label) ++ printTacEntry' operation
+printTacEntry (TACEntry label operation) = putStrLn $ printLabel label ++ printTacEntry' operation
 
 printTacEntry' operation = case operation of
     Binary temp1 temp2 bop temp3 -> printTacTemp temp1 ++ " = " ++ printTacTemp temp2 ++  printTacBop bop ++ printTacTemp temp3
