@@ -48,34 +48,55 @@ tacGeneratorDeclaration x =
     AssgmArrayTypeDec ids _ _ _ _ exp -> tacGeneratorDeclExpression ids exp
     AssgmArrayDec ids _ _ _ exp ->  tacGeneratorDeclExpression ids exp
 
-tacGeneratorDeclExpression = tacGeneratorDeclExpression' 0 0
+tacGeneratorDeclExpression = tacGeneratorDeclExpression' []
 
-tacGeneratorDeclExpression' depth length ids decExp = 
+tacGeneratorDeclExpression' lengths ids decExp = 
   case decExp of 
-    ExprDecArray (ArrayInit _ expressions _ ) -> tacGeneratorDeclExpression'' depth length ids expressions
+    ExprDecArray (ArrayInit _ expressions _ ) -> tacGeneratorDeclExpression'' (0:lengths) ids expressions
     ExprDec exp -> do
       env <- get
       (tacEntry, temp) <- tacGeneratorExpression exp
       modify $ addTacEntries tacEntry
-      if depth == 0
+      if null lengths
         then mapM_ (tacGeneratorIdentifier temp) ids
-        else mapM_ (tacGeneratorArrayIdentifier temp (getExpPos exp) depth length ) ids
+        else mapM_ (tacGeneratorArrayIdentifier temp (getExpPos exp) lengths ) ids
       get
 
-tacGeneratorDeclExpression'' _ _ _ [] = get
-tacGeneratorDeclExpression'' depth length ids (x:xs) = do
-  tacGeneratorDeclExpression' (depth + 1) length ids x
-  tacGeneratorDeclExpression'' depth (length + 1) ids xs
+tacGeneratorDeclExpression'' _ _ [] = get
+tacGeneratorDeclExpression'' lengths@(x:xs) ids (y:ys) = do
+  tacGeneratorDeclExpression'' ((x+1):xs) ids ys
+  tacGeneratorDeclExpression' lengths ids y
   get
 
-
+--Vedere array qua
 tacGeneratorIdentifier temp@(Temp _ _ _ ty) (PIdent (loc, identifier)) = do
   modify $ addTacEntry $ TACEntry Nothing $ Nullary (Temp ThreeAddressCode.TAC.Var identifier loc ty) temp 
   get
 
-tacGeneratorArrayIdentifier temp@(Temp _ _ _ ty) expLoc depth lenght (PIdent (loc, identifier)) = do
-  modify $ addTacEntry $ TACEntry Nothing $ IndexLeft (Temp ThreeAddressCode.TAC.Var identifier loc ty) (Temp ThreeAddressCode.TAC.Fix (show lenght) loc Int) temp
-  get
+tacGeneratorArrayIdentifier temp@(Temp _ _ _ ty) expLoc lenghts id@(PIdent (loc, identifier)) = do
+  tacEnv <- get
+  let ty = getVarTypeTAC id tacEnv
+      arrayPos = arrayCalculatePosition ty lenghts
+      temp1 = Temp ThreeAddressCode.TAC.Var identifier loc ty
+      temp2 = Temp ThreeAddressCode.TAC.Fix (show arrayPos) loc Int in do
+        modify $ addTacEntry $ TACEntry Nothing $ IndexLeft temp1 temp2 temp
+        get
+
+arrayCalculatePosition ty lengths = (sizeof ty) * (arrayCalculatePosition' (reverse (getArrayDimensions ty)) lengths)
+  where
+    arrayCalculatePosition' _ [x] =  x 
+    arrayCalculatePosition' (y:ys) (x:xs) = x + y * (arrayCalculatePosition' ys xs)
+
+getArrayDimensions ar@(Array ty _) = (calculateBound ar):(getArrayDimensions ty)  
+getArrayDimensions ty = []
+
+calculateBound (Array ty (boundLeft, boundRight)) = 
+  let dimensionLeft = calculateBound' boundLeft
+      dimensionRight = calculateBound' boundRight in
+       dimensionRight - dimensionLeft 
+          where calculateBound' bound = case bound of
+                  Utils.Type.Fix lenght -> lenght
+                  Utils.Type.Var _ -> 0
 
 tacGeneratorFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBlock  (POpenGraph (locGraph,_)) _ _)) = 
   tacGeneratorBody  body
@@ -163,8 +184,8 @@ tacGeneratorExpression exp = case exp of
        return ([], temp)
     -- EFun funidentifier _ passedparams _ -> TacChecker [] $ Temp "pippo" (0,0) Bool--eFunTypeChecker funidentifier passedparams environment
     Evar identifier@(PIdent (loc, id)) -> do
-      (_,_,_,bptree) <- get
-      let ty = getVarTypeTAC identifier (bptree,(getCurIdOfTokenPos loc bptree)) in
+      tacEnv <- get
+      let ty = getVarTypeTAC identifier tacEnv in
         return ([], Temp ThreeAddressCode.TAC.Var id loc ty)
     Econst (Estring (PString desc)) ->tacGeneratorConstant desc String
     Econst (Eint (PInteger desc)) -> tacGeneratorConstant desc Int
