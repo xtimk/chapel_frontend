@@ -120,6 +120,9 @@ transPEmod x = case x of
 transPDef :: PDef -> Result
 transPDef x = case x of
   PDef string -> failure x
+transPNeg :: PNeg -> Result
+transPNeg x = case x of
+  PNeg string -> failure x
 transPElor :: PElor -> Result
 transPElor x = case x of
   PElor string -> failure x
@@ -280,6 +283,7 @@ transExp x = case x of
   Econst constant -> failure x
 transUnaryOperator :: UnaryOperator -> Result
 transUnaryOperator x = case x of
+  Negation pneg -> failure x
   Address pdef -> failure x
   Indirection petimes -> failure x
 transConstant :: Constant -> Result

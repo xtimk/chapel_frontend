@@ -114,6 +114,9 @@ newtype PEmod = PEmod ((Int,Int),String)
 newtype PDef = PDef ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
+newtype PNeg = PNeg ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
 newtype PElor = PElor ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
@@ -276,7 +279,8 @@ data Exp
     | Econst Constant
   deriving (Eq, Ord, Show, Read)
 
-data UnaryOperator = Address PDef | Indirection PEtimes
+data UnaryOperator
+    = Negation PNeg | Address PDef | Indirection PEtimes
   deriving (Eq, Ord, Show, Read)
 
 data Constant

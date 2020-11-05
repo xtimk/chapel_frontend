@@ -53,6 +53,7 @@ position token PEtimes ('*');
 position token PEdiv ('/');
 position token PEmod ('%');
 position token PDef ('&');
+position token PNeg ('!');
 position token PElor ({"||"});
 position token PEland ({"&&"});
 position token PEeq ({"=="});
@@ -224,6 +225,7 @@ _. Exp14 ::= Exp15 ;
 _. Exp15 ::= Exp16 ;
 InnerExp. Exp16 ::= POpenParenthesis Exp PCloseParenthesis ;
 
+Negation.      UnaryOperator ::= PNeg ;
 Address.      UnaryOperator ::= PDef ;
 Indirection.  UnaryOperator ::= PEtimes ;
 

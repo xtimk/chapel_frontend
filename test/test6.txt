@@ -16,7 +16,8 @@ else
 
 proc pile(z:int, a:int) : string{
 
-   var x = a + a;
+   var x = !a + a;
+   var m = !true;
 
 
    return "ciao";

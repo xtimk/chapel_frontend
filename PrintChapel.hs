@@ -199,6 +199,9 @@ instance Print AbsChapel.PEmod where
 instance Print AbsChapel.PDef where
   prt _ (AbsChapel.PDef (_,i)) = doc (showString i)
 
+instance Print AbsChapel.PNeg where
+  prt _ (AbsChapel.PNeg (_,i)) = doc (showString i)
+
 instance Print AbsChapel.PElor where
   prt _ (AbsChapel.PElor (_,i)) = doc (showString i)
 
@@ -425,6 +428,7 @@ instance Print AbsChapel.Exp where
 
 instance Print AbsChapel.UnaryOperator where
   prt i e = case e of
+    AbsChapel.Negation pneg -> prPrec i 0 (concatD [prt 0 pneg])
     AbsChapel.Address pdef -> prPrec i 0 (concatD [prt 0 pdef])
     AbsChapel.Indirection petimes -> prPrec i 0 (concatD [prt 0 petimes])
 
