@@ -80,7 +80,7 @@ tacGeneratorIdentifier temp@(Temp _ _ _ ty) (PIdent (loc, identifier)) =
 
 tacGeneratorArrayIdentifier temp@(Temp _ _ _ ty) expLoc lenghts id@(PIdent (loc, identifier)) = do
   tacEnv <- get
-  let ty = getVarTypeTAC id tacEnv
+  let (loc,ty) = getVarTypeTAC id tacEnv
       arrayPos = arrayCalculatePosition ty lenghts
       temp1 = Temp ThreeAddressCode.TAC.Var identifier loc ty
       temp2 = Temp ThreeAddressCode.TAC.Fix (show arrayPos) loc Int in
@@ -203,7 +203,7 @@ tacGeneratorExpression exp = case exp of
     -- EFun funidentifier _ passedparams _ -> TacChecker [] $ Temp "pippo" (0,0) Bool--eFunTypeChecker funidentifier passedparams environment
     Evar identifier@(PIdent (loc, id)) -> do
       tacEnv <- get
-      let ty = getVarTypeTAC identifier tacEnv in
+      let (loc,ty) = getVarTypeTAC identifier tacEnv in
         return ([], Temp ThreeAddressCode.TAC.Var id loc ty)
     Econst (Estring (PString desc)) ->tacGeneratorConstant desc String
     Econst (Eint (PInteger desc)) -> tacGeneratorConstant desc Int
