@@ -7,7 +7,7 @@ import Utils.AbsUtils
 type SymbolTable = Map String (String, EnvEntry)
 
 data EnvEntry = 
-  Variable Mode Loc Type
+  Variable Loc Type
   | Assignm Loc Type
   | Function Loc [[EnvEntry]] Type 
 --  | Constant Literal

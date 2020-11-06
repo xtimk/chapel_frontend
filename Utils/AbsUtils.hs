@@ -38,3 +38,15 @@ getExpPos exp = case exp of
 getAssignPos assgn = case assgn of 
     AssgnEq (PAssignmEq (loc,_)) ->  loc
     AssgnPlEq (PAssignmPlus (loc,_)) ->  loc
+
+getVarPos (Evar (PIdent ((l,c),_))) = (l,c)
+
+getVarId (Evar (PIdent ((l,c),indentifier))) = indentifier
+
+getAssignOpPos op = case op of
+  (AssgnEq (PAssignmEq ((l,c),_))) -> (l,c)
+  (AssgnPlEq (PAssignmPlus ((l,c),_))) -> (l,c)
+
+getAssignOpTok op = case op of
+  (AssgnEq (PAssignmEq ((l,c),t))) -> t
+  (AssgnPlEq (PAssignmPlus ((l,c),t))) -> t
