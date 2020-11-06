@@ -7,6 +7,7 @@ import AbsChapel
 import Prelude hiding (id)
 import qualified Data.Map as DMap
 import Checker.ErrorPrettyPrinter
+import ThreeAddressCode.TAC
 
 data BPTree a = Void | Node {
     id :: (String, (Loc, Loc)),
@@ -156,6 +157,18 @@ getVarTypeTAC (PIdent (loc, identifier)) (_,_,_,tree,_,_)  =
         symtable = uniteSymTables $ bpPathToList currentNode tree in
         case DMap.lookup identifier symtable of
             Just (_,var) -> var
+
+getFunctionParams identifier paramsPassed env = 
+    let Function _ params _ = getVarTypeTAC identifier env in 
+        head $ filter (matchParams paramsPassed) params
+
+matchParams [] [] = True
+matchParams _ [] = False
+matchParams [] _ = False
+matchParams  ((Temp _ _ _ y):ys) ((Variable _ ty):xs) = 
+    if y == ty
+        then matchParams ys xs 
+        else False
 
 getFunParams (PIdent (_, identifier)) (_,tree,currentNode) = 
     let symtable = uniteSymTables $ bpPathToList currentNode tree in

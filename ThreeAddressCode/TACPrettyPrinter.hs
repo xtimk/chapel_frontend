@@ -15,9 +15,9 @@ printTacEntry' operation = case operation of
     RelCondJump temp1 rel temp2 temp3 -> ""
     IndexLeft temp1 temp2 temp3 ->  printTacTemp temp1 ++ "[" ++ printTacTemp temp2 ++ "]" ++ " = " ++ printTacTemp temp3
     IndexRight temp1 temp2 temp3 -> printTacTemp temp1 ++ " = " ++  printTacTemp temp2 ++  "[" ++ printTacTemp temp3 ++ "]"
-    DeferenceRight temp1 temp2 -> ""
+    DeferenceRight temp1 temp2 -> printTacTemp temp1 ++ " = &" ++  printTacTemp temp2
     ReferenceLeft temp1 temp2 -> ""
-    RefereceneRight temp1 temp2 -> ""
+    ReferenceRight temp1 temp2 -> printTacTemp temp1 ++ " = *" ++  printTacTemp temp2
     SetParam temp -> "param " ++ printTacTemp temp 
     CallProc temp1 arity -> "call " ++ printTacTemp temp1 ++ ", " ++ show arity 
     CallFun temp1 temp2 arity -> printTacTemp temp1 ++ " = fcall " ++ printTacTemp temp2 ++ ", " ++ show arity 

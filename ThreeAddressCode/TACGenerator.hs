@@ -23,10 +23,10 @@ addTacEntries tacEntry (tac,_te, _t, _b, _labels, _label ) =
 addTacEntry tacEntry (tac,_te, _t, _b, _labels, _label ) =
     (tacEntry:tac,_te, _t,_b, _labels, _label)
 
-addBTrueJmpLabel tacEntry (_tac,_te, _t, _b, _labels, _label ) =
+addBTrueJmpLabel _ (_tac,_te, _t, _b, _labels, _label ) =
     (_tac,_te, _t,_b, _labels, _label)
 
-addBFalseJmpLabel tacEntry (_tac,_te, _t, _b, _labels, _label ) =
+addBFalseJmpLabel _ (_tac,_te, _t, _b, _labels, _label ) =
     (_tac,_te, _t,_b, _labels, _label)
 
 
@@ -218,29 +218,49 @@ tacGeneratorConstant (loc, id) ty = return ([], Temp ThreeAddressCode.TAC.Fix id
 
 tacCheckerBinaryBoolean loc e1 op e2 = return ([], Temp ThreeAddressCode.TAC.Fix "pippo" (0,0) Int)
 
-tacGeneratorFunctionCall identifier@(PIdent (_, id)) params = do
-  tacParameters <- mapM tacGeneratorFunctionParameter params
+tacGeneratorFunctionCall identifier@(PIdent (_, id)) paramsPassed = do
   tacEnv <- get
-  let tacExp = concat $ map fst tacParameters 
-      tacPar = map snd tacParameters 
-      tacs = tacPar ++ tacExp
+  tacParameters <- mapM tacGeneratorFunctionParameter $ reverse paramsPassed
+  let tacExp = concat $ map fst tacParameters
+      tempPars =  map snd tacParameters
+      funParams = getFunctionParams identifier tempPars tacEnv 
       Function loc _ retTy = getVarTypeTAC identifier tacEnv
-      parameterLenght = length params
-      funTemp = Temp ThreeAddressCode.TAC.Var id loc retTy in
-        case retTy of
-          Utils.Type.Void -> let tacEntry = TACEntry Nothing $ CallProc funTemp parameterLenght in 
-                      return (tacEntry:tacs,  funTemp)
-          _ -> do
-            idResFun <- newtemp
-            let idResTemp = Temp ThreeAddressCode.TAC.Var idResFun loc retTy
-                tacEntry = TACEntry Nothing $ CallFun idResTemp funTemp parameterLenght in
-                  return (tacEntry:tacs, idResTemp)
+      parameterLenght = length paramsPassed
+      funTemp = Temp ThreeAddressCode.TAC.Var id loc retTy in do
+        tacPar <- mapM tacGenerationTempParameter $ zip funParams tempPars
+        let 
+          tacsTemp = map (tacGenerationEntryParameter.snd) tacPar
+          tacs = tacsTemp ++ concat (map fst tacPar) ++ tacExp in 
+          case retTy of
+            Utils.Type.Void -> let tacEntry = TACEntry Nothing $ CallProc funTemp parameterLenght in 
+                      return (tacEntry:tacs,funTemp)
+            _ -> do
+              idResFun <- newtemp
+              let idResTemp = Temp ThreeAddressCode.TAC.Var idResFun loc retTy
+                  tacEntry = TACEntry Nothing $ CallFun idResTemp funTemp parameterLenght in
+                    return (tacEntry:tacs, idResTemp)
 
 
-tacGeneratorFunctionParameter (PassedPar exp) = do
-  (tacs, temp) <- tacGeneratorExpression exp
-  let tacEntry = TACEntry Nothing $ SetParam temp in
-    return (tacs, tacEntry)
+tacGeneratorFunctionParameter (PassedPar exp) = tacGeneratorExpression exp
+
+tacGenerationEntryParameter temp = TACEntry Nothing $ SetParam temp
+
+tacGenerationTempParameter ((Variable locMode tyPar),temp@(Temp _ _ _ tyTemp)) = 
+    case (tyPar, tyTemp) of
+      (Reference _, Reference _)  -> return ([], temp)
+      (Reference tyFound, _)  -> do
+        idVal <- newtemp 
+        let valTemp = Temp ThreeAddressCode.TAC.Var idVal locMode tyFound
+            valEntry = TACEntry Nothing $ ReferenceRight valTemp temp in
+              return ([valEntry],valTemp )
+      (_, Reference tyFound) -> do
+        idRef <- newtemp
+        let refTemp = Temp ThreeAddressCode.TAC.Var idRef locMode tyFound
+            refEntry = TACEntry Nothing $ DeferenceRight refTemp temp in
+              return ([refEntry], refTemp)
+      _ -> return ([], temp)
+
+
     
 
 tacGeneratorArrayIndexing var@(Evar identifier@(PIdent (_, id))) arrayDecl = do
