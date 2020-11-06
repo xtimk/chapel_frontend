@@ -13,9 +13,11 @@ proc main(l: int, z:int)
         b = 2;
         b = 8;
     }
-    main(10 + 10, a* 4 + 5);
+    var jj = main(10 + 10, a* 4 + 5);
 
     a = 66;
     b = 10;
+
+    return a;
 
 }
