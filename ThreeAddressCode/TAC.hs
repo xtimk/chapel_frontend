@@ -22,7 +22,7 @@ data TACOperation =
     IndexRight Temp Temp Temp |
     DeferenceRight Temp Temp |
     ReferenceLeft Temp Temp |
-    RefereceneRight Temp Temp |
+    ReferenceRight Temp Temp |
     SetParam Temp |
     CallProc Temp Int |
     CallFun Temp Temp Int |

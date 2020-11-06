@@ -8,3 +8,9 @@ data Type = Int | Real | Bool | Void | Char | String | Infered | Array Type (Bou
 
 data Bound = Var String | Fix Int
   deriving (Show)
+
+instance Eq Type where
+    x == y = case (x,y) of
+      (Reference ty1, ty2) -> ty1 == ty2
+      (ty1,Reference ty2) -> ty1 == ty2
+      (_,_) -> show x == show y
