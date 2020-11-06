@@ -18,9 +18,9 @@ printTacEntry' operation = case operation of
     DeferenceRight temp1 temp2 -> ""
     ReferenceLeft temp1 temp2 -> ""
     RefereceneRight temp1 temp2 -> ""
-    SetParam temp -> ""
-    CallProc temp1 temp2 -> ""
-    CallFun temp1 temp2 temp3 -> ""
+    SetParam temp -> "param " ++ printTacTemp temp 
+    CallProc temp1 arity -> "call " ++ printTacTemp temp1 ++ ", " ++ show arity 
+    CallFun temp1 temp2 arity -> printTacTemp temp1 ++ " = fcall " ++ printTacTemp temp2 ++ ", " ++ show arity 
     ReturnVoid -> ""
     ReturnValue temp -> ""
 

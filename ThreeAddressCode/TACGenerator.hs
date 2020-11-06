@@ -88,7 +88,7 @@ tacGeneratorIdentifier temp@(Temp _ _ _ ty) (PIdent (loc, identifier)) =
 
 tacGeneratorArrayIdentifier temp@(Temp _ _ _ ty) expLoc lenghts id@(PIdent (loc, identifier)) = do
   tacEnv <- get
-  let (loc,ty) = getVarTypeTAC id tacEnv
+  let Variable loc ty = getVarTypeTAC id tacEnv
       arrayPos = arrayCalculatePosition ty lenghts
       temp1 = Temp ThreeAddressCode.TAC.Var identifier loc ty
       temp2 = Temp ThreeAddressCode.TAC.Fix (show arrayPos) loc Int in
@@ -162,21 +162,12 @@ tacGeneratorStatement statement = case statement of
     --typeCheckerBody IfThenBlk (createId lIf cIf nameIf) bodyIf
     --typeCheckerBody IfElseBlk (createId lElse cElse nameElse) bodyElse
     return []
-  StExp exp@(EFun funidentifier _ params _) _semicolon-> --do
-    --environment <- get
-    --let DataChecker ty errors = eFunTypeChecker funidentifier params environment in
-     -- modify $ addErrorsCurrentNode errors
-    return []
+  StExp (EFun funidentifier _ passedparams _) _semicolon-> do
+    (tacs, _) <- tacGeneratorFunctionCall funidentifier passedparams
+    return tacs
   StExp exp _semicolon -> do
-    env <- get
-    (tacEntry, temp) <- tacGeneratorExpression exp
-    -- modify $ addTacEntries (tacEntry)
-    return $ reverse tacEntry --uncomment
-    -- return []
-    --env <- get
-   -- let DataChecker _ errors = typeCheckerExpression env exp in do
-       -- modify $ addErrorsCurrentNode errors
-       -- get
+    (tacEntry, _) <- tacGeneratorExpression exp
+    return $ reverse tacEntry
   RetVal ret exp _semicolon -> return [] --do
     --(_s,tree,current_id) <- get
     --let DataChecker tyret errs2 = typeCheckerExpression (_s,tree,current_id) exp in do
@@ -211,10 +202,10 @@ tacGeneratorExpression exp = case exp of
     --Epreop (Indirection _) e1 -> TacChecker [] $ Temp "pippo" (0,0) Bool-- typeCheckerIndirection environment e1
     --Epreop (Address _) e1 -> TacChecker [] $ Temp "pippo" (0,0) Bool-- typeCheckerAddress environment e1
     Earray expIdentifier arDeclaration -> tacGeneratorArrayIndexing expIdentifier arDeclaration
-    -- EFun funidentifier _ passedparams _ -> TacChecker [] $ Temp "pippo" (0,0) Bool--eFunTypeChecker funidentifier passedparams environment
+    EFun funidentifier _ passedparams _ -> tacGeneratorFunctionCall funidentifier passedparams
     Evar identifier@(PIdent (_, id)) -> do
       tacEnv <- get
-      let (loc,ty) = getVarTypeTAC identifier tacEnv in
+      let Variable loc ty = getVarTypeTAC identifier tacEnv in
         return ([], Temp ThreeAddressCode.TAC.Var id loc ty)
     Econst (Estring (PString desc)) ->tacGeneratorConstant desc String
     Econst (Eint (PInteger desc)) -> tacGeneratorConstant desc Int
@@ -227,9 +218,30 @@ tacGeneratorConstant (loc, id) ty = return ([], Temp ThreeAddressCode.TAC.Fix id
 
 tacCheckerBinaryBoolean loc e1 op e2 = return ([], Temp ThreeAddressCode.TAC.Fix "pippo" (0,0) Int)
 
+tacGeneratorFunctionCall identifier@(PIdent (_, id)) params = do
+  tacParameters <- mapM tacGeneratorFunctionParameter params
+  tacEnv <- get
+  let Function loc _ retTy = getVarTypeTAC identifier tacEnv
+      parameterLenght = length params
+      funTemp = Temp ThreeAddressCode.TAC.Var id loc retTy in
+        case retTy of
+          Utils.Type.Void -> let tacEntry = TACEntry Nothing $ CallProc funTemp parameterLenght in 
+                      return ((concat tacParameters) ++ [tacEntry],  funTemp)
+          _ -> do
+            idResFun <- newtemp
+            let idResTemp = Temp ThreeAddressCode.TAC.Var idResFun loc retTy
+                tacEntry = TACEntry Nothing $ CallFun idResTemp funTemp parameterLenght in
+                  return ((concat tacParameters) ++ [tacEntry],  funTemp)
+
+
+tacGeneratorFunctionParameter (PassedPar exp) = do
+  (tacs, temp) <- tacGeneratorExpression exp
+  let tacEntry = TACEntry Nothing $ SetParam temp in
+    return (tacs ++ [tacEntry])
+
 tacGeneratorArrayIndexing var@(Evar identifier@(PIdent (_, id))) arrayDecl = do
   tacEnv <- get
-  let (loc,ty) = getVarTypeTAC identifier tacEnv in do
+  let Variable loc ty = getVarTypeTAC identifier tacEnv in do
     (tacsAdd, temp) <- tacGeneratorArrayIndexing' var arrayDecl
     idArVal <- newtemp
     let tempArrayVal = Temp ThreeAddressCode.TAC.Var idArVal loc ty 
@@ -285,7 +297,7 @@ tacGenerationArrayPosition (ArrayInit _ expressions _ ) = tacGenerationArrayPosi
       (tacOther, tempOthers) <- tacGenerationArrayPosition' xs
       return ((tacExp ++ tacOther), tempExp:tempOthers)
 
-tacGenerationArrayPosAdd (loc,ty) temps = do
+tacGenerationArrayPosAdd (Variable loc ty) temps = do
   (tacs, temp) <- tacGenerationArrayPosAdd' (tail (reverse (getArrayDimensions ty))) (reverse temps)
   idSize <- newtemp
   let size = sizeof ty

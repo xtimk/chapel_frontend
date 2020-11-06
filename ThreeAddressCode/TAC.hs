@@ -24,8 +24,8 @@ data TACOperation =
     ReferenceLeft Temp Temp |
     RefereceneRight Temp Temp |
     SetParam Temp |
-    CallProc Temp Temp |
-    CallFun Temp Temp Temp |
+    CallProc Temp Int |
+    CallFun Temp Temp Int |
     ReturnVoid |
     ReturnValue Temp 
     deriving (Show)

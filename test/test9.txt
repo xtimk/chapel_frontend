@@ -1,8 +1,9 @@
 var a = 1;
 var b = 2;
 
-proc main()
+proc main(l: int, z:int)
 {
+
     a = 3 + 3 * 5;
     b = 4;
     if (a < b) then
@@ -12,6 +13,9 @@ proc main()
         b = 2;
         b = 8;
     }
+    main(10 + 10, a* 4 + 5);
+
     a = 66;
     b = 10;
+
 }
