@@ -221,23 +221,27 @@ tacCheckerBinaryBoolean loc e1 op e2 = return ([], Temp ThreeAddressCode.TAC.Fix
 tacGeneratorFunctionCall identifier@(PIdent (_, id)) params = do
   tacParameters <- mapM tacGeneratorFunctionParameter params
   tacEnv <- get
-  let Function loc _ retTy = getVarTypeTAC identifier tacEnv
+  let tacExp = concat $ map fst tacParameters 
+      tacPar = map snd tacParameters 
+      tacs = tacPar ++ tacExp
+      Function loc _ retTy = getVarTypeTAC identifier tacEnv
       parameterLenght = length params
       funTemp = Temp ThreeAddressCode.TAC.Var id loc retTy in
         case retTy of
           Utils.Type.Void -> let tacEntry = TACEntry Nothing $ CallProc funTemp parameterLenght in 
-                      return ((concat tacParameters) ++ [tacEntry],  funTemp)
+                      return (tacEntry:tacs,  funTemp)
           _ -> do
             idResFun <- newtemp
             let idResTemp = Temp ThreeAddressCode.TAC.Var idResFun loc retTy
                 tacEntry = TACEntry Nothing $ CallFun idResTemp funTemp parameterLenght in
-                  return ((concat tacParameters) ++ [tacEntry],  funTemp)
+                  return (tacEntry:tacs, idResTemp)
 
 
 tacGeneratorFunctionParameter (PassedPar exp) = do
   (tacs, temp) <- tacGeneratorExpression exp
   let tacEntry = TACEntry Nothing $ SetParam temp in
-    return (tacs ++ [tacEntry])
+    return (tacs, tacEntry)
+    
 
 tacGeneratorArrayIndexing var@(Evar identifier@(PIdent (_, id))) arrayDecl = do
   tacEnv <- get

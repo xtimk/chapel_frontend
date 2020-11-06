@@ -50,7 +50,7 @@ typeCheckerFunction (FunDec (PProc (loc@(l,c),_) ) signature body@(BodyBlock  (P
         modify (\(_s, tree,_i) -> (_s, updateTree (modFunRetType (getFunName signature) Utils.Type.Void node) tree , _i ))
       get    
     _otherwhise -> do 
-      modify $ addErrorsCurrentNode [ErrorChecker (l,c) (ErrorMissingReturn (getFunName signature))]
+      --modify $ addErrorsCurrentNode [ErrorChecker (l,c) (ErrorMissingReturn (getFunName signature))]
       get
   get
 
