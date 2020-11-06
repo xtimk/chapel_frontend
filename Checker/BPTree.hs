@@ -155,9 +155,7 @@ getVarTypeTAC (PIdent (loc, identifier)) (_,_,_,tree,_,_)  =
     let currentNode = getCurIdOfTokenPos loc tree
         symtable = uniteSymTables $ bpPathToList currentNode tree in
         case DMap.lookup identifier symtable of
-            Just (_,Variable loc t) -> (loc,t)
-            Just (_,Function loc _ t) -> (loc,t)
-            -- Nothing -> DataChecker Checker.SymbolTable.Error [ErrorChecker (l,c) $ Checker.SymbolTable.ErrorVarNotDeclared identifier]
+            Just (_,var) -> var
 
 getFunParams (PIdent (_, identifier)) (_,tree,currentNode) = 
     let symtable = uniteSymTables $ bpPathToList currentNode tree in
