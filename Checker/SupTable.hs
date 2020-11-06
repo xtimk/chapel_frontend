@@ -23,6 +23,9 @@ supTac Bool Bool = Bool
 --Infered 
 sup _ _ _ Infered ty = DataChecker ty []
 sup _ _ _ ty Infered = DataChecker ty []
+--Reference
+sup mode id loc (Reference ty1) ty2 = sup mode id loc ty1 ty2
+sup mode id loc ty1 (Reference ty2) = sup mode id loc ty1 ty2
 --Pointer
 sup mode id loc (Pointer _p1) (Pointer _p2) = let DataChecker ty errors = sup mode id loc _p1 _p2 in
   DataChecker (Pointer ty) errors

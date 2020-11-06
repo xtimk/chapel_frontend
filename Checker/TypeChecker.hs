@@ -6,8 +6,6 @@ import AbsChapel
 import Checker.SymbolTable
 import Checker.BPTree
 import Checker.SupTable
-import Data.Maybe
-import Debug.Trace
 import Utils.AbsUtils
 import Utils.Type
 import Checker.ErrorPrettyPrinter
@@ -18,10 +16,10 @@ startState = (DMap.empty, Checker.BPTree.Node {Checker.BPTree.id = ("0", ((0::In
 typeChecker (Progr p) = typeCheckerModule p
 
 typeCheckerModule (Mod m) = do
-  modify (addFunctionOnCurrentNode "writeInt" (-1,-1) [[Variable Normal (-1,-1) Int]] Utils.Type.Void)
-  modify (addFunctionOnCurrentNode "writeReal" (-1,-1) [[Variable Normal (-1,-1) Real]] Utils.Type.Void)
-  modify (addFunctionOnCurrentNode "writeChar" (-1,-1) [[Variable Normal (-1,-1) Char]] Utils.Type.Void)
-  modify (addFunctionOnCurrentNode "writeString" (-1,-1) [[Variable Normal (-1,-1) String]] Utils.Type.Void)
+  modify (addFunctionOnCurrentNode "writeInt" (-1,-1) [[Variable (-1,-1) Int]] Utils.Type.Void)
+  modify (addFunctionOnCurrentNode "writeReal" (-1,-1) [[Variable (-1,-1) Real]] Utils.Type.Void)
+  modify (addFunctionOnCurrentNode "writeChar" (-1,-1) [[Variable  (-1,-1) Char]] Utils.Type.Void)
+  modify (addFunctionOnCurrentNode "writeString" (-1,-1) [[Variable  (-1,-1) String]] Utils.Type.Void)
   modify (addFunctionOnCurrentNode "readInt" (-1,-1) [] Utils.Type.Int)
   modify (addFunctionOnCurrentNode "readReal" (-1,-1) [] Utils.Type.Real)
   modify (addFunctionOnCurrentNode "readChar" (-1,-1) [] Utils.Type.Char)
@@ -30,24 +28,24 @@ typeCheckerModule (Mod m) = do
   get
 
 createId l c name = show l ++ "_" ++ show c ++ "_" ++ name
-createId' l c name = name
+createId' _ _ name = name
 
 typeCheckerExt [] = get
 
 typeCheckerExt (x:xs) = case x of
-    ExtDecl (Decl decMode declList _ ) -> do
+    ExtDecl (Decl _ declList _ ) -> do
         mapM_ typeCheckerDeclaration declList
         typeCheckerExt xs
     ExtFun fun -> do
         typeCheckerFunction fun
         typeCheckerExt xs
 
-typeCheckerFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBlock  (POpenGraph (locGraph,_)) _ _)) = do
+typeCheckerFunction (FunDec (PProc (loc@(l,c),_) ) signature body@(BodyBlock  (POpenGraph (locGraph,_)) _ _)) = do
   typeCheckerSignature loc locGraph signature
   typeCheckerBody ProcedureBlk (createId' l c (getFunName signature)) body
   env@(_s,tree,current_id) <- get
   case getVarType (getFunNamePident signature) env of
-    DataChecker Infered e -> do
+    DataChecker Infered _ -> do
       let node = findNodeById current_id tree in
         modify (\(_s, tree,_i) -> (_s, updateTree (modFunRetType (getFunName signature) Utils.Type.Void node) tree , _i ))
       get    
@@ -56,11 +54,11 @@ typeCheckerFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBlo
       get
   get
 
-getFunName (SignNoRet (PIdent ((l,c),identifier)) (FunParams _ params _)) = identifier
-getFunName (SignWRet (PIdent ((l,c),identifier)) (FunParams _ params _) _ types) = identifier
+getFunName (SignNoRet (PIdent (_,identifier)) _) = identifier
+getFunName (SignWRet (PIdent (_,identifier)) _ _ _) = identifier
 
-getFunNamePident (SignNoRet r@(PIdent ((l,c),identifier)) (FunParams _ params _)) = r
-getFunNamePident (SignWRet r@(PIdent ((l,c),identifier)) (FunParams _ params _) _ types) = r
+getFunNamePident (SignNoRet r@(PIdent _) _) = r
+getFunNamePident (SignWRet r@(PIdent _) _ _ _) = r
 
 typeCheckerSignature locstart locEnd signature = case signature of
   SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' locstart locEnd identifier params Infered
@@ -82,7 +80,7 @@ typeCheckerSignature' locstart locEnd ident@(PIdent (loc,identifier)) params typ
                 put (symtable, updateTree (addEntryNode identifier (Function loc [variables] types) node) tree, currentIdNode )
                 get
               Just entryFound -> case entryFound of 
-                Variable _ locVar t -> do
+                Variable locVar _ -> do
                   modify $ addErrorsCurrentNode [ErrorChecker loc $ ErrorVarAlreadyDeclared locVar identifier]
                   get
                 Function locFun varOfvar t -> 
@@ -106,10 +104,10 @@ typeCheckerSignatureOverloading identifier loc locFun var (x:xs) = case (var,x) 
     else errors
 
 typeCheckerSignatureOverloading' identifier loc locFun [] [] = [ErrorChecker loc $ ErrorSignatureAlreadyDeclared locFun identifier]
-typeCheckerSignatureOverloading' identifier loc locFun [] _ = []
-typeCheckerSignatureOverloading' identifier loc locFun _ [] = []
-typeCheckerSignatureOverloading' identifier loc locFun ((Variable m1 l1 ty1):xs) ((Variable m2 l2 ty2):ys) = 
-  if show m1 == show m2 &&  show ty1 == show ty2
+typeCheckerSignatureOverloading' _ _ _ [] _ = []
+typeCheckerSignatureOverloading' _ _ _ _ [] = []
+typeCheckerSignatureOverloading' identifier loc locFun ((Variable _ ty1):xs) ((Variable _ ty2):ys) = 
+  if show ty1 == show ty2
   then typeCheckerSignatureOverloading' identifier loc locFun xs ys
   else []
   
@@ -131,9 +129,13 @@ typeCheckerParam' mode types identifier =
     get
 
 typeCheckerParam'' (PIdent (loc,identifier)) mode ty env@(sym,_t,_i) = case DMap.lookup identifier sym of
-  Just (varAlreadyDeclName, Variable _ (varAlreadyDecLine,varAlreadyDecColumn) varAlreadyDecTypes) -> 
+  Just (_, Variable (varAlreadyDecLine,varAlreadyDecColumn) _) -> 
     addErrorsCurrentNode [ErrorChecker (varAlreadyDecLine,varAlreadyDecColumn) $ ErrorVarAlreadyDeclared loc identifier] env
-  Nothing -> (DMap.insert identifier (identifier, Variable mode loc ty) sym,_t,_i)
+  Nothing -> (DMap.insert identifier (identifier, Variable loc (typeCheckerModeParameter mode ty)) sym,_t,_i)
+
+typeCheckerModeParameter mode ty = case mode of
+  Ref -> Reference ty
+  _ -> ty
   
 typeCheckerBody blkType identifier (BodyBlock  (POpenGraph (locStart,_)) xs (PCloseGraph (locEnd,_))  ) = do
   -- create new child for the blk and enter in it
@@ -141,15 +143,15 @@ typeCheckerBody blkType identifier (BodyBlock  (POpenGraph (locStart,_)) xs (PCl
   let actualNode = findNodeById current_id tree; child = createChild identifier blkType locStart locEnd actualNode in
      put (DMap.empty, addChild actualNode (setSymbolTable sym child) tree, (identifier, (locStart, locEnd)))
   -- process body
-  mapM_ (typeCheckerBody' blkType) xs
+  mapM_ typeCheckerBody' xs
   modify(\(_s,_t,_) -> (_s,_t,current_id))
   get
 
-typeCheckerBody' blkType x = do
+typeCheckerBody' x = do
   case x of
     Stm statement -> typeCheckerStatement statement
     Fun fun _ -> typeCheckerFunction fun
-    DeclStm (Decl decMode declList _ ) -> do
+    DeclStm (Decl _ declList _ ) -> do
       mapM_ typeCheckerDeclaration declList
       get
     Block body@(BodyBlock (POpenGraph ((l,c), name)) _ _) -> typeCheckerBody SimpleBlk (createId l c name) body
@@ -168,10 +170,10 @@ typeCheckerSequenceStatement pos = do
       get
 
 typeCheckerStatement statement = case statement of
-  Break (PBreak (pos@(l,c), name)) _semicolon -> do
+  Break (PBreak (pos, _)) _semicolon -> do
     typeCheckerSequenceStatement pos
     get
-  Continue (PContinue (pos@(l,c), name)) _semicolon -> do
+  Continue (PContinue (pos, _)) _semicolon -> do
     typeCheckerSequenceStatement pos
     get 
   DoWhile (Pdo ((l,c),name)) _while body guard -> do
@@ -191,9 +193,9 @@ typeCheckerStatement statement = case statement of
     typeCheckerBody IfThenBlk (createId lIf cIf nameIf) bodyIf
     typeCheckerBody IfElseBlk (createId lElse cElse nameElse) bodyElse
     get
-  StExp exp@(EFun funidentifier _ params _) _semicolon-> do
+  StExp (EFun funidentifier _ params _) _semicolon-> do
     environment <- get
-    let DataChecker ty errors = eFunTypeChecker funidentifier params environment in
+    let DataChecker _ errors = eFunTypeChecker funidentifier params environment in
       modify $ addErrorsCurrentNode errors
     get
   StExp exp _semicolon -> do
@@ -213,15 +215,15 @@ typeCheckerReturn (PReturn (pos, _ret)) tyret = do
   case findProcedureGetBlkType tree current_id of
     ProcedureBlk -> do -- devo controllare quì che il tipo di ritorno nel return sia compatibile con il tipo di ritorno della funzione
       case getFunRetType (_s,tree,current_id) of
-        DataChecker Infered e -> do
+        DataChecker Infered _ -> do
             modify $ setReturnType tyret
             get
         _oth -> let
           (DataChecker tyfun errs1) = getFunRetType (_s,tree,current_id);
-          (DataChecker t errs) = sup SupRet (getFunNameFromEnv (_s,tree,current_id)) pos tyfun tyret in
+          (DataChecker _ errs) = sup SupRet (getFunNameFromEnv (_s,tree,current_id)) pos tyfun tyret in
           do
             get
-            let node = findNodeById current_id tree ; errors = errs1 ++ errs in
+            let errors = errs1 ++ errs in
               modify $ addErrorsCurrentNode errors
             get
       get
@@ -232,18 +234,6 @@ typeCheckerReturn (PReturn (pos, _ret)) tyret = do
       get
   get
 
-getVarPos (Evar (PIdent ((l,c),indentifier))) = (l,c)
-
-getVarId (Evar (PIdent ((l,c),indentifier))) = indentifier
-
-getAssignOpPos op = case op of
-  (AssgnEq (PAssignmEq ((l,c),_))) -> (l,c)
-  (AssgnPlEq (PAssignmPlus ((l,c),_))) -> (l,c)
-
-getAssignOpTok op = case op of
-  (AssgnEq (PAssignmEq ((l,c),t))) -> t
-  (AssgnPlEq (PAssignmPlus ((l,c),t))) -> t
-
 typeCheckerGuard (SGuard _ expression _) = do
    (_s,tree,current_id) <- get
    let DataChecker ty errors = typeCheckerExpression (_s,tree,current_id) expression in do
@@ -251,8 +241,7 @@ typeCheckerGuard (SGuard _ expression _) = do
      case ty of
        Bool -> get
        _otherwhise -> do
-        let node = findNodeById current_id tree in
-          modify $ addErrorsCurrentNode  [ErrorChecker (getExpPos expression) ErrorGuardNotBoolean]
+        modify $ addErrorsCurrentNode  [ErrorChecker (getExpPos expression) ErrorGuardNotBoolean]
         get
 
 typeCheckerDeclaration x = do
@@ -291,7 +280,7 @@ typeCheckerIdentifiersArray ids assgn array typeLeft typeRight = do
 
 typeCheckerBuildArrayType environment (ArrayDeclIndex _ array _) = typeCheckerBuildArrayType' environment array
   where
-    typeCheckerBuildArrayType' enviroment [] types = DataChecker types []
+    typeCheckerBuildArrayType' _ [] types = DataChecker types []
     typeCheckerBuildArrayType' enviroment (array:arrays) types = 
       let DataChecker bounds errors = typeCheckerBuildArrayParameter enviroment array; DataChecker typesFound othersErrors = typeCheckerBuildArrayType' enviroment arrays types in 
         DataChecker (Array typesFound bounds) (errors ++ othersErrors)
@@ -301,7 +290,7 @@ typeCheckerIdentifiers identifiers assgn typeLeft typeRight = do
   get
 
 typeCheckerIdentifier assgn typeLeft typeRight id@(PIdent (loc, identifier)) = do
-  (_s,tree,current_id) <- get
+  (_s,_,current_id) <- get
   let DataChecker ty errors = sup SupDecl identifier loc typeLeft typeRight in do
     modify $ addErrorsCurrentNode (errors ++ typeCheckerAssignmentDecl assgn)
     case ty of
@@ -312,17 +301,17 @@ typeCheckerIdentifier assgn typeLeft typeRight id@(PIdent (loc, identifier)) = d
 
 typeCheckerAssignmentDecl assgnm = case assgnm of
   Nothing -> []
-  Just (AssgnEq (PAssignmEq (loc,_))) -> []
+  Just (AssgnEq (PAssignmEq (_,_))) -> []
   Just (AssgnPlEq (PAssignmPlus (loc,_))) -> [ErrorChecker loc ErrorAssignDecl]
 
 typeCheckerVariable (PIdent ((l,c), identifier)) tree types currentIdNode = 
   let node = findNodeById currentIdNode tree in case DMap.lookup identifier (getSymbolTable node) of
-      Just (varAlreadyDeclName, Variable _ (varAlreadyDecLine,varAlreadyDecColumn) varAlreadyDecTypes) -> 
+      Just (_, Variable (varAlreadyDecLine,varAlreadyDecColumn) _) -> 
         updateTree (addErrorsNode node [ErrorChecker (varAlreadyDecLine,varAlreadyDecColumn) $ ErrorVarAlreadyDeclared (l,c) identifier]) tree
-      Nothing -> updateTree (addEntryNode identifier (Variable Normal (l,c) types) node) tree
+      Nothing -> updateTree (addEntryNode identifier (Variable (l,c) types) node) tree
 
 typeCheckerDeclExpression environment decExp = case decExp of
-  ExprDecArray arrays@(ArrayInit _ expression@(exp:exps) _) -> foldl (typeCheckerDeclArrayExp environment) (DataChecker (Array Infered (Fix 0, Fix 0)) []) expression
+  ExprDecArray (ArrayInit _ expression _) -> foldl (typeCheckerDeclArrayExp environment) (DataChecker (Array Infered (Fix 0, Fix 0)) []) expression
   ExprDec exp -> typeCheckerExpression environment exp
 
 typeCheckerDeclArrayExp environment types expression = case (typeCheckerDeclExpression environment expression, types) of
@@ -349,7 +338,7 @@ typeCheckerBuildArrayBound enviroment lBound rBound =
         ETrue (PTrue (loc,id)) -> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundArray  Bool id]
         EFalse (PFalse (loc,id)) -> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundArray  Bool id]
         Estring (PString (loc,id)) -> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundArray  String id]
-        Eint (PInteger (loc,dimension)) -> DataChecker (Fix $ read dimension) []
+        Eint (PInteger (_,dimension)) -> DataChecker (Fix $ read dimension) []
 
 typeCheckerExpression environment exp = case exp of
     EAss e1 assign e2 -> typeCheckerAssignment environment e1 assign e2
@@ -384,10 +373,10 @@ typeCheckerAssignment environment e1 assign e2 =
   let DataChecker tyLeft errLeft = typeCheckerLeftExpression assign environment e1;
       DataChecker tyRight errRight = typeCheckerExpression environment e2 in 
         case assign of
-          AssgnEq (PAssignmEq (loc,_)) -> 
+          AssgnEq (PAssignmEq (_,_)) -> 
             let DataChecker ty errors = sup SupDecl "" (getExpPos e1) tyLeft tyRight; in 
                   DataChecker ty (errLeft ++ errRight ++ errors)
-          AssgnPlEq (PAssignmPlus (loc,_)) ->  
+          AssgnPlEq (PAssignmPlus (_,_)) ->  
             let DataChecker ty3 errors3 = sup SupPlus "" (getExpPos e1) tyLeft tyRight;
                 DataChecker ty errors = sup SupDecl "" (getExpPos e1) tyLeft ty3 in  
                   DataChecker ty (errLeft ++ errRight ++ errors3 ++ errors)
@@ -403,10 +392,10 @@ typeCheckerAddress enviroment exp = case exp of
 
 typeCheckerIndirection environment e1 = 
   let newLoc = getExpPos e1 in case e1 of
-    Epreop (Indirection (PEtimes (loc,identifier))) e1 -> let DataChecker ty errors = typeCheckerIndirection environment e1 in case ty of
+    Epreop (Indirection (PEtimes (loc,_))) e1 -> let DataChecker ty errors = typeCheckerIndirection environment e1 in case ty of
       Pointer tyPoint -> DataChecker tyPoint errors
       ty ->  DataChecker ty $  ErrorChecker loc (ErrorNoPointerAddress ty "expression"):errors
-    Evar id@(PIdent (loc,identifier)) ->  let DataChecker ty errors = getVarType id environment; in case ty of
+    Evar id@(PIdent (_,identifier)) ->  let DataChecker ty errors = getVarType id environment; in case ty of
       Pointer tyPointed -> DataChecker tyPointed []
       Error -> DataChecker ty errors
       ty -> DataChecker ty $ ErrorChecker newLoc (ErrorNoPointerAddress ty identifier):errors
@@ -415,7 +404,7 @@ typeCheckerIndirection environment e1 =
 eFunTypeChecker funidentifier@(PIdent (loc,identifier)) passedparams environment = 
   case getEntry funidentifier environment of
     DataChecker Nothing errors -> DataChecker Error errors
-    DataChecker (Just (Variable _ _ ty)) _-> DataChecker Error [ErrorChecker loc $ ErrorCalledProcWithVariable identifier]
+    DataChecker (Just (Variable _ _)) _-> DataChecker Error [ErrorChecker loc $ ErrorCalledProcWithVariable identifier]
     DataChecker (Just (Function _ paramss ty)) _-> 
       let errorss = map (checkPassedParams funidentifier environment (DataChecker 0 []) passedparams) paramss; 
           errors = checkSignatureWithLessError errorss in DataChecker ty errors
@@ -427,22 +416,22 @@ checkSignatureWithLessError (err:errorss) =
     then err
     else otherErr
 
-checkPassedParams funidentifier  _ (DataChecker actual errors) [] [] = errors
+checkPassedParams _  _ (DataChecker _ errors) [] [] = errors
 checkPassedParams (PIdent (loc,identifier)) _ (DataChecker actual errors) [] xs = ErrorChecker loc (ErrorCalledProcWrongArgs (actual + length xs) actual identifier):errors
 checkPassedParams (PIdent (loc,identifier)) _ (DataChecker actual errors) xs [] =  ErrorChecker loc (ErrorCalledProcWrongArgs actual (length xs + actual) identifier):errors
 checkPassedParams funidentifier environment (DataChecker actual errors) (p:passedParams) (e:expectedParams) =
   let err = checkCorrectTypeOfParam (actual + 1) funidentifier p e environment in 
     checkPassedParams funidentifier environment (DataChecker (actual + 1) (errors ++ err)) passedParams expectedParams
 
-checkCorrectTypeOfParam actual (PIdent ((l,c), identifier)) (PassedPar exp) (Variable Normal (l1,c1) tyVar) environment = 
+checkCorrectTypeOfParam actual (PIdent (_, identifier)) (PassedPar exp) (Variable _ tyVar) environment = 
   let DataChecker tyExp errorsExp = typeCheckerExpression environment exp;
-      DataChecker ty errorsVar = sup SupFun "" (getExpPos exp) tyExp tyVar in errorsIncompatibleTypesChangeToFun actual identifier (errorsVar ++ errorsExp)
+      DataChecker _ errorsVar = sup SupFun "" (getExpPos exp) tyExp tyVar in errorsIncompatibleTypesChangeToFun actual identifier (errorsVar ++ errorsExp)
 
 errorsIncompatibleTypesChangeToFun pos id = map (errorIncompatibleTypesChangeToFun pos id)
 
 errorIncompatibleTypesChangeToFun pos id (ErrorChecker loc (ErrorIncompatibleDeclTypes _ ty1 ty2)) = 
   ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam pos ty1 ty2 id
-errorIncompatibleTypesChangeToFun ty1 ty2 error = error
+errorIncompatibleTypesChangeToFun _ _ error = error
 
 typeCheckerExpression' environment supMode loc e1 e2 =
   let DataChecker tye1 errors1 = typeCheckerExpression environment e1; 
@@ -462,7 +451,7 @@ typeCheckerDeclarationArray environment exp (ArrayInit _ arrays _ ) = case exp o
     DataChecker types expErrors -> DataChecker Error $ ErrorChecker (getExpPos exp) (ErrorDeclarationBoundNotCorrectType types identifier):expErrors
   _ -> DataChecker Error [ErrorChecker (getExpPos exp) ErrorArrayCallExpression]
 
-getDeclarationDimension environment [] = DataChecker 0 [] 
+getDeclarationDimension _ [] = DataChecker 0 [] 
 getDeclarationDimension environment (array:arrays) = let DataChecker dimension errors = getDeclarationDimension environment arrays in 
   case array of
     ExprDec exp -> let DataChecker ty expErrors = typeCheckerExpression environment exp in case sup Sup "" (getExpPos exp) Int ty of
