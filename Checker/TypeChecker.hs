@@ -11,7 +11,7 @@ import Utils.Type
 import Checker.ErrorPrettyPrinter
 
 
-startState = (DMap.empty, Checker.BPTree.Node {Checker.BPTree.id = ("0", ((0::Int,0::Int),(0::Int,0::Int))), val = BP {symboltable = DMap.empty, statements = [], errors = [], blocktype = ExternalBlk}, parentID = Nothing, children = []}, ("0", ((0::Int,0::Int),(0::Int,0::Int))))
+startState = ([], Checker.BPTree.Node {Checker.BPTree.id = ("0", ((0::Int,0::Int),(0::Int,0::Int))), val = BP {symboltable = DMap.empty, statements = [], errors = [], blocktype = ExternalBlk}, parentID = Nothing, children = []}, ("0", ((0::Int,0::Int),(0::Int,0::Int))))
 
 typeChecker (Progr p) = typeCheckerModule p
 
@@ -70,10 +70,9 @@ typeCheckerSignature' locstart locEnd ident@(PIdent (loc,identifier)) params typ
     _ -> do
       typeCheckerParams params
       (symtable, tree, currentIdNode) <- get
-      let node = findNodeById currentIdNode tree;  
-          DataChecker entry errors = getEntry ident (symtable, tree, currentIdNode); 
-          variables = map (snd.snd) (DMap.toAscList symtable);
-           in 
+      let node = findNodeById currentIdNode tree
+          DataChecker entry errors = getEntry ident (symtable, tree, currentIdNode)
+          variables = reverse $ map (snd.snd) symtable in 
             case entry of
               Nothing -> do
                 modify $ addErrorsCurrentNode errors
@@ -128,10 +127,16 @@ typeCheckerParam' mode types identifier =
     modify (typeCheckerParam'' identifier mode typefound)
     get
 
-typeCheckerParam'' (PIdent (loc,identifier)) mode ty env@(sym,_t,_i) = case DMap.lookup identifier sym of
-  Just (_, Variable (varAlreadyDecLine,varAlreadyDecColumn) _) -> 
+typeCheckerParam'' (PIdent (loc,identifier)) mode ty env@(sym,_t,_i) = case typeCheckerParam''' sym identifier of
+  Just (_,(_, Variable (varAlreadyDecLine,varAlreadyDecColumn) _)) -> 
     addErrorsCurrentNode [ErrorChecker (varAlreadyDecLine,varAlreadyDecColumn) $ ErrorVarAlreadyDeclared loc identifier] env
-  Nothing -> (DMap.insert identifier (identifier, Variable loc (typeCheckerModeParameter mode ty)) sym,_t,_i)
+  Nothing -> ((identifier, (identifier, Variable loc (typeCheckerModeParameter mode ty))):sym,_t,_i)
+
+typeCheckerParam''' [] _ = Nothing;
+typeCheckerParam''' (x@(id,_):xs) identifier = 
+  if id == identifier
+    then Just x
+    else typeCheckerParam''' xs identifier
 
 typeCheckerModeParameter mode ty = case mode of
   Ref -> Reference ty
@@ -141,7 +146,7 @@ typeCheckerBody blkType identifier (BodyBlock  (POpenGraph (locStart,_)) xs (PCl
   -- create new child for the blk and enter in it
   (sym, tree, current_id) <- get
   let actualNode = findNodeById current_id tree; child = createChild identifier blkType locStart locEnd actualNode in
-     put (DMap.empty, addChild actualNode (setSymbolTable sym child) tree, (identifier, (locStart, locEnd)))
+     put ([], addChild actualNode (setSymbolTable (DMap.fromList sym) child) tree, (identifier, (locStart, locEnd)))
   -- process body
   mapM_ typeCheckerBody' xs
   modify(\(_s,_t,_) -> (_s,_t,current_id))
