@@ -10,7 +10,7 @@ printTacEntry' operation = case operation of
     Binary temp1 temp2 bop temp3 -> printTacTemp temp1 ++ " = " ++ printTacTemp temp2 ++  printTacBop bop ++ printTacTemp temp3
     Unary temp1 uop  temp2 -> printTacTemp temp1 ++ " = " ++ printTacUop uop ++ printTacTemp temp2
     Nullary temp1 temp2 ->  printTacTemp temp1 ++ " = " ++ printTacTemp temp2
-    UnconJump label -> "goto " ++ show label
+    UnconJump label -> "goto " ++ printLabel (Just label)
     BoolCondJump temp label -> "if " ++ printTacTemp temp ++ " goto " ++ printLabel (Just label)
     RelCondJump temp1 rel temp2 label -> "if " ++ printTacTemp temp1 ++ " " ++ show rel ++ " " ++ printTacTemp temp2 ++ " goto " ++ printLabel (Just label)
     IndexLeft temp1 temp2 temp3 ->  printTacTemp temp1 ++ "[" ++ printTacTemp temp2 ++ "]" ++ " = " ++ printTacTemp temp3
