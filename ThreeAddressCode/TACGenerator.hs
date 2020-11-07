@@ -169,8 +169,8 @@ tacGeneratorStatement statement = case statement of
     labels <- getSequenceControlLabels
     case labels of
         Just (SequenceControlLabel (IfSimpleLabels ltrue lfalse)) -> do
-          label <- popLabel 
-          pushLabel label
+          -- label <- popLabel 
+          -- pushLabel label
           res <- tacGeneratorBody body
     
           -- faccio il push della label per attaccarla al prossimo blocco (quello dopo if)
@@ -180,11 +180,37 @@ tacGeneratorStatement statement = case statement of
                 pushLabel lfalse
                 return (resg ++ res) 
               
-  IfElse (PIf ((lIf,cIf), nameIf)) guard _then bodyIf (PElse ((lElse,cElse), nameElse)) bodyElse -> --do
-    --typeCheckerGuard guard
-    --typeCheckerBody IfThenBlk (createId lIf cIf nameIf) bodyIf
-    --typeCheckerBody IfElseBlk (createId lElse cElse nameElse) bodyElse
-    return []
+  IfElse (PIf ((lIf,cIf), nameIf)) (SGuard _ guard _) _then bodyIf@(BodyBlock(POpenGraph (locStartThen,_)) _ (PCloseGraph (locEndThen,_))  ) (PElse ((lElse,cElse), nameElse)) bodyElse@(BodyBlock(POpenGraph (locStartElse,_)) _ (PCloseGraph (locEndElse,_))  ) -> do
+    labelTrue <- newlabelFALL locStartThen
+    labelFalse <- newlabel locEndThen
+    modify $ addIfSimpleLabels labelTrue labelFalse
+    (resg,_) <- tacGeneratorGuard RightExp guard 
+    labels <- getSequenceControlLabels
+
+    case labels of
+        Just (SequenceControlLabel (IfSimpleLabels ltrue liffalse)) -> do
+          label <- popLabel 
+          pushLabel label
+          resthen <- tacGeneratorBody bodyIf
+
+          labels <- getSequenceControlLabels
+          case labels of
+              Just (SequenceControlLabel (IfSimpleLabels ltrue lfalse)) -> do
+
+                pushLabel lfalse
+                latestLabel <- newlabel locStartElse
+                modify $ addIfSimpleLabels ltrue latestLabel
+                reselse <- tacGeneratorBody bodyElse
+          -- faccio il push della label per attaccarla al prossimo blocco (quello dopo if)
+                labels <- getSequenceControlLabels
+                case labels of
+                    Just (SequenceControlLabel (IfSimpleLabels ltrue lfalse)) -> do
+                      pushLabel lfalse
+                      let goto = TACEntry Nothing $ UnconJump (getLabelFromMaybe latestLabel) in
+                        return (resg ++ resthen ++ goto:reselse)
+
+
+
   StExp (EFun funidentifier _ passedparams _) _semicolon-> do
     (tacs, _) <- tacGeneratorFunctionCall LeftExp funidentifier passedparams
     return tacs

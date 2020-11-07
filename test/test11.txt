@@ -1,0 +1,26 @@
+var a = 1;
+var b = 2;
+var c : bool;
+
+proc main(l: int,ref z:int)
+{
+    a = 90;
+
+
+    if (  (a < 1 || b < 3) && b < 5  ) then
+    {
+        a = b;
+        b = 1;
+        b = 2;
+        b = 8;
+    }
+    else
+    {
+    a = 4;
+    a = 4;
+
+    }
+
+
+    a = 7;
+}
