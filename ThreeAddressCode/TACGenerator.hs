@@ -12,10 +12,10 @@ import Checker.SymbolTable
 import Utils.Type
 import Checker.SupTable
 
-type TacMonad a = State ([TACEntry], Temp, Int, BPTree BP, Maybe SequenceControlLabel, Maybe Label) a
+type TacMonad a = State ([TACEntry], Temp, Int, BPTree BP, [Maybe SequenceControlLabel], Maybe Label) a
 
 
-startTacState bpTree = ([], Temp ThreeAddressCode.TAC.Fix "" (0::Int,0::Int) Int,  0, bpTree, Nothing, Nothing)
+startTacState bpTree = ([], Temp ThreeAddressCode.TAC.Fix "" (0::Int,0::Int) Int,  0, bpTree, [], Nothing)
 
 addTacEntries tacEntry (tac,_te, _t, _b, _labels, _label ) =
     (tacEntry ++ tac,_te, _t,_b, _labels, _label)
@@ -24,12 +24,20 @@ addTacEntry tacEntry (tac,_te, _t, _b, _labels, _label ) =
     (tacEntry:tac,_te, _t,_b, _labels, _label)
 
 addIfSimpleLabels ltrue lfalse lbreak (_tac,_te, _t, _b, _labels, _label ) =
-    (_tac,_te, _t,_b, (Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak))), _label)
+    (_tac,_te, _t,_b, ((Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak))):_labels), _label)
 
 getSequenceControlLabels :: TacMonad (Maybe SequenceControlLabel)
 getSequenceControlLabels = do
     (_tac,_te, _t, _b, ifLabels, _label ) <- get
-    return ifLabels
+    case ifLabels of
+      [] -> return Nothing
+      _ -> do 
+        put (_tac,_te, _t, _b,tail ifLabels, _label )
+        return $ head ifLabels
+
+setSequenceControlLabels a = do
+  (_tac,_te, _t, _b, ifLabels, _label ) <- get
+  put (_tac,_te, _t, _b, a:ifLabels, _label )
 
     --(_tac,_te, _t,_b, (Just (SequenceControlLabel (IfSimpleLabels ltrue lfalse))), _label)
 isLabelFALL Nothing = False
@@ -147,6 +155,7 @@ tacGeneratorBody'' x = case x of
 tacGeneratorStatement statement = case statement of
   Break (PBreak (pos@(l,c), name)) _semicolon -> do
     labels <- getSequenceControlLabels
+    setSequenceControlLabels labels
     case labels of
         Just (SequenceIfSimple (IfSimpleLabels _ _ lbreak)) -> do
           let goto = TACEntry Nothing $ UnconJump (getLabelFromMaybe lbreak) in
@@ -172,6 +181,7 @@ tacGeneratorStatement statement = case statement of
     (resg,_) <- tacGeneratorGuard RightExp guard 
     
     labels <- getSequenceControlLabels
+    setSequenceControlLabels labels
     case labels of
         Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak)) -> do
           -- label <- popLabel 
@@ -180,9 +190,11 @@ tacGeneratorStatement statement = case statement of
     
           -- faccio il push della label per attaccarla al prossimo blocco (quello dopo if)
           labels <- getSequenceControlLabels
+          setSequenceControlLabels labels
           case labels of
               Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak)) -> do
                 pushLabel lfalse
+                labels <- getSequenceControlLabels
                 return (resg ++ res) 
               
   IfElse (PIf ((lIf,cIf), nameIf)) (SGuard _ guard _) _then bodyIf@(BodyBlock(POpenGraph (locStartThen,_)) _ (PCloseGraph (locEndThen,_))  ) (PElse ((lElse,cElse), nameElse)) bodyElse@(BodyBlock(POpenGraph (locStartElse,_)) _ (PCloseGraph (locEndElse,_))  ) -> do
@@ -417,17 +429,20 @@ tacCheckerBinaryBoolean vtype loc e1 op e2 = do
   case op of
     AND ->  do
       labels <- getSequenceControlLabels
+      setSequenceControlLabels labels
       case labels of
         Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak)) -> 
           getIfSimpleTacAND vtype loc e1 op e2 ltrue lfalse
     OR -> do
       labels <- getSequenceControlLabels
+      setSequenceControlLabels labels
       case labels of
         Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak)) -> 
           getIfSimpleTacOR vtype loc e1 op e2 ltrue lfalse
 
     _ -> do
       labels <- getSequenceControlLabels
+      setSequenceControlLabels labels
       case labels of
         Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak)) -> 
           getIfSimpleTacREL vtype loc e1 op e2 ltrue lfalse

@@ -9,9 +9,13 @@ proc main(l: int,ref z:int)
     {
         a = b;
         b = 1;
-        break;
-        b = 2;
-        b = 8;
+        if ( b < 55 ) then
+        {
+            b = 2;
+            b = 8; 
+        }
+        a = 22;
+        b = 88;
     }
     a = 4;
     a = 4;

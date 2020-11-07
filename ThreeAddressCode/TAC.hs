@@ -53,15 +53,18 @@ data IfSimpleLabels = IfSimpleLabels {
     breakLabel :: Maybe Label
 } deriving (Show)
 
--- data IfThenElseLabels = IfThenElseLabels {
---     labelTrueIfThen :: Maybe Label,
---     labelFalseIfThen :: Maybe Label,
---     latestLabel :: Maybe Label
--- } deriving (Show)
+data WhileDoLabels = WhileDoLabels {
+    labelWhileDoGuardTrue :: Maybe Label,
+    labelWhileDoGuardFalse :: Maybe Label,
+    labelWhileDoBegin :: Maybe Label
+} deriving (Show)
 
-data SequenceControlLabel = SequenceIfSimple IfSimpleLabels
-    deriving (Show)
+data SequenceControlLabel = 
+    SequenceIfSimple IfSimpleLabels |
+    SequenceWhileDo WhileDoLabels
+        deriving (Show)
 
+addLabelToEntry :: Maybe Label -> TACEntry -> TACEntry
 addLabelToEntry label (TACEntry _  operationType) = TACEntry label operationType
 
 sizeof ty = case ty of
