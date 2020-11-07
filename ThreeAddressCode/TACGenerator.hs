@@ -205,12 +205,14 @@ tacGeneratorStatement statement = case statement of
     modify $ addIfSimpleLabels labelTrue labelFalse latestLabel
     (resg,_) <- tacGeneratorGuard RightExp guard 
     labels <- getSequenceControlLabels
+    setSequenceControlLabels labels
 
     case labels of
         Just (SequenceIfSimple (IfSimpleLabels ltrue liffalse _)) -> do
           resthen <- tacGeneratorBody bodyIf
 
           labels <- getSequenceControlLabels
+          setSequenceControlLabels labels
           case labels of
               Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse _)) -> do
                 -- attacco la label false al blocco else
@@ -219,6 +221,7 @@ tacGeneratorStatement statement = case statement of
                 reselse <- tacGeneratorBody bodyElse
           -- faccio il push della label per attaccarla al prossimo blocco (quello dopo if)
                 labels <- getSequenceControlLabels
+                setSequenceControlLabels labels
                 case labels of
                     Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse _)) -> do
                       pushLabel lfalse
@@ -452,9 +455,9 @@ notRel ThreeAddressCode.TAC.LTE t1 t2 = (ThreeAddressCode.TAC.GT, t1, t2)
 notRel ThreeAddressCode.TAC.GT t1 t2 = (LTE, t1, t2)
 notRel ThreeAddressCode.TAC.GTE t1 t2 = (ThreeAddressCode.TAC.LT, t1, t2)
 notRel ThreeAddressCode.TAC.EQ t1 t2 = (NEQ, t1, t2)
-
-notRel ThreeAddressCode.TAC.AND t1 t2 = (OR, t1, t2)
-notRel ThreeAddressCode.TAC.OR t1 t2 = (AND, t1, t2)
+-- non dovrei mai arrivare a chiamare i due casi sotto, se ci arrivo c'e qualcosa di sbagliato
+-- notRel ThreeAddressCode.TAC.AND t1 t2 = (OR, t1, t2)
+-- notRel ThreeAddressCode.TAC.OR t1 t2 = (AND, t1, t2)
 
 -- Unary Temp Uop Temp |
 
