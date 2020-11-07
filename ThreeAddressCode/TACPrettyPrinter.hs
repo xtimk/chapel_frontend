@@ -25,9 +25,9 @@ printTacEntry' operation = case operation of
     ReturnValue temp -> ""
 
 
-printLabel (Just ("FALL",(l,c))) = "  "
+printLabel (Just ("FALL",(l,c))) = "         "
 printLabel (Just (lab,(l,c))) = lab ++ "@" ++ show l ++ "," ++ show c ++ ": "
-printLabel Nothing = "  "
+printLabel Nothing = "         "
 
 printTacTemp (Temp mode id (l,c) ty) = case mode of
     Var -> id ++ "@" ++ show l ++ "," ++ show c
