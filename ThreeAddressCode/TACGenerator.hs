@@ -23,8 +23,8 @@ addTacEntries tacEntry (tac,_te, _t, _b, _labels, _label ) =
 addTacEntry tacEntry (tac,_te, _t, _b, _labels, _label ) =
     (tacEntry:tac,_te, _t,_b, _labels, _label)
 
-addIfSimpleLabels ltrue lfalse (_tac,_te, _t, _b, _labels, _label ) =
-    (_tac,_te, _t,_b, (Just (SequenceControlLabel (IfSimpleLabels ltrue lfalse))), _label)
+addIfSimpleLabels ltrue lfalse lbreak (_tac,_te, _t, _b, _labels, _label ) =
+    (_tac,_te, _t,_b, (Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak))), _label)
 
 getSequenceControlLabels :: TacMonad (Maybe SequenceControlLabel)
 getSequenceControlLabels = do
@@ -145,9 +145,14 @@ tacGeneratorBody'' x = case x of
 
 -- ritorno una coppia (tacs, eventuale label da attaccare al tac successivo)
 tacGeneratorStatement statement = case statement of
-  Break (PBreak (pos@(l,c), name)) _semicolon -> --do
+  Break (PBreak (pos@(l,c), name)) _semicolon -> do
+    labels <- getSequenceControlLabels
+    case labels of
+        Just (SequenceIfSimple (IfSimpleLabels _ _ lbreak)) -> do
+          let goto = TACEntry Nothing $ UnconJump (getLabelFromMaybe lbreak) in
+            return (goto:[])
+
     --typeCheckerSequenceStatement pos
-    return []
   Continue (PContinue (pos@(l,c), name)) _semicolon -> --do
     --typeCheckerSequenceStatement pos
     return [] 
@@ -163,12 +168,12 @@ tacGeneratorStatement statement = case statement of
     -- inserisco le label nell'env e chiamo la funzione per la generazione del TAC della guardia
     labelTrue <- newlabelFALL locStart
     labelFalse <- newlabel locEnd
-    modify $ addIfSimpleLabels labelTrue labelFalse
+    modify $ addIfSimpleLabels labelTrue labelFalse labelFalse
     (resg,_) <- tacGeneratorGuard RightExp guard 
     
     labels <- getSequenceControlLabels
     case labels of
-        Just (SequenceControlLabel (IfSimpleLabels ltrue lfalse)) -> do
+        Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak)) -> do
           -- label <- popLabel 
           -- pushLabel label
           res <- tacGeneratorBody body
@@ -176,35 +181,34 @@ tacGeneratorStatement statement = case statement of
           -- faccio il push della label per attaccarla al prossimo blocco (quello dopo if)
           labels <- getSequenceControlLabels
           case labels of
-              Just (SequenceControlLabel (IfSimpleLabels ltrue lfalse)) -> do
+              Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak)) -> do
                 pushLabel lfalse
                 return (resg ++ res) 
               
   IfElse (PIf ((lIf,cIf), nameIf)) (SGuard _ guard _) _then bodyIf@(BodyBlock(POpenGraph (locStartThen,_)) _ (PCloseGraph (locEndThen,_))  ) (PElse ((lElse,cElse), nameElse)) bodyElse@(BodyBlock(POpenGraph (locStartElse,_)) _ (PCloseGraph (locEndElse,_))  ) -> do
     labelTrue <- newlabelFALL locStartThen
     labelFalse <- newlabel locEndThen
-    modify $ addIfSimpleLabels labelTrue labelFalse
+    latestLabel <- newlabel locStartElse
+
+    modify $ addIfSimpleLabels labelTrue labelFalse latestLabel
     (resg,_) <- tacGeneratorGuard RightExp guard 
     labels <- getSequenceControlLabels
 
     case labels of
-        Just (SequenceControlLabel (IfSimpleLabels ltrue liffalse)) -> do
-          label <- popLabel 
-          pushLabel label
+        Just (SequenceIfSimple (IfSimpleLabels ltrue liffalse _)) -> do
           resthen <- tacGeneratorBody bodyIf
 
           labels <- getSequenceControlLabels
           case labels of
-              Just (SequenceControlLabel (IfSimpleLabels ltrue lfalse)) -> do
-
+              Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse _)) -> do
+                -- attacco la label false al blocco else
                 pushLabel lfalse
-                latestLabel <- newlabel locStartElse
-                modify $ addIfSimpleLabels ltrue latestLabel
+                modify $ addIfSimpleLabels ltrue latestLabel latestLabel
                 reselse <- tacGeneratorBody bodyElse
           -- faccio il push della label per attaccarla al prossimo blocco (quello dopo if)
                 labels <- getSequenceControlLabels
                 case labels of
-                    Just (SequenceControlLabel (IfSimpleLabels ltrue lfalse)) -> do
+                    Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse _)) -> do
                       pushLabel lfalse
                       let goto = TACEntry Nothing $ UnconJump (getLabelFromMaybe latestLabel) in
                         return (resg ++ resthen ++ goto:reselse)
@@ -283,142 +287,150 @@ tacGeneratorExpression' exptype e1 op e2 loc = do
 
 tacGeneratorConstant (loc, id) ty = return ([], Temp ThreeAddressCode.TAC.Fix id loc ty)
 
+getIfSimpleTacAND vtype loc e1 op e2 ltrue lfalse = 
+  if (isLabelFALL lfalse)
+    then
+      do
+        l1true <- newlabelFALL loc
+        l1false <- newlabel loc
+
+        modify $ addIfSimpleLabels l1true l1false l1false
+        (tac1,temp1) <- tacGeneratorExpression vtype e1
+
+        l2false <- return lfalse
+        l2true <- return ltrue
+        modify $ addIfSimpleLabels l1true l1false l1false
+
+        label <- popLabel
+        (tac2',temp2') <- tacGeneratorExpression vtype e2
+        (tac2, temp2) <- return (attachLabelToFirstElem label tac2', temp2')
+
+        let tacs = tac1 ++ tac2 in
+          if (isLabelFALL lfalse)
+            then 
+              do
+                pushLabel l1false
+                return (tacs, temp2)
+            else
+              do
+                return (tacs, temp2)
+    else
+      do
+        l1false <- return lfalse
+        l1true <- newlabelFALL loc
+        modify $ addIfSimpleLabels l1true l1false l1false
+        (tac1,temp1) <- tacGeneratorExpression vtype e1
+
+        l2false <- return lfalse
+        l2true <- return ltrue
+        modify $ addIfSimpleLabels l1true l1false l1false
+        label <- popLabel
+        (tac2',temp2') <- tacGeneratorExpression vtype e2
+        (tac2, temp2) <- return (attachLabelToFirstElem label tac2', temp2')
+
+        let tacs = tac1 ++ tac2 in
+          if (isLabelFALL lfalse)
+            then 
+              do
+                pushLabel l1false
+                return (tacs, temp2)
+            else
+              do
+                return (tacs, temp2)
+
+getIfSimpleTacOR vtype loc e1 op e2 ltrue lfalse = 
+  if not (isLabelFALL ltrue)
+    then
+      do
+        l1false <- newlabelFALL loc
+        l1true <- return ltrue
+        modify $ addIfSimpleLabels l1true l1false l1false
+        (tac1,temp1) <- tacGeneratorExpression vtype e1
+
+        l2false <- return lfalse
+        l2true <- return ltrue
+        modify $ addIfSimpleLabels l1true l1false l1false
+        label <- popLabel
+        (tac2',temp2') <- tacGeneratorExpression vtype e2
+        (tac2, temp2) <- return (attachLabelToFirstElem label tac2', temp2')
+
+        let tacs = tac1 ++ tac2 in
+          if not (isLabelFALL ltrue)
+            then
+              return (tacs, temp2)
+            else
+              do
+                pushLabel l1true
+                return (tacs, temp2)
+    else
+      do
+        l1false <- newlabelFALL loc
+        l1true <- newlabel loc
+        modify $ addIfSimpleLabels l1true l1false l1false
+        (tac1,temp1) <- tacGeneratorExpression vtype e1
+
+        l2false <- return lfalse
+        l2true <- return ltrue
+        modify $ addIfSimpleLabels l2true l2false l1false
+        label <- popLabel
+        (tac2',temp2') <- tacGeneratorExpression vtype e2
+        (tac2, temp2) <- return (attachLabelToFirstElem label tac2', temp2')
+
+        let tacs = tac1 ++ tac2 in
+          if not (isLabelFALL ltrue)
+            then
+              return (tacs, temp2)
+            else
+              do
+                pushLabel l1true
+                return (tacs, temp2)
+
+getIfSimpleTacREL vtype loc e1 op e2 ltrue lfalse =
+  case (isLabelFALL ltrue, isLabelFALL lfalse) of
+    (True,True) -> do
+      (tac1,temp1) <- tacGeneratorExpression vtype e1
+      (tac2,temp2) <- tacGeneratorExpression vtype e2
+      return (tac1 ++ tac2, temp1)
+    (_, True) -> do
+      (tac1,temp1) <- tacGeneratorExpression vtype e1
+      (tac2,temp2) <- tacGeneratorExpression vtype e2
+      let aa = TACEntry Nothing (RelCondJump temp1 op temp2 (getLabelFromMaybe ltrue)) in
+        return (tac1 ++ tac2 ++ [aa], temp2)
+    (True, _) -> do
+      (tac1,temp1) <- tacGeneratorExpression vtype e1
+      (tac2,temp2) <- tacGeneratorExpression vtype e2
+      let 
+        (ope, t1, t2) = notRel op temp1 temp2
+        aa = TACEntry Nothing (RelCondJump t1 ope t2 (getLabelFromMaybe lfalse)) in
+        return (tac1 ++ tac2 ++ [aa], temp2)
+    (_,_) -> do
+      (tac1,temp1) <- tacGeneratorExpression vtype e1
+      (tac2,temp2) <- tacGeneratorExpression vtype e2
+      let 
+        aa = TACEntry Nothing (RelCondJump temp1 op temp2 (getLabelFromMaybe ltrue));
+        bb = TACEntry Nothing (UnconJump (getLabelFromMaybe lfalse))
+        in
+          return ((tac1 ++ tac2 ++ (aa:bb:[]) , temp2))
+
+
 tacCheckerBinaryBoolean vtype loc e1 op e2 = do
   case op of
     AND ->  do
       labels <- getSequenceControlLabels
       case labels of
-        Just (SequenceControlLabel (IfSimpleLabels ltrue lfalse)) -> do
-          if (isLabelFALL lfalse)
-            then
-              do
-                l1true <- newlabelFALL loc
-                l1false <- newlabel loc
-
-                modify $ addIfSimpleLabels l1true l1false
-                (tac1,temp1) <- tacGeneratorExpression vtype e1
-
-                l2false <- return lfalse
-                l2true <- return ltrue
-                modify $ addIfSimpleLabels l1true l1false
-
-                label <- popLabel
-                (tac2',temp2') <- tacGeneratorExpression vtype e2
-                (tac2, temp2) <- return (attachLabelToFirstElem label tac2', temp2')
-
-                let tacs = tac1 ++ tac2 in
-                  if (isLabelFALL lfalse)
-                    then 
-                      do
-                        pushLabel l1false
-                        return (tacs, temp2)
-                    else
-                      do
-                        return (tacs, temp2)
-            else
-              do
-                l1false <- return lfalse
-                l1true <- newlabelFALL loc
-                modify $ addIfSimpleLabels l1true l1false
-                (tac1,temp1) <- tacGeneratorExpression vtype e1
-
-                l2false <- return lfalse
-                l2true <- return ltrue
-                modify $ addIfSimpleLabels l1true l1false
-                label <- popLabel
-                (tac2',temp2') <- tacGeneratorExpression vtype e2
-                (tac2, temp2) <- return (attachLabelToFirstElem label tac2', temp2')
-
-                let tacs = tac1 ++ tac2 in
-                  if (isLabelFALL lfalse)
-                    then 
-                      do
-                        pushLabel l1false
-                        return (tacs, temp2)
-                    else
-                      do
-                        return (tacs, temp2)
-
+        Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak)) -> 
+          getIfSimpleTacAND vtype loc e1 op e2 ltrue lfalse
     OR -> do
       labels <- getSequenceControlLabels
       case labels of
-        Just (SequenceControlLabel (IfSimpleLabels ltrue lfalse)) -> do
-          if not (isLabelFALL ltrue)
-            then
-              do
-                l1false <- newlabelFALL loc
-                l1true <- return ltrue
-                modify $ addIfSimpleLabels l1true l1false
-                (tac1,temp1) <- tacGeneratorExpression vtype e1
-
-                l2false <- return lfalse
-                l2true <- return ltrue
-                modify $ addIfSimpleLabels l1true l1false
-                label <- popLabel
-                (tac2',temp2') <- tacGeneratorExpression vtype e2
-                (tac2, temp2) <- return (attachLabelToFirstElem label tac2', temp2')
-
-                let tacs = tac1 ++ tac2 in
-                  if not (isLabelFALL ltrue)
-                    then
-                      return (tacs, temp2)
-                    else
-                      do
-                        pushLabel l1true
-                        return (tacs, temp2)
-            else
-              do
-                l1false <- newlabelFALL loc
-                l1true <- newlabel loc
-                modify $ addIfSimpleLabels l1true l1false
-                (tac1,temp1) <- tacGeneratorExpression vtype e1
-
-                l2false <- return lfalse
-                l2true <- return ltrue
-                modify $ addIfSimpleLabels l2true l2false
-                label <- popLabel
-                (tac2',temp2') <- tacGeneratorExpression vtype e2
-                (tac2, temp2) <- return (attachLabelToFirstElem label tac2', temp2')
-
-                let tacs = tac1 ++ tac2 in
-                  if not (isLabelFALL ltrue)
-                    then
-                      return (tacs, temp2)
-                    else
-                      do
-                        pushLabel l1true
-                        return (tacs, temp2)
-
+        Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak)) -> 
+          getIfSimpleTacOR vtype loc e1 op e2 ltrue lfalse
 
     _ -> do
       labels <- getSequenceControlLabels
       case labels of
-        Just (SequenceControlLabel (IfSimpleLabels ltrue lfalse)) -> 
-          case (isLabelFALL ltrue, isLabelFALL lfalse) of
-            (True,True) -> do
-              (tac1,temp1) <- tacGeneratorExpression vtype e1
-              (tac2,temp2) <- tacGeneratorExpression vtype e2
-              return (tac1 ++ tac2, temp1)
-            (_, True) -> do
-              (tac1,temp1) <- tacGeneratorExpression vtype e1
-              (tac2,temp2) <- tacGeneratorExpression vtype e2
-              let aa = TACEntry Nothing (RelCondJump temp1 op temp2 (getLabelFromMaybe ltrue)) in
-                return (tac1 ++ tac2 ++ [aa], temp2)
-            (True, _) -> do
-              (tac1,temp1) <- tacGeneratorExpression vtype e1
-              (tac2,temp2) <- tacGeneratorExpression vtype e2
-              let 
-                (ope, t1, t2) = notRel op temp1 temp2
-                aa = TACEntry Nothing (RelCondJump t1 ope t2 (getLabelFromMaybe lfalse)) in
-                return (tac1 ++ tac2 ++ [aa], temp2)
-            (_,_) -> do
-              (tac1,temp1) <- tacGeneratorExpression vtype e1
-              (tac2,temp2) <- tacGeneratorExpression vtype e2
-              let 
-                aa = TACEntry Nothing (RelCondJump temp1 op temp2 (getLabelFromMaybe ltrue));
-                bb = TACEntry Nothing (UnconJump (getLabelFromMaybe lfalse))
-                in
-                  return ((tac1 ++ tac2 ++ (aa:bb:[]) , temp2))
+        Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak)) -> 
+          getIfSimpleTacREL vtype loc e1 op e2 ltrue lfalse
 
 notRel ThreeAddressCode.TAC.LT t1 t2 = (GTE, t1, t2)
 notRel ThreeAddressCode.TAC.LTE t1 t2 = (ThreeAddressCode.TAC.GT, t1, t2)
