@@ -47,6 +47,13 @@ data TacChecker a = TacChecker {
   datas :: a
 } deriving (Show)
 
+data IfSimpleLabels = IfSimpleLabels {
+    labelTrue :: Maybe Label,
+    labelFalse :: Maybe Label
+} deriving (Show)
+
+data SequenceControlLabel = SequenceControlLabel IfSimpleLabels
+    deriving (Show)
 
 addLabelToEntry label (TACEntry _  operationType) = TACEntry label operationType
 

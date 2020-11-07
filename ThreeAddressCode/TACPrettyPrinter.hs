@@ -10,9 +10,9 @@ printTacEntry' operation = case operation of
     Binary temp1 temp2 bop temp3 -> printTacTemp temp1 ++ " = " ++ printTacTemp temp2 ++  printTacBop bop ++ printTacTemp temp3
     Unary temp1 uop  temp2 -> printTacTemp temp1 ++ " = " ++ printTacUop uop ++ printTacTemp temp2
     Nullary temp1 temp2 ->  printTacTemp temp1 ++ " = " ++ printTacTemp temp2
-    UnconJump label -> ""
-    BoolCondJump temp label -> ""
-    RelCondJump temp1 rel temp2 temp3 -> ""
+    UnconJump label -> "goto " ++ show label
+    BoolCondJump temp label -> "if " ++ printTacTemp temp ++ " goto " ++ printLabel (Just label)
+    RelCondJump temp1 rel temp2 label -> "if " ++ printTacTemp temp1 ++ " " ++ show rel ++ " " ++ printTacTemp temp2 ++ " goto " ++ printLabel (Just label)
     IndexLeft temp1 temp2 temp3 ->  printTacTemp temp1 ++ "[" ++ printTacTemp temp2 ++ "]" ++ " = " ++ printTacTemp temp3
     IndexRight temp1 temp2 temp3 -> printTacTemp temp1 ++ " = " ++  printTacTemp temp2 ++  "[" ++ printTacTemp temp3 ++ "]"
     DeferenceRight temp1 temp2 -> printTacTemp temp1 ++ " = &" ++  printTacTemp temp2
@@ -24,6 +24,8 @@ printTacEntry' operation = case operation of
     ReturnVoid -> ""
     ReturnValue temp -> ""
 
+
+printLabel (Just ("FALL",(l,c))) = "  "
 printLabel (Just (lab,(l,c))) = lab ++ "@" ++ show l ++ "," ++ show c ++ ": "
 printLabel Nothing = "  "
 
