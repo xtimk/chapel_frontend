@@ -2,6 +2,8 @@ module Utils.AbsUtils where
 
 import AbsChapel
 
+data ExpType = LeftExp | RightExp
+
 type Loc = (Int,Int)
 
 getExprDeclPos (ExprDecArray (ArrayInit _ (e:exps) _)) = getExprDeclPos e

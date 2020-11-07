@@ -1,7 +1,8 @@
 var a = 1;
 var b = 2;
+var c = 3;
 
-proc main(l: int,ref z:int)
+proc main(l: int, ref z:int, m:char, o:bool, f:string)
 {
 
     a = 3 + 3 * 5;
@@ -13,7 +14,7 @@ proc main(l: int,ref z:int)
         b = 2;
         b = 8;
     }
-    var jj = main(z + z, z + 20);
+    var jj = main(l+l+l,z+z,m,o,f);
 
     a = 66;
     b = 10;
