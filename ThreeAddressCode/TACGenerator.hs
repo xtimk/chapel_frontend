@@ -279,7 +279,7 @@ tacGeneratorExpression' exptype e1 op e2 loc = do
 
 tacGeneratorConstant (loc, id) ty = return ([], Temp ThreeAddressCode.TAC.Fix id loc ty)
 
-getIfSimpleTacAND vtype loc e1 op e2 ltrue lfalse = 
+genLazyTacAND vtype loc e1 op e2 ltrue lfalse = 
   if (isLabelFALL lfalse)
     then
       do
@@ -326,7 +326,7 @@ getIfSimpleTacAND vtype loc e1 op e2 ltrue lfalse =
               do
                 return (tacs, temp2)
 
-getIfSimpleTacOR vtype loc e1 op e2 ltrue lfalse = 
+genLazyTacOR vtype loc e1 op e2 ltrue lfalse = 
   if not (isLabelFALL ltrue)
     then
       do
@@ -373,7 +373,7 @@ getIfSimpleTacOR vtype loc e1 op e2 ltrue lfalse =
                 pushLabel $ Just l1true
                 return (tacs, temp2)
 
-getIfSimpleTacREL vtype loc e1 op e2 ltrue lfalse = do
+genLazyTacREL vtype loc e1 op e2 ltrue lfalse = do
   (tac1,temp1) <- tacGeneratorExpression vtype e1
   (tac2,temp2) <- tacGeneratorExpression vtype e2
   case (isLabelFALL ltrue, isLabelFALL lfalse) of
@@ -397,9 +397,9 @@ tacCheckerBinaryBoolean vtype loc e1 op e2 = do
   setSequenceControlLabels labels
   case labels of
     (SequenceLazyEvalLabels ltrue lfalse lbreak) -> case op of
-      AND -> getIfSimpleTacAND vtype loc e1 op e2 ltrue lfalse
-      OR -> getIfSimpleTacOR vtype loc e1 op e2 ltrue lfalse
-      _ -> getIfSimpleTacREL vtype loc e1 op e2 ltrue lfalse
+      AND -> genLazyTacAND vtype loc e1 op e2 ltrue lfalse
+      OR -> genLazyTacOR vtype loc e1 op e2 ltrue lfalse
+      _ -> genLazyTacREL vtype loc e1 op e2 ltrue lfalse
 
 notRel ThreeAddressCode.TAC.LT t1 t2 = (GTE, t1, t2)
 notRel ThreeAddressCode.TAC.LTE t1 t2 = (ThreeAddressCode.TAC.GT, t1, t2)
