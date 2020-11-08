@@ -245,7 +245,7 @@ tacGeneratorExpression expType exp = case exp of
     Egrthen e1 (PEgrthen (loc,_)) e2 -> tacCheckerBinaryBoolean expType loc e1 ThreeAddressCode.TAC.GT e2
     Ele e1 (PEle (loc,_)) e2 -> tacCheckerBinaryBoolean expType loc e1 ThreeAddressCode.TAC.LTE e2
     Ege e1 (PEge (loc,_)) e2 -> tacCheckerBinaryBoolean expType loc e1 ThreeAddressCode.TAC.GTE e2
-    --Epreop (Negation _) e1 ->
+    Epreop (Negation (PNeg (loc,_))) e1 -> tacCheckerUnaryBoolean expType loc e1
     --Epreop (Indirection _) e1 -> TacChecker [] $ Temp "pippo" (0,0) Bool-- typeCheckerIndirection environment e1
     --Epreop (Address _) e1 -> TacChecker [] $ Temp "pippo" (0,0) Bool-- typeCheckerAddress environment e1
     Earray expIdentifier arDeclaration -> tacGeneratorArrayIndexing expIdentifier arDeclaration
@@ -402,6 +402,16 @@ tacCheckerBinaryBoolean vtype loc e1 op e2 = do
       AND -> genLazyTacAND vtype loc e1 op e2 ltrue lfalse
       OR -> genLazyTacOR vtype loc e1 op e2 ltrue lfalse
       _ -> genLazyTacREL vtype loc e1 op e2 ltrue lfalse
+
+tacCheckerUnaryBoolean expType loc e1 = do
+  labels <- popSequenceControlLabels
+  setSequenceControlLabels labels
+  case labels of
+      (SequenceLazyEvalLabels ltrue lfalse lbreak) -> do
+        modify $ addIfSimpleLabels lfalse ltrue lbreak
+        (tac1,temp1) <- tacGeneratorExpression expType e1
+        return (tac1, temp1)
+
 
 notRel ThreeAddressCode.TAC.LT t1 t2 = (GTE, t1, t2)
 notRel ThreeAddressCode.TAC.LTE t1 t2 = (ThreeAddressCode.TAC.GT, t1, t2)
