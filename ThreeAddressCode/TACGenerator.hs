@@ -56,14 +56,14 @@ tacGeneratorDeclExpression' lengths ids decExp =
         else do
           res <- mapM (tacGeneratorArrayIdentifier temp (getExpPos exp) lengths ) ids
           return $ reverse (res ++ tacEntry)
-      
+
 
 tacGeneratorDeclExpression'' _ _ [] = return []
 tacGeneratorDeclExpression'' lengths@(x:xs) ids (y:ys) = do
   res1 <- tacGeneratorDeclExpression'' ((x+1):xs) ids ys
   res2 <- tacGeneratorDeclExpression' lengths ids y
   return (res1 ++ res2)
-  
+
 
 --Vedere array qua
 tacGeneratorIdentifier temp@(Temp _ _ _ ty) (PIdent (loc, identifier)) =
@@ -141,24 +141,37 @@ tacGeneratorStatement statement = case statement of
   Continue (PContinue (pos@(l,c), name)) _semicolon -> --do
     --typeCheckerSequenceStatement pos
     return [] 
-  DoWhile _pdo _while body guard -> --do
-    --typeCheckerBody DoWhileBlk (createId l c name) body
-    --typeCheckerGuard guard
-    return []
+  DoWhile (Pdo (loc@(l,c),name)) _while body (SGuard _ guard _) -> do
+    -- inserisco le label nell'env e chiamo la funzione per la generazione del TAC della guardia
+    labelBegin <- newlabel loc
+    labelTrue <- newlabelFALL loc
+    labelFalse <- newlabel loc -- s.next
+
+    pushLabel $ Just labelBegin
+    res <- tacGeneratorBody body
+
+    modify $ addIfSimpleLabels labelBegin labelFalse labelBegin
+    (resg,_) <- tacGeneratorGuard RightExp guard
+    popSequenceControlLabels
+
+    pushLabel $ Just labelFalse
+    let gotob = TACEntry Nothing $ UnconJump labelBegin
+    return (res ++ resg ++ [gotob])
+
   While _pwhile (SGuard _ guard _) body -> do
     -- inserisco le label nell'env e chiamo la funzione per la generazione del TAC della guardia
     labelBegin <- newlabel  $ getBodyStartPos body
     labelTrue <- newlabelFALL $ getBodyStartPos body
     labelFalse <- newlabel  $ getBodyEndPos body -- s.next
 
-    modify $ addWhileDoLabels labelTrue labelFalse labelBegin
+    modify $ addIfSimpleLabels labelTrue labelFalse labelBegin
     (resg',_) <- tacGeneratorGuard RightExp guard
-    resg <- return $ attachLabelToFirstElem labelBegin resg'
+    resg <- return $ attachLabelToFirstElem (Just labelBegin) resg'
     popSequenceControlLabels
     
     res <- tacGeneratorBody body
-    pushLabel labelFalse
-    let gotob = TACEntry Nothing $ UnconJump (getLabelFromMaybe labelBegin)
+    pushLabel $ Just labelFalse
+    let gotob = TACEntry Nothing $ UnconJump labelBegin
     return (resg ++ res ++ [gotob]) 
 
   If (PIf _) (SGuard _ guard _) _then body-> do
@@ -170,10 +183,10 @@ tacGeneratorStatement statement = case statement of
     (resg,_) <- tacGeneratorGuard RightExp guard
 
     popSequenceControlLabels
-    pushLabel labelTrue
+    pushLabel (Just labelTrue)
 
     res <- tacGeneratorBody body
-    pushLabel labelFalse
+    pushLabel (Just labelFalse)
     return (resg ++ res) 
 
   IfElse _ (SGuard _ guard _) _then bodyIf _ bodyElse -> do
@@ -185,13 +198,13 @@ tacGeneratorStatement statement = case statement of
     (resg,_) <- tacGeneratorGuard RightExp guard 
    
     popSequenceControlLabels
-    pushLabel labelTrue
+    pushLabel (Just labelTrue)
     resthen <- tacGeneratorBody bodyIf
-    let goto = TACEntry Nothing $ UnconJump (getLabelFromMaybe latestLabel)
+    let goto = TACEntry Nothing $ UnconJump latestLabel
 
-    pushLabel labelFalse
+    pushLabel $ Just labelFalse
     reselse <- tacGeneratorBody bodyElse
-    pushLabel latestLabel
+    pushLabel $ Just latestLabel
  
     return (resg ++ resthen ++ goto:reselse)
   StExp (EFun funidentifier _ passedparams _) _semicolon-> do
@@ -265,94 +278,7 @@ tacGeneratorExpression' exptype e1 op e2 loc = do
 
 tacGeneratorConstant (loc, id) ty = return ([], Temp ThreeAddressCode.TAC.Fix id loc ty)
 
-getWhileDoTacAND vtype loc e1 op e2 ltrue lfalse = 
-  if isLabelFALL lfalse
-    then do
-        l1true <- newlabelFALL loc
-        l1false <- newlabel loc
-
-        modify $ addWhileDoLabels l1true l1false l1false
-        (tac1,temp1) <- tacGeneratorExpression vtype e1
-        let l2false = lfalse
-        let l2true = ltrue
-        modify $ addWhileDoLabels l1true l1false l1false
-
-        label <- popLabel
-        (tac2',temp2') <- tacGeneratorExpression vtype e2
-        let (tac2, temp2) = (attachLabelToFirstElem label tac2', temp2')
-
-        let tacs = tac1 ++ tac2 in
-          if isLabelFALL lfalse
-            then do
-                pushLabel l1false
-                return (tacs, temp2)
-            else return (tacs, temp2)
-    else do
-        let l1false = lfalse
-        l1true <- newlabelFALL loc
-        modify $ addWhileDoLabels l1true l1false l1false
-        (tac1,temp1) <- tacGeneratorExpression vtype e1
-
-        let l2false = lfalse
-        let l2true = ltrue
-        modify $ addWhileDoLabels l1true l1false l1false
-        label <- popLabel
-        (tac2',temp2') <- tacGeneratorExpression vtype e2
-        (tac2, temp2) <- return (attachLabelToFirstElem label tac2', temp2')
-
-        let tacs = tac1 ++ tac2 in
-          if isLabelFALL lfalse
-            then do
-                pushLabel l1false
-                return (tacs, temp2)
-            else return (tacs, temp2)
-
-getWhileDoTacOR vtype loc e1 op e2 ltrue lfalse = 
-  if not (isLabelFALL ltrue)
-    then do
-        l1false <- newlabelFALL loc
-        let l1true = ltrue
-        modify $ addWhileDoLabels l1true l1false l1false
-        (tac1,temp1) <- tacGeneratorExpression vtype e1
-
-        let l2false = lfalse
-        let l2true = ltrue
-        modify $ addWhileDoLabels l1true l1false l1false
-        label <- popLabel
-        (tac2',temp2') <- tacGeneratorExpression vtype e2
-        (tac2, temp2) <- return (attachLabelToFirstElem label tac2', temp2')
-
-        let tacs = tac1 ++ tac2 in
-          if not (isLabelFALL ltrue)
-            then
-              return (tacs, temp2)
-            else do
-                pushLabel l1true
-                return (tacs, temp2)
-    else do
-        l1false <- newlabelFALL loc
-        l1true <- newlabel loc
-        modify $ addWhileDoLabels l1true l1false l1false
-        (tac1,temp1) <- tacGeneratorExpression vtype e1
-
-        let l2false = lfalse
-        let l2true = ltrue
-        modify $ addWhileDoLabels l2true l2false l1false
-        label <- popLabel
-        (tac2',temp2') <- tacGeneratorExpression vtype e2
-        (tac2, temp2) <- return (attachLabelToFirstElem label tac2', temp2')
-
-        let tacs = tac1 ++ tac2 in
-          if not (isLabelFALL ltrue)
-            then
-              return (tacs, temp2)
-            else do
-                pushLabel l1true
-                return (tacs, temp2)
-
-
-
-getIfSimpleTacAND vtype loc e1 op e2 ltrue lfalse = 
+genLazyTacAND vtype loc e1 op e2 ltrue lfalse = 
   if (isLabelFALL lfalse)
     then
       do
@@ -372,7 +298,7 @@ getIfSimpleTacAND vtype loc e1 op e2 ltrue lfalse =
           if (isLabelFALL lfalse)
             then 
               do
-                pushLabel l1false
+                pushLabel $ Just l1false
                 return (tacs, temp2)
             else
               do
@@ -393,13 +319,13 @@ getIfSimpleTacAND vtype loc e1 op e2 ltrue lfalse =
           if (isLabelFALL lfalse)
             then 
               do
-                pushLabel l1false
+                pushLabel $ Just l1false
                 return (tacs, temp2)
             else
               do
                 return (tacs, temp2)
 
-getIfSimpleTacOR vtype loc e1 op e2 ltrue lfalse = 
+genLazyTacOR vtype loc e1 op e2 ltrue lfalse = 
   if not (isLabelFALL ltrue)
     then
       do
@@ -421,7 +347,7 @@ getIfSimpleTacOR vtype loc e1 op e2 ltrue lfalse =
               return (tacs, temp2)
             else
               do
-                pushLabel l1true
+                pushLabel $ Just l1true
                 return (tacs, temp2)
     else
       do
@@ -443,25 +369,25 @@ getIfSimpleTacOR vtype loc e1 op e2 ltrue lfalse =
               return (tacs, temp2)
             else
               do
-                pushLabel l1true
+                pushLabel $ Just l1true
                 return (tacs, temp2)
 
-getIfSimpleTacREL vtype loc e1 op e2 ltrue lfalse = do
+genLazyTacREL vtype loc e1 op e2 ltrue lfalse = do
   (tac1,temp1) <- tacGeneratorExpression vtype e1
   (tac2,temp2) <- tacGeneratorExpression vtype e2
   case (isLabelFALL ltrue, isLabelFALL lfalse) of
     (True,True) ->
       return (tac1 ++ tac2, temp1)
     (_, True) ->
-      let aa = TACEntry Nothing (RelCondJump temp1 op temp2 (getLabelFromMaybe ltrue)) in
+      let aa = TACEntry Nothing (RelCondJump temp1 op temp2 ltrue) in
         return (tac1 ++ tac2 ++ [aa], temp2)
     (True, _) ->
       let (ope, t1, t2) = notRel op temp1 temp2
-          aa = TACEntry Nothing (RelCondJump t1 ope t2 (getLabelFromMaybe lfalse)) in
+          aa = TACEntry Nothing (RelCondJump t1 ope t2 lfalse) in
             return (tac1 ++ tac2 ++ [aa], temp2)
     (_,_) ->
-      let aa = TACEntry Nothing (RelCondJump temp1 op temp2 (getLabelFromMaybe ltrue));
-          bb = TACEntry Nothing (UnconJump (getLabelFromMaybe lfalse)) in
+      let aa = TACEntry Nothing (RelCondJump temp1 op temp2 ltrue);
+          bb = TACEntry Nothing (UnconJump lfalse) in
             return (tac1 ++ tac2 ++ (aa:bb:[]) , temp2)
 
 
@@ -469,14 +395,10 @@ tacCheckerBinaryBoolean vtype loc e1 op e2 = do
   labels <- popSequenceControlLabels
   setSequenceControlLabels labels
   case labels of
-    Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak)) -> case op of
-      AND -> getIfSimpleTacAND vtype loc e1 op e2 ltrue lfalse
-      OR -> getIfSimpleTacOR vtype loc e1 op e2 ltrue lfalse
-      _ -> getIfSimpleTacREL vtype loc e1 op e2 ltrue lfalse
-    Just (SequenceWhileDo (WhileDoLabels ltrue lfalse lbegin)) -> case op of
-      AND -> getWhileDoTacAND vtype loc e1 op e2 ltrue lfalse
-      OR -> getWhileDoTacOR vtype loc e1 op e2 ltrue lfalse
-      _ -> getIfSimpleTacREL vtype loc e1 op e2 ltrue lfalse
+    (SequenceLazyEvalLabels ltrue lfalse lbreak) -> case op of
+      AND -> genLazyTacAND vtype loc e1 op e2 ltrue lfalse
+      OR -> genLazyTacOR vtype loc e1 op e2 ltrue lfalse
+      _ -> genLazyTacREL vtype loc e1 op e2 ltrue lfalse
 
 notRel ThreeAddressCode.TAC.LT t1 t2 = (GTE, t1, t2)
 notRel ThreeAddressCode.TAC.LTE t1 t2 = (ThreeAddressCode.TAC.GT, t1, t2)
@@ -522,7 +444,7 @@ tacGeneratorFunctionParameter expType (PassedPar exp) =
           varTemp =  Temp ThreeAddressCode.TAC.Var id loc ty in 
             return ([], varTemp)
     _ -> tacGeneratorExpression expType exp
-  
+
 
 tacGenerationEntryParameter temp = TACEntry Nothing $ SetParam temp
 
@@ -578,7 +500,7 @@ tacGeneratorAssignment leftExp assign rightExp = do
                 entryadd = TACEntry Nothing $ Binary tempAdd temp Plus tempRight 
                 entryFinal = TACEntry Nothing $ IndexLeft variable index tempAdd in 
                   return ((entryFinal:entryadd:entryArrayValue:[]) ++ tacs, temp)
-                
+
 
 tacGeneratorLeftExpression leftExp assign tempRight = case leftExp of
   Evar {} -> do
@@ -619,4 +541,3 @@ tacGenerationArrayPosAdd (Variable loc ty) temps = do
                   mulEntry = TACEntry Nothing $ Binary tempMult temp Times tempLength
                   addEntry =  TACEntry Nothing $ Binary tempAdd y Plus tempMult in
                     return (addEntry:mulEntry:tacs,tempAdd)
-
