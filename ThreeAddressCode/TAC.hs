@@ -27,7 +27,8 @@ data TACOperation =
     CallProc Temp Int |
     CallFun Temp Temp Int |
     ReturnVoid |
-    ReturnValue Temp 
+    ReturnValue Temp |
+    VoidOp 
     deriving (Show)
 
 data Temp = Temp TempMode String Loc Type

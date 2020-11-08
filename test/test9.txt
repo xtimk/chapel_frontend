@@ -4,6 +4,15 @@ var c = 3;
 
 proc main(l: int, ref z:int, m:char, o:bool, f:string)
 {
+    proc pluto()
+    {
+       
+    };
+
+    proc bella()
+    {
+       
+    };
 
     a = 3 + 3 * 5;
     b = 4;
@@ -16,9 +25,19 @@ proc main(l: int, ref z:int, m:char, o:bool, f:string)
     }
     var jj = main(l+l+l,z+z,m,o,f);
 
+    bella();
+
     a = 66;
     b = 10;
 
     return a;
 
 }
+
+ proc genoveffa()
+    {
+       proc cavallo()
+    {
+       
+    };
+    }

@@ -12,45 +12,55 @@ import Checker.SymbolTable
 import Utils.Type
 import Checker.SupTable
 
-type TacMonad a = State ([TACEntry], Temp, Int, BPTree BP, [Maybe SequenceControlLabel], Maybe Label) a
+type TacMonad a = State ([TACEntry], Temp, Int, BPTree BP, [Maybe SequenceControlLabel], Maybe Label,  [TACEntry]) a
 
 
-startTacState bpTree = ([], Temp ThreeAddressCode.TAC.Fix "" (0::Int,0::Int) Int,  0, bpTree, [], Nothing)
+startTacState bpTree = ([], Temp ThreeAddressCode.TAC.Fix "" (0::Int,0::Int) Int,  0, bpTree, [], Nothing, [])
 
-addTacEntries tacEntry (tac,_te, _t, _b, _labels, _label ) =
-    (tacEntry ++ tac,_te, _t,_b, _labels, _label)
+pushFunTacs tacEntries = do
+  (tac,_te, _t, _b, _labels, _label, _ft ) <- get
+  put (tac,_te, _t,_b, _labels, _label, (tacEntries) ++ _ft)
+  get
 
-addTacEntry tacEntry (tac,_te, _t, _b, _labels, _label ) =
-    (tacEntry:tac,_te, _t,_b, _labels, _label)
+popFunTacs :: TacMonad [TACEntry]
+popFunTacs = do
+  (_tac,_te, _t,_b, _labels, _label, ft) <- get
+  put (_tac,_te, _t,_b, _labels, _label, [])
+  return ft
 
-addIfSimpleLabels ltrue lfalse lbreak (_tac,_te, _t, _b, _labels, _label ) =
-    (_tac,_te, _t,_b, ((Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak))):_labels), _label)
 
-addWhileDoLabels ltrue lfalse lbegin (_tac,_te, _t, _b, _labels, _label ) =
-    (_tac,_te, _t,_b, ((Just (SequenceWhileDo (WhileDoLabels ltrue lfalse lbegin))):_labels), _label)
+addTacEntries tacEntry (tac,_te, _t, _b, _labels, _label, _ft ) =
+    (tacEntry ++ tac,_te, _t,_b, _labels, _label, _ft)
+
+addTacEntry tacEntry (tac,_te, _t, _b, _labels, _label, _ft) =
+    (tacEntry:tac,_te, _t,_b, _labels, _label, _ft)
+
+addIfSimpleLabels ltrue lfalse lbreak (_tac,_te, _t, _b, _labels, _label,_ft ) =
+    (_tac,_te, _t,_b, ((Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak))):_labels), _label,_ft)
+
+addWhileDoLabels ltrue lfalse lbegin (_tac,_te, _t, _b, _labels, _label, _ft ) =
+    (_tac,_te, _t,_b, ((Just (SequenceWhileDo (WhileDoLabels ltrue lfalse lbegin))):_labels), _label, _ft)
 
 
 getSequenceControlLabels :: TacMonad (Maybe SequenceControlLabel)
 getSequenceControlLabels = do
-    (_tac,_te, _t, _b, ifLabels, _label ) <- get
+    (_tac,_te, _t, _b, ifLabels, _label, _ft ) <- get
     case ifLabels of
       [] -> return Nothing
       _ -> do 
-        put (_tac,_te, _t, _b,tail ifLabels, _label )
+        put (_tac,_te, _t, _b,tail ifLabels, _label, _ft )
         return $ head ifLabels
 
 setSequenceControlLabels a = do
-  (_tac,_te, _t, _b, ifLabels, _label ) <- get
-  put (_tac,_te, _t, _b, a:ifLabels, _label )
+  (_tac,_te, _t, _b, ifLabels, _label, _ft ) <- get
+  put (_tac,_te, _t, _b, a:ifLabels, _label, _ft )
 
-    --(_tac,_te, _t,_b, (Just (SequenceControlLabel (IfSimpleLabels ltrue lfalse))), _label)
 isLabelFALL Nothing = False
 isLabelFALL (Just (name,pos)) = (name == "FALL")
 
 getLabelFromMaybe (Just (name,pos)) = (name,pos)
 
 
--- tacGenerator :: Program -> StateT ([TACEntry], Temp, Int, BPTree BP, Maybe SequenceControlLabel, Maybe Label) Identity ([TACEntry], Temp, Int, BPTree BP, Maybe SequenceControlLabel, Maybe Label)
 tacGenerator (Progr p) = tacGeneratorModule p
 
 tacGeneratorModule (Mod m) = do
@@ -65,10 +75,10 @@ tacGeneratorExt (x:xs) = case x of
         res2 <- tacGeneratorExt xs
         return $ res ++ res2
     ExtFun fun -> do
-        resfun <- tacGeneratorFunction fun -- todo
+        resfun <- tacGeneratorFunction fun 
+        tacsFun <- popFunTacs 
         res <- tacGeneratorExt xs
-        return (resfun:res)
-
+        return $ (tacsFun ++ resfun):res
 
 tacGeneratorDeclaration x =
   case x of
@@ -107,7 +117,7 @@ tacGeneratorDeclExpression'' lengths@(x:xs) ids (y:ys) = do
 tacGeneratorIdentifier temp@(Temp _ _ _ ty) (PIdent (loc, identifier)) =
   return $ TACEntry Nothing $ Nullary (Temp ThreeAddressCode.TAC.Var identifier loc ty) temp
 
-tacGeneratorArrayIdentifier temp@(Temp _ _ _ ty) expLoc lenghts id@(PIdent (loc, identifier)) = do
+tacGeneratorArrayIdentifier temp@(Temp _ _ _ _) _ lenghts id@(PIdent (_, identifier)) = do
   tacEnv <- get
   let Variable loc ty = getVarTypeTAC id tacEnv
       arrayPos = arrayCalculatePosition ty lenghts
@@ -131,8 +141,18 @@ calculateBound (boundLeft, boundRight) =
                   Utils.Type.Fix lenght -> lenght
                   Utils.Type.Var _ -> 0
 
--- tacGeneratorFunction :: Function -> StateT ([TACEntry], Temp, Int, BPTree BP, Maybe SequenceControlLabel, Maybe Label) Identity [TACEntry]
-tacGeneratorFunction (FunDec (PProc (loc@(l,c),funname) ) signature body@(BodyBlock  (POpenGraph (locGraph,_)) _ _)) = tacGeneratorBody body 
+tacGeneratorFunction (FunDec (PProc (loc,_) ) signature body) = do
+  envTac <-get
+  tacs <- tacGeneratorBody body 
+  let ident@(PIdent (loc,id)) = getFunNamePident signature
+  let tacVoid = TACEntry Nothing VoidOp
+  let Function _ _ retTy = getVarTypeTAC ident envTac
+  case retTy of
+    Utils.Type.Void -> do
+      let entryVoid = TACEntry Nothing ReturnVoid
+      return $ tacVoid:attachLabelToFirstElem (Just (id,loc)) (tacs ++ [entryVoid] )
+    _ ->  return $ tacVoid:attachLabelToFirstElem (Just (id,loc)) tacs
+ 
 
 tacGeneratorBody (BodyBlock  _ xs _  ) = do
   label <- popLabel
@@ -148,7 +168,10 @@ tacGeneratorBody' (x:xs) = do
 
 tacGeneratorBody'' x = case x of
   Stm statement -> tacGeneratorStatement statement
-  Fun fun _ -> tacGeneratorFunction fun
+  Fun fun _ -> do 
+    tacs <- tacGeneratorFunction fun
+    pushFunTacs tacs
+    return []
   DeclStm (Decl _ declList _ ) -> do
     result <- mapM tacGeneratorDeclaration declList
     return (concat result)
@@ -161,14 +184,12 @@ tacGeneratorStatement statement = case statement of
     labels <- getSequenceControlLabels
     setSequenceControlLabels labels
     case labels of
-        Just (SequenceIfSimple (IfSimpleLabels _ _ lbreak)) -> do
+        Just (SequenceIfSimple (IfSimpleLabels _ _ lbreak)) ->
           let goto = TACEntry Nothing $ UnconJump (getLabelFromMaybe lbreak) in
             return (goto:[])
-        Just (SequenceWhileDo (WhileDoLabels _ lbreak _)) -> do
+        Just (SequenceWhileDo (WhileDoLabels _ lbreak _)) ->
           let goto = TACEntry Nothing $ UnconJump (getLabelFromMaybe lbreak) in
             return (goto:[])
-
-    --typeCheckerSequenceStatement pos
   Continue (PContinue (pos@(l,c), name)) _semicolon -> --do
     --typeCheckerSequenceStatement pos
     return [] 
@@ -268,19 +289,22 @@ tacGeneratorStatement statement = case statement of
   StExp exp _semicolon -> do
     (tacEntry, _) <- tacGeneratorExpression LeftExp exp
     return $ reverse tacEntry
-  RetVal ret exp _semicolon -> return [] --do
+  RetVal (PReturn (loc,_)) exp _semicolon -> do
+    (tacs, temp) <- tacGeneratorExpression RightExp exp
+    tacEntry <- return $ TACEntry Nothing $ ReturnValue temp
+    return $ tacEntry:tacs
     --(_s,tree,current_id) <- get
     --let DataChecker tyret errs2 = typeCheckerExpression (_s,tree,current_id) exp in do
      -- modify $ addErrorsCurrentNode errs2
      -- typeCheckerReturn return tyret
-  RetVoid ret _semicolon -> return [] --typeCheckerReturn return Checker.SymbolTable.Void
+  RetVoid (PReturn (_,_)) _semicolon -> return [TACEntry Nothing ReturnVoid] 
 
 attachLabelToFirstElem _ [] = []
 attachLabelToFirstElem (Just label) ((TACEntry _l _e):xs) = (TACEntry (Just label) _e):xs
 attachLabelToFirstElem Nothing xs = xs
 
 
-tacGeneratorGuard expType guard = tacGeneratorExpression expType guard
+tacGeneratorGuard = tacGeneratorExpression
 
 tacGeneratorExpression expType exp = case exp of
     EAss e1 assign e2 -> tacGeneratorAssignment e1 assign e2
@@ -532,62 +556,37 @@ getIfSimpleTacOR vtype loc e1 op e2 ltrue lfalse =
                 pushLabel l1true
                 return (tacs, temp2)
 
-getIfSimpleTacREL vtype loc e1 op e2 ltrue lfalse =
+getIfSimpleTacREL vtype loc e1 op e2 ltrue lfalse = do
+  (tac1,temp1) <- tacGeneratorExpression vtype e1
+  (tac2,temp2) <- tacGeneratorExpression vtype e2
   case (isLabelFALL ltrue, isLabelFALL lfalse) of
-    (True,True) -> do
-      (tac1,temp1) <- tacGeneratorExpression vtype e1
-      (tac2,temp2) <- tacGeneratorExpression vtype e2
+    (True,True) ->
       return (tac1 ++ tac2, temp1)
-    (_, True) -> do
-      (tac1,temp1) <- tacGeneratorExpression vtype e1
-      (tac2,temp2) <- tacGeneratorExpression vtype e2
+    (_, True) ->
       let aa = TACEntry Nothing (RelCondJump temp1 op temp2 (getLabelFromMaybe ltrue)) in
         return (tac1 ++ tac2 ++ [aa], temp2)
-    (True, _) -> do
-      (tac1,temp1) <- tacGeneratorExpression vtype e1
-      (tac2,temp2) <- tacGeneratorExpression vtype e2
-      let 
-        (ope, t1, t2) = notRel op temp1 temp2
-        aa = TACEntry Nothing (RelCondJump t1 ope t2 (getLabelFromMaybe lfalse)) in
-        return (tac1 ++ tac2 ++ [aa], temp2)
-    (_,_) -> do
-      (tac1,temp1) <- tacGeneratorExpression vtype e1
-      (tac2,temp2) <- tacGeneratorExpression vtype e2
-      let 
-        aa = TACEntry Nothing (RelCondJump temp1 op temp2 (getLabelFromMaybe ltrue));
-        bb = TACEntry Nothing (UnconJump (getLabelFromMaybe lfalse))
-        in
-          return ((tac1 ++ tac2 ++ (aa:bb:[]) , temp2))
+    (True, _) ->
+      let (ope, t1, t2) = notRel op temp1 temp2
+          aa = TACEntry Nothing (RelCondJump t1 ope t2 (getLabelFromMaybe lfalse)) in
+            return (tac1 ++ tac2 ++ [aa], temp2)
+    (_,_) ->
+      let aa = TACEntry Nothing (RelCondJump temp1 op temp2 (getLabelFromMaybe ltrue));
+          bb = TACEntry Nothing (UnconJump (getLabelFromMaybe lfalse)) in
+            return (tac1 ++ tac2 ++ (aa:bb:[]) , temp2)
 
 
 tacCheckerBinaryBoolean vtype loc e1 op e2 = do
-  case op of
-    AND ->  do
-      labels <- getSequenceControlLabels
-      setSequenceControlLabels labels
-      case labels of
-        Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak)) -> 
-          getIfSimpleTacAND vtype loc e1 op e2 ltrue lfalse
-        Just (SequenceWhileDo (WhileDoLabels ltrue lfalse lbegin)) -> 
-          getWhileDoTacAND vtype loc e1 op e2 ltrue lfalse
-
-    OR -> do
-      labels <- getSequenceControlLabels
-      setSequenceControlLabels labels
-      case labels of
-        Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak)) -> 
-          getIfSimpleTacOR vtype loc e1 op e2 ltrue lfalse
-        Just (SequenceWhileDo (WhileDoLabels ltrue lfalse lbegin)) -> 
-          getWhileDoTacOR vtype loc e1 op e2 ltrue lfalse
-
-    _ -> do
-      labels <- getSequenceControlLabels
-      setSequenceControlLabels labels
-      case labels of
-        Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak)) -> 
-          getIfSimpleTacREL vtype loc e1 op e2 ltrue lfalse
-        Just (SequenceWhileDo (WhileDoLabels ltrue lfalse lbegin)) -> 
-          getIfSimpleTacREL vtype loc e1 op e2 ltrue lfalse
+  labels <- getSequenceControlLabels
+  setSequenceControlLabels labels
+  case labels of
+    Just (SequenceIfSimple (IfSimpleLabels ltrue lfalse lbreak)) -> case op of
+      AND -> getIfSimpleTacAND vtype loc e1 op e2 ltrue lfalse
+      OR -> getIfSimpleTacOR vtype loc e1 op e2 ltrue lfalse
+      _ -> getIfSimpleTacREL vtype loc e1 op e2 ltrue lfalse
+    Just (SequenceWhileDo (WhileDoLabels ltrue lfalse lbegin)) -> case op of
+      AND -> getWhileDoTacAND vtype loc e1 op e2 ltrue lfalse
+      OR -> getWhileDoTacOR vtype loc e1 op e2 ltrue lfalse
+      _ -> getIfSimpleTacREL vtype loc e1 op e2 ltrue lfalse
 
 notRel ThreeAddressCode.TAC.LT t1 t2 = (GTE, t1, t2)
 notRel ThreeAddressCode.TAC.LTE t1 t2 = (ThreeAddressCode.TAC.GT, t1, t2)
@@ -737,25 +736,24 @@ tacGenerationArrayPosAdd (Variable loc ty) temps = do
 
 newtemp :: TacMonad String
 newtemp = do
-  (_tac, _temp , k , _bp, _labels, _label) <- get
-  put (_tac, _temp , k + 1 , _bp, _labels, _label)
+  (_tac, _temp , k , _bp, _labels, _label, _ft) <- get
+  put (_tac, _temp , k + 1 , _bp, _labels, _label, _ft)
   return $ int2AddrTempName k
 
 --newlabel :: Loc -> TacMonad Label
 newlabel pos = do
-  (_tac, _temp , k , _bp, _labels, _label) <- get
-  put (_tac, _temp , k + 1 , _bp, _labels, _label)
+  (_tac, _temp , k , _bp, _labels, _label, _ft) <- get
+  put (_tac, _temp , k + 1 , _bp, _labels, _label, _ft)
   return $ Just ((int2Label k),pos)
 
-newlabelFALL pos = do
-  return $ Just ("FALL",pos)
+newlabelFALL pos = return $ Just ("FALL",pos)
 
 popLabel :: TacMonad (Maybe Label)
 popLabel = do
-  (_tac, _temp , k , _bp, _labels, label) <- get
-  put (_tac, _temp , k , _bp, _labels, Nothing)
+  (_tac, _temp , k , _bp, _labels, label, _ft) <- get
+  put (_tac, _temp , k , _bp, _labels, Nothing, _ft)
   return label
 
 pushLabel label = do
-  (_tac, _temp , k , _bp, _labels, _) <- get
-  put (_tac, _temp , k , _bp, _labels, label)
+  (_tac, _temp , k , _bp, _labels, _, _ft) <- get
+  put (_tac, _temp , k , _bp, _labels, label, _ft)

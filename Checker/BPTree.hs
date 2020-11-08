@@ -152,7 +152,7 @@ getVarType (PIdent ((l,c), identifier)) (_,tree,currentNode) =
             Just (_,Function _ _ t) -> DataChecker t []
             Nothing -> DataChecker Error [ErrorChecker (l,c) $ ErrorVarNotDeclared identifier]
 
-getVarTypeTAC (PIdent (loc, identifier)) (_,_,_,tree,_,_)  = 
+getVarTypeTAC (PIdent (loc, identifier)) (_,_,_,tree,_,_,_)  = 
     let currentNode = getCurIdOfTokenPos loc tree
         symtable = uniteSymTables $ bpPathToList currentNode tree in
         case DMap.lookup identifier symtable of
