@@ -4,7 +4,6 @@ var c : bool;
 
 proc main(l: int,ref z:int)
 {
-    a = 90;
 
 
     do while

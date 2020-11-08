@@ -1,0 +1,13 @@
+var a = 1;
+var b = 2;
+var c : bool;
+
+proc main(l: int,ref z:int)
+{
+    a = 90;
+    do while
+    {
+        a = 3;
+    } (4 < 5)
+    a = 7;
+}
