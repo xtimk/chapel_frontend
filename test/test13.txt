@@ -1,0 +1,18 @@
+var a = 1;
+var b = 2;
+var c : bool;
+
+proc main(l: int,ref z:int)
+{
+    a = 90;
+
+
+    do while
+    {
+        a = b;
+        b = 1;
+        b = 2;
+        b = 8;
+    } (  (a + 5 < 1 || b < 3) && b < 5  )
+    a = 7;
+}
