@@ -21,9 +21,9 @@ newtemp = do
 newlabel pos = do
   (_tac, _temp , k , _bp, _labels, _label, _ft) <- get
   put (_tac, _temp , k + 1 , _bp, _labels, _label, _ft)
-  return $ (int2Label k,pos)
+  return (int2Label k,pos)
 
-newlabelFALL pos = return $ ("FALL",pos)
+newlabelFALL pos = return ("FALL",pos)
 
 popLabel :: TacMonad (Maybe Label)
 popLabel = do
@@ -59,13 +59,12 @@ addTacEntry tacEntry (tac,_te, _t, _b, _labels, _label, _ft) =
 
 --addIfSimpleLabels :: Label -> Label -> Label -> (a, b, c, d, [SequenceControlLabel], f, g) -> (a, b, c, d, [SequenceControlLabel], f, g)
 addIfSimpleLabels ltrue lfalse lbreak (_tac,_te, _t, _b, _labels, _label,_ft ) =
-    (_tac,_te, _t,_b, (SequenceLazyEvalLabels ltrue lfalse lbreak):_labels, _label,_ft)
+    (_tac,_te, _t,_b, SequenceLazyEvalLabels ltrue lfalse lbreak:_labels, _label,_ft)
 
-popSequenceControlLabels :: TacMonad (SequenceLazyEvalLabels)
+popSequenceControlLabels :: TacMonad SequenceLazyEvalLabels
 popSequenceControlLabels = do
     (_tac,_te, _t, _b, ifLabels, _label, _ft ) <- get
     case ifLabels of
-      -- [] -> return ()
       _ -> do 
         put (_tac,_te, _t, _b,tail ifLabels, _label, _ft )
         return $ head ifLabels

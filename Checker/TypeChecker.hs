@@ -381,6 +381,7 @@ typeCheckerAssignment environment e1 assign e2 =
 typeCheckerLeftExpression assign enviroment exp = case exp of
   Evar {} -> typeCheckerExpression enviroment exp
   Earray {} -> typeCheckerExpression enviroment exp
+  Epreop {} -> typeCheckerExpression enviroment exp
   _ -> DataChecker Error [ErrorChecker (getExpPos exp) $ ErrorNotLeftExpression exp assign]
 
 typeCheckerAddress enviroment exp = case exp of
