@@ -48,22 +48,11 @@ data TacChecker a = TacChecker {
   datas :: a
 } deriving (Show)
 
-data IfSimpleLabels = IfSimpleLabels {
-    labelTrue :: Maybe Label,
-    labelFalse :: Maybe Label,
-    breakLabel :: Maybe Label
+data SequenceLazyEvalLabels = SequenceLazyEvalLabels {
+    labelTrue :: Label,
+    labelFalse :: Label,
+    breakLabel :: Label
 } deriving (Show)
-
-data WhileDoLabels = WhileDoLabels {
-    labelWhileDoGuardTrue :: Maybe Label,
-    labelWhileDoGuardFalse :: Maybe Label,
-    labelWhileDoBegin :: Maybe Label
-} deriving (Show)
-
-data SequenceControlLabel = 
-    SequenceIfSimple IfSimpleLabels |
-    SequenceWhileDo WhileDoLabels
-        deriving (Show)
 
 addLabelToEntry :: Maybe Label -> TACEntry -> TACEntry
 addLabelToEntry label (TACEntry _  operationType) = TACEntry label operationType
