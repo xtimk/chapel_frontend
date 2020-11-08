@@ -5,12 +5,13 @@ var c : bool;
 proc main(l: int,ref z:int)
 {
     a = 90;
-
+    continue;
 
     if (  (a < 1 || b < 3) && b < 5  ) then
     {
         if ( b < 55 ) then
         {
+            break;
             b = 2;
             b = 8; 
         }
