@@ -10,9 +10,9 @@ printTacEntry' operation = case operation of
     Binary temp1 temp2 bop temp3 -> printTacTemp temp1 ++ " = " ++ printTacTemp temp2 ++  printTacBop bop ++ printTacTemp temp3
     Unary temp1 uop  temp2 -> printTacTemp temp1 ++ " = " ++ printTacUop uop ++ printTacTemp temp2
     Nullary temp1 temp2 ->  printTacTemp temp1 ++ " = " ++ printTacTemp temp2
-    UnconJump label -> "goto " ++ printLabel (Just label)
-    BoolCondJump temp label -> "if " ++ printTacTemp temp ++ " goto " ++ printLabel (Just label)
-    RelCondJump temp1 rel temp2 label -> "if " ++ printTacTemp temp1 ++ " " ++ show rel ++ " " ++ printTacTemp temp2 ++ " goto " ++ printLabel (Just label)
+    UnconJump label -> "goto " ++ printLabelGoto label
+    BoolCondJump temp label -> "if " ++ printTacTemp temp ++ " goto " ++ printLabelGoto label
+    RelCondJump temp1 rel temp2 label -> "if " ++ printTacTemp temp1 ++ printTacRel rel ++ printTacTemp temp2 ++ " goto " ++ printLabelGoto label
     IndexLeft temp1 temp2 temp3 ->  printTacTemp temp1 ++ "[" ++ printTacTemp temp2 ++ "]" ++ " = " ++ printTacTemp temp3
     IndexRight temp1 temp2 temp3 -> printTacTemp temp1 ++ " = " ++  printTacTemp temp2 ++  "[" ++ printTacTemp temp3 ++ "]"
     DeferenceRight temp1 temp2 -> printTacTemp temp1 ++ " = &" ++  printTacTemp temp2
@@ -30,6 +30,8 @@ printLabel (Just ("FALL",_)) = "         "
 printLabel (Just (lab,(l,c))) = lab ++ "@" ++ show l ++ "," ++ show c ++ ": "
 printLabel Nothing = "         "
 
+printLabelGoto (lab,(l,c)) = lab ++ "@" ++ show l ++ "," ++ show c 
+
 printTacTemp (Temp mode id (l,c) _) = case mode of
     Var -> id ++ "@" ++ show l ++ "," ++ show c
     Fix -> id
@@ -43,16 +45,11 @@ printTacBop bop = case bop of
 
 printTacUop uop = case uop of
     Neg -> " not "
-
-
-
-int2AddrTempName k = "t" ++ show k
-int2Label k = "L" ++ show k
     
---printTacRel rel = case rel of
-   -- LT -> " < "
-   -- GT -> " > "
-   -- LTE -> " >= "
-   -- GTE -> " <= "
-   -- EQ -> " = "
-    --NEQ -> " != "
+printTacRel rel = case rel of
+    ThreeAddressCode.TAC.LT -> " < "
+    ThreeAddressCode.TAC.GT -> " > "
+    ThreeAddressCode.TAC.LTE -> " <= "
+    ThreeAddressCode.TAC.GTE -> " >= "
+    ThreeAddressCode.TAC.EQ -> " = "
+    ThreeAddressCode.TAC.NEQ -> " != "

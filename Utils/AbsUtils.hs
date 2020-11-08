@@ -15,6 +15,10 @@ getFunName (SignWRet (PIdent (_,identifier)) _ _ _) = identifier
 getFunNamePident (SignNoRet r@(PIdent _) _) = r
 getFunNamePident (SignWRet r@(PIdent _) _ _ _) = r
 
+
+---getBodyStartPos = 
+----getBodyEndPos =
+
 getExpPos exp = case exp of
     Evar (PIdent (loc,_)) -> loc
     Econst (Estring (PString (loc,_))) -> loc
