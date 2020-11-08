@@ -50,7 +50,7 @@ getTreeErrors tree = foldr (\tree errors -> getErrors tree ++ errors ) [] (bp2li
 getBlkTypeSimple (Node _ (BP _ _ _ blocktype) _ _) = blocktype
 
 getBpStartPos (Node (_,(startPos,_)) _ _ _) = startPos
-getBpEndPos (Node (_,(endPos,_)) _ _ _) = endPos
+getBpEndPos (Node (_,(_,endPos)) _ _ _) = endPos
 
 getSymbolTable (Node _ (BP symboltable _ _ _) _ _) =  symboltable
 setSymbolTable sym (Node id (BP _ statements errors blocktype) parent children) = 

@@ -135,17 +135,20 @@ tacGeneratorStatement statement = case statement of
   Break (PBreak (pos, _)) _semicolon -> do
     (_,_,_,tree,_,_,_) <- get
     let Just node = findFirstParentsBlockTypeFromPos SequenceBlk tree pos
-    --label <- newlabel $ getBpEndPos node
-    --let breakEntry = TACEntry Nothing $ UnconJump label
-    return []
-  Continue (PContinue (pos@(l,c), name)) _semicolon -> --do
-    --typeCheckerSequenceStatement pos
-    return [] 
-  DoWhile (Pdo (loc@(l,c),name)) _while body (SGuard _ guard _) -> do
+    label <- newlabel $ getBpEndPos node
+    let breakEntry = TACEntry Nothing $ UnconJump label
+    return [breakEntry]
+  Continue (PContinue (pos,_)) _semicolon -> do
+    (_,_,_,tree,_,_,_) <- get
+    let Just node = findFirstParentsBlockTypeFromPos SequenceBlk tree pos
+    label <- newlabel $ getBpStartPos node
+    let continueEntry = TACEntry Nothing $ UnconJump label
+    return [continueEntry]
+  DoWhile _pdo _while body (SGuard _ guard _) -> do
     -- inserisco le label nell'env e chiamo la funzione per la generazione del TAC della guardia
-    labelBegin <- newlabel loc
-    labelTrue <- newlabelFALL loc
-    labelFalse <- newlabel loc -- s.next
+    labelBegin <- newlabel $ getBodyStartPos body
+    labelTrue <- newlabelFALL $ getBodyStartPos body
+    labelFalse <- newlabel $ getBodyEndPos body -- s.next
 
     pushLabel $ Just labelBegin
     res <- tacGeneratorBody body

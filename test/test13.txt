@@ -9,6 +9,14 @@ proc main(l: int,ref z:int)
 
     do while
     {
+        
+        do while
+        {
+            var m = 4;
+            break;
+        } (2 <4)
+        break;
+        continue;
         a = b;
         b = 1;
         b = 2;
