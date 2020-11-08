@@ -5,7 +5,7 @@ var c : bool;
 proc main(l: int,ref z:int)
 {
     a = 4;
-    if ( (a < 1 || b < 3) && b < 5 ) then
+    if ( (a < 1 || b < 3) && !(b < 5) ) then
     {
         a = b;
         b = 1;
