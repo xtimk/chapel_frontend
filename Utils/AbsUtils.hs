@@ -16,8 +16,8 @@ getFunNamePident (SignNoRet r@(PIdent _) _) = r
 getFunNamePident (SignWRet r@(PIdent _) _ _ _) = r
 
 
----getBodyStartPos = 
-----getBodyEndPos =
+getBodyStartPos (BodyBlock (POpenGraph (locStart,_)) _ _ ) = locStart
+getBodyEndPos (BodyBlock _ _ (PCloseGraph (locEnd,_))  ) =locEnd
 
 getExpPos exp = case exp of
     Evar (PIdent (loc,_)) -> loc

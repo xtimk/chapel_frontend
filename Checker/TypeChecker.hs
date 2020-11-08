@@ -162,9 +162,6 @@ typeCheckerSequenceStatement pos = do
   case findSequenceControlGetBlkType tree current_id of
     WhileBlk -> get
     DoWhileBlk -> get
-    IfSimpleBlk -> get
-    IfThenBlk -> get
-    IfElseBlk -> get
     _otherwhise -> do -- caso in cui trovo un break che non e' in while, dowhile ecc..
       modify $ addErrorsCurrentNode [ErrorChecker pos ErrorBreakNotInsideAProcedure]
       get

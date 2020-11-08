@@ -32,11 +32,40 @@ data BlkType =
   SimpleBlk |
   IfSimpleBlk |
   IfThenBlk |
-  IfElseBlk
+  IfElseBlk |
+  SequenceBlk 
   deriving (Show)
+
+
+instance Eq BlkType where
+       x == y =  case (x,y) of
+           (SequenceBlk, DoWhileBlk) -> True
+           (SequenceBlk, WhileBlk) -> True
+           (DoWhileBlk, SequenceBlk) -> True
+           (WhileBlk, SequenceBlk) -> True
+           _ -> show x == show y
 
 getTreeErrors tree = foldr (\tree errors -> getErrors tree ++ errors ) [] (bp2list tree)
 
+getBlkTypeSimple (Node _ (BP _ _ _ blocktype) _ _) = blocktype
+
+getBpStartPos (Node (_,(startPos,_)) _ _ _) = startPos
+getBpEndPos (Node (_,(endPos,_)) _ _ _) = endPos
+
+getSymbolTable (Node _ (BP symboltable _ _ _) _ _) =  symboltable
+setSymbolTable sym (Node id (BP _ statements errors blocktype) parent children) = 
+    Checker.BPTree.Node {Checker.BPTree.id = id,
+    val = BP {symboltable = sym, statements = statements, errors = errors, blocktype = blocktype}, 
+    parentID = parent, 
+    children = children}
+
+getErrors (Node _ (BP _ _ errors _) _ _) = errors
+
+getParentID (Node _ _ parent _) =  case parent of
+        Just p -> p -- il caso nothing non serve, non e' mai raggiungibile dalla getBlkType
+
+
+getBlockFromPos pos tree = getCurIdOfTokenPos
 findNodeById searchedId tree = findNode (bp2list tree)
     where
         findNode [] = Checker.BPTree.Void
@@ -45,6 +74,16 @@ findNodeById searchedId tree = findNode (bp2list tree)
             then actualNode
             else findNode xs
 
+findFirstParentsBlockTypeFromPos blkType tree pos = findFirstParentsBlockType blkType tree (getCurIdOfTokenPos pos tree)
+findFirstParentsBlockType blkType tree currentId = 
+    let elements = findParentsBlockType blkType tree currentId in if null elements
+    then Nothing
+    else Just $ head elements
+
+findParentsBlockType blkType tree currentId = filter (findFirstParentBlockType' blkType) (bpPathToList currentId tree)
+    where
+        findFirstParentBlockType' blkType tree = getBlkTypeSimple tree == blkType
+
 findProcedureGetBlkType tree current_id = 
     let node = findNodeById current_id tree in
         case getBlkTypeSimple node of
@@ -52,23 +91,15 @@ findProcedureGetBlkType tree current_id =
             ExternalBlk -> ExternalBlk
             _otherwhise -> findProcedureGetBlkType tree (getParentID node)
 
-getBlkTypeSimple (Node _ (BP _ _ _ blocktype) _ _) = blocktype
 
 findSequenceControlGetBlkType tree current_id = 
     let node = findNodeById current_id tree in
         case getBlkTypeSimple node of
             WhileBlk -> WhileBlk
             DoWhileBlk -> DoWhileBlk
-            IfSimpleBlk -> IfSimpleBlk
-            IfThenBlk -> IfThenBlk
-            IfElseBlk -> IfElseBlk
             ExternalBlk -> ExternalBlk -- sono arrivato ricorsivamente fino al blocco esterno, lo restituisco, non vado in ricorsione
             _otherwhise -> findSequenceControlGetBlkType tree (getParentID node)
 
-getParentID (Node _ _ parent _) = 
-    case parent of
-        Just p -> p
-        -- il caso nothing non serve, non e' mai raggiungibile dalla getBlkType
 
 modErrorsPos pos = map (modErrorPos pos)
 
@@ -89,16 +120,7 @@ modFunAddOverloading identifier vars (Node id (BP symboltable statements errors 
 alterRetType tye (s,(Function _a _b _ )) = (s,(Function _a _b tye))
 addFunVariables vars (s,(Function _a varOfVar _t )) = (s,(Function _a (vars:varOfVar) _t))
 
-getSymbolTable (Node _ (BP symboltable _ _ _) _ _) =  symboltable
-setSymbolTable sym (Node id (BP _ statements errors blocktype) parent children) = 
-    Checker.BPTree.Node {Checker.BPTree.id = id,
-    val = BP {symboltable = sym, statements = statements, errors = errors, blocktype = blocktype}, 
-    parentID = parent, 
-    children = children}
-
-getErrors (Node _ (BP _ _ errors _) _ _) = errors
-              
-
+            
 addFunctionOnCurrentNode identifier loc variables types (_s,tree,currentId) = 
     let entry = Function loc variables types in
     (_s,updateTree (addEntryNode identifier entry (findNodeById currentId tree)) tree, currentId)
@@ -165,10 +187,7 @@ getFunctionParams identifier paramsPassed env =
 matchParams [] [] = True
 matchParams _ [] = False
 matchParams [] _ = False
-matchParams  ((Temp _ _ _ y):ys) ((Variable _ ty):xs) = 
-    if y == ty
-        then matchParams ys xs 
-        else False
+matchParams  ((Temp _ _ _ y):ys) ((Variable _ ty):xs) = y == ty && matchParams ys xs 
 
 getFunParams (PIdent (_, identifier)) (_,tree,currentNode) = 
     let symtable = uniteSymTables $ bpPathToList currentNode tree in
@@ -222,11 +241,13 @@ bp2list = bpttolist []
         bpttolist xs x@(Node _ _ _ children) =  x : concatMap (bpttolist xs) children
 
 
-getCurIdOfTokenPos loc (Node id _ _ children) = 
+getCurNodeOfTokenPos loc node@(Node _ _ _ children) = 
   let r = filter (isIdInTree loc) children in
     if null r
-      then id
-      else getCurIdOfTokenPos loc (head r)
+      then node
+      else getCurNodeOfTokenPos loc (head r)
+      
+getCurIdOfTokenPos loc node = let Node id _ _ _ = getCurNodeOfTokenPos loc node in id
 
 isIdInTree (l,c)  (Node (_,((lstart,cstart),(lend,cend))) _ _ _) 
   | l < lstart = False

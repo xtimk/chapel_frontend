@@ -132,28 +132,24 @@ tacGeneratorBody'' x = case x of
 
 -- ritorno una coppia (tacs, eventuale label da attaccare al tac successivo)
 tacGeneratorStatement statement = case statement of
-  Break (PBreak (pos@(l,c), name)) _semicolon -> do
-    labels <- popSequenceControlLabels
-    setSequenceControlLabels labels
-    case labels of
-        Just (SequenceIfSimple (IfSimpleLabels _ _ lbreak)) ->
-          let goto = TACEntry Nothing $ UnconJump (getLabelFromMaybe lbreak) in
-            return (goto:[])
-        Just (SequenceWhileDo (WhileDoLabels _ lbreak _)) ->
-          let goto = TACEntry Nothing $ UnconJump (getLabelFromMaybe lbreak) in
-            return (goto:[])
+  Break (PBreak (pos, _)) _semicolon -> do
+    (_,_,_,tree,_,_,_) <- get
+    let Just node = findFirstParentsBlockTypeFromPos SequenceBlk tree pos
+    --label <- newlabel $ getBpEndPos node
+    --let breakEntry = TACEntry Nothing $ UnconJump label
+    return []
   Continue (PContinue (pos@(l,c), name)) _semicolon -> --do
     --typeCheckerSequenceStatement pos
     return [] 
-  DoWhile (Pdo ((l,c),name)) _while body guard -> --do
+  DoWhile _pdo _while body guard -> --do
     --typeCheckerBody DoWhileBlk (createId l c name) body
     --typeCheckerGuard guard
     return []
-  While (PWhile (loc@(l,c), name)) (SGuard _ guard _) body -> do
+  While _pwhile (SGuard _ guard _) body -> do
     -- inserisco le label nell'env e chiamo la funzione per la generazione del TAC della guardia
-    labelBegin <- newlabel loc
-    labelTrue <- newlabelFALL loc
-    labelFalse <- newlabel loc -- s.next
+    labelBegin <- newlabel  $ getBodyStartPos body
+    labelTrue <- newlabelFALL $ getBodyStartPos body
+    labelFalse <- newlabel  $ getBodyEndPos body -- s.next
 
     modify $ addWhileDoLabels labelTrue labelFalse labelBegin
     (resg',_) <- tacGeneratorGuard RightExp guard
@@ -165,10 +161,10 @@ tacGeneratorStatement statement = case statement of
     let gotob = TACEntry Nothing $ UnconJump (getLabelFromMaybe labelBegin)
     return (resg ++ res ++ [gotob]) 
 
-  If (PIf _) (SGuard _ guard _) _then body@(BodyBlock(POpenGraph (locStart,_)) _ (PCloseGraph (locEnd,_))  ) -> do
+  If (PIf _) (SGuard _ guard _) _then body-> do
     -- inserisco le label nell'env e chiamo la funzione per la generazione del TAC della guardia
-    labelTrue <- newlabelFALL locStart
-    labelFalse <- newlabel locEnd
+    labelTrue <- newlabelFALL $ getBodyStartPos body
+    labelFalse <- newlabel $ getBodyEndPos body
     modify $ addIfSimpleLabels labelTrue labelFalse labelFalse
 
     (resg,_) <- tacGeneratorGuard RightExp guard
@@ -180,10 +176,10 @@ tacGeneratorStatement statement = case statement of
     pushLabel labelFalse
     return (resg ++ res) 
 
-  IfElse (PIf ((lIf,cIf), nameIf)) (SGuard _ guard _) _then bodyIf@(BodyBlock(POpenGraph (locStartThen,_)) _ (PCloseGraph (locEndThen,_))  ) (PElse ((lElse,cElse), nameElse)) bodyElse@(BodyBlock(POpenGraph (locStartElse,_)) _ (PCloseGraph (locEndElse,_))  ) -> do
-    labelTrue <- newlabelFALL locStartThen
-    labelFalse <- newlabel locEndThen
-    latestLabel <- newlabel locStartElse
+  IfElse _ (SGuard _ guard _) _then bodyIf _ bodyElse -> do
+    labelTrue <- newlabelFALL $ getBodyStartPos bodyIf 
+    labelFalse <- newlabel $ getBodyStartPos bodyElse 
+    latestLabel <- newlabel $ getBodyEndPos bodyElse 
 
     modify $ addIfSimpleLabels labelTrue labelFalse latestLabel
     (resg,_) <- tacGeneratorGuard RightExp guard 
@@ -204,11 +200,11 @@ tacGeneratorStatement statement = case statement of
   StExp exp _semicolon -> do
     (tacEntry, _) <- tacGeneratorExpression LeftExp exp
     return $ reverse tacEntry
-  RetVal (PReturn (loc,_)) exp _semicolon -> do
+  RetVal _ret exp _semicolon -> do
     (tacs, temp) <- tacGeneratorExpression RightExp exp
     let tacEntry = TACEntry Nothing $ ReturnValue temp
     return $ tacEntry:tacs
-  RetVoid (PReturn (_,_)) _semicolon -> return [TACEntry Nothing ReturnVoid] 
+  RetVoid _ret _semicolon -> return [TACEntry Nothing ReturnVoid] 
 
 attachLabelToFirstElem _ [] = []
 attachLabelToFirstElem (Just label) ((TACEntry _l _e):xs) = (TACEntry (Just label) _e):xs
