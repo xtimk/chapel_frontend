@@ -79,4 +79,4 @@ isLabelFALL (name,pos) = name == "FALL"
 getLabelFromMaybe (Just (name,pos)) = (name,pos)
 
 int2AddrTempName k = "t" ++ show k
-int2Label k = "L" ++ show k
+int2Label k = "L"
