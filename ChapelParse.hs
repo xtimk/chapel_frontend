@@ -19,6 +19,7 @@ import Checker.ErrorPrettyPrinter
 import Checker.BPTree
 import ThreeAddressCode.TACGenerator
 import ThreeAddressCode.TACPrettyPrinter
+import ThreeAddressCode.TACStateUtils
 
 
 

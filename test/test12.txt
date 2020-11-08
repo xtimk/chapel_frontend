@@ -12,8 +12,6 @@ proc main(l: int,ref z:int)
         a = b;
         b = 1;
         b = 2;
-        break;
-        continue;
         b = 8;
     }
     a = 7;
