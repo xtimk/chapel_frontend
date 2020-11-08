@@ -31,11 +31,13 @@ popLabel = do
   put (_tac, _temp , k , _bp, _labels, Nothing, _ft)
   return label
 
-pushLabel label = do
-  (_tac, _temp , k , _bp, _labels, _, _ft) <- get
-  put (_tac, _temp , k , _bp, _labels, label, _ft)
-
-  
+pushLabel newLabel = do
+  (_tac, _temp , k , _bp, _ls, oldLabel, _ft) <- get
+  case oldLabel of
+      Nothing -> do
+          put (_tac, _temp , k , _bp, _ls,Just newLabel, _ft)
+          return newLabel
+      Just label -> return label
 
 pushFunTacs tacEntries = do
   (tac,_te, _t, _b, _labels, _label, _ft ) <- get

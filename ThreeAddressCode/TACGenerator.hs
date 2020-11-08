@@ -150,16 +150,15 @@ tacGeneratorStatement statement = case statement of
     labelTrue <- newlabelFALL $ getBodyStartPos body
     labelFalse <- newlabel $ getBodyEndPos body -- s.next
 
-    pushLabel $ Just labelBegin
+    pushLabel $ labelBegin
     res <- tacGeneratorBody body
-
-    modify $ addIfSimpleLabels labelBegin labelFalse labelBegin
+    
+    modify $ addIfSimpleLabels labelBegin labelFalse labelTrue
     (resg,_) <- tacGeneratorGuard RightExp guard
     popSequenceControlLabels
 
-    pushLabel $ Just labelFalse
-    let gotob = TACEntry Nothing $ UnconJump labelBegin
-    return (res ++ resg ++ [gotob])
+    pushLabel labelFalse
+    return (res ++ take (length resg -1 ) resg ) 
 
   While _pwhile (SGuard _ guard _) body -> do
     -- inserisco le label nell'env e chiamo la funzione per la generazione del TAC della guardia
@@ -173,7 +172,7 @@ tacGeneratorStatement statement = case statement of
     popSequenceControlLabels
     
     res <- tacGeneratorBody body
-    pushLabel $ Just labelFalse
+    pushLabel labelFalse
     let gotob = TACEntry Nothing $ UnconJump labelBegin
     return (resg ++ res ++ [gotob]) 
 
@@ -186,10 +185,10 @@ tacGeneratorStatement statement = case statement of
     (resg,_) <- tacGeneratorGuard RightExp guard
 
     popSequenceControlLabels
-    pushLabel (Just labelTrue)
+    pushLabel labelTrue
 
     res <- tacGeneratorBody body
-    pushLabel (Just labelFalse)
+    pushLabel labelFalse
     return (resg ++ res) 
 
   IfElse _ (SGuard _ guard _) _then bodyIf _ bodyElse -> do
@@ -201,13 +200,13 @@ tacGeneratorStatement statement = case statement of
     (resg,_) <- tacGeneratorGuard RightExp guard 
    
     popSequenceControlLabels
-    pushLabel (Just labelTrue)
+    pushLabel labelTrue
     resthen <- tacGeneratorBody bodyIf
     let goto = TACEntry Nothing $ UnconJump latestLabel
 
-    pushLabel $ Just labelFalse
+    pushLabel labelFalse
     reselse <- tacGeneratorBody bodyElse
-    pushLabel $ Just latestLabel
+    pushLabel latestLabel
  
     return (resg ++ resthen ++ goto:reselse)
   StExp (EFun funidentifier _ passedparams _) _semicolon-> do
@@ -301,7 +300,7 @@ genLazyTacAND vtype loc e1 op e2 ltrue lfalse =
           if (isLabelFALL lfalse)
             then 
               do
-                pushLabel $ Just l1false
+                pushLabel l1false
                 return (tacs, temp2)
             else
               do
@@ -322,7 +321,7 @@ genLazyTacAND vtype loc e1 op e2 ltrue lfalse =
           if (isLabelFALL lfalse)
             then 
               do
-                pushLabel $ Just l1false
+                pushLabel l1false
                 return (tacs, temp2)
             else
               do
@@ -350,7 +349,7 @@ genLazyTacOR vtype loc e1 op e2 ltrue lfalse =
               return (tacs, temp2)
             else
               do
-                pushLabel $ Just l1true
+                pushLabel l1true
                 return (tacs, temp2)
     else
       do
@@ -372,7 +371,7 @@ genLazyTacOR vtype loc e1 op e2 ltrue lfalse =
               return (tacs, temp2)
             else
               do
-                pushLabel $ Just l1true
+                pushLabel l1true
                 return (tacs, temp2)
 
 genLazyTacREL vtype loc e1 op e2 ltrue lfalse = do

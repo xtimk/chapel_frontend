@@ -4,23 +4,13 @@ var c : bool;
 
 proc main(l: int,ref z:int)
 {
-    a = 90;
-
-
     do while
     {
-        
         do while
         {
-            var m = 4;
-            break;
-        } (2 <4)
-        break;
-        continue;
-        a = b;
-        b = 1;
-        b = 2;
-        b = 8;
-    } (  (a + 5 < 1 || b < 3) && b < 5  )
-    a = 7;
+             var m = 10;
+        }(10 < 4)
+    }(4 <4)
+
+    var t4knot4kjo = 10;
 }
