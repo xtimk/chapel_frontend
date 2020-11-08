@@ -4,6 +4,8 @@ var c : bool;
 
 proc main(l: int,ref z:int)
 {
+
+
     do while
     {
         do while

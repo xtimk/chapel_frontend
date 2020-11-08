@@ -222,7 +222,8 @@ tacGeneratorStatement statement = case statement of
   RetVoid _ret _semicolon -> return [TACEntry Nothing ReturnVoid] 
 
 attachLabelToFirstElem _ [] = []
-attachLabelToFirstElem (Just label) ((TACEntry _l _e):xs) = (TACEntry (Just label) _e):xs
+attachLabelToFirstElem (Just label) ((TACEntry Nothing _e):xs) = (TACEntry (Just label) _e):xs
+attachLabelToFirstElem (Just label) ((TACEntry (Just _l) _e):xs) = (TACEntry (Just label) VoidOp):(TACEntry (Just _l) _e):xs
 attachLabelToFirstElem Nothing xs = xs
 
 
