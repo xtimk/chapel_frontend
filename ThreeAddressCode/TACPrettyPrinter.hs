@@ -21,15 +21,16 @@ printTacEntry' operation = case operation of
     SetParam temp -> "param " ++ printTacTemp temp 
     CallProc temp1 arity -> "call " ++ printTacTemp temp1 ++ ", " ++ show arity 
     CallFun temp1 temp2 arity -> printTacTemp temp1 ++ " = fcall " ++ printTacTemp temp2 ++ ", " ++ show arity 
-    ReturnVoid -> ""
-    ReturnValue temp -> ""
+    ReturnVoid -> "return"
+    ReturnValue temp -> "return " ++ printTacTemp temp
+    VoidOp -> ""
 
 
-printLabel (Just ("FALL",(l,c))) = "         "
+printLabel (Just ("FALL",_)) = "         "
 printLabel (Just (lab,(l,c))) = lab ++ "@" ++ show l ++ "," ++ show c ++ ": "
 printLabel Nothing = "         "
 
-printTacTemp (Temp mode id (l,c) ty) = case mode of
+printTacTemp (Temp mode id (l,c) _) = case mode of
     Var -> id ++ "@" ++ show l ++ "," ++ show c
     Fix -> id
 

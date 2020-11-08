@@ -54,11 +54,6 @@ typeCheckerFunction (FunDec (PProc (loc@(l,c),_) ) signature body@(BodyBlock  (P
       get
   get
 
-getFunName (SignNoRet (PIdent (_,identifier)) _) = identifier
-getFunName (SignWRet (PIdent (_,identifier)) _ _ _) = identifier
-
-getFunNamePident (SignNoRet r@(PIdent _) _) = r
-getFunNamePident (SignWRet r@(PIdent _) _ _ _) = r
 
 typeCheckerSignature locstart locEnd signature = case signature of
   SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' locstart locEnd identifier params Infered
