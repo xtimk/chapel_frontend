@@ -7,9 +7,8 @@ Decidere se fare overload funzioni anche nelle funzioni dichiarate nelle funzion
 Controllare dimensioni in lunghezza degli array
 Vedere se mettere ++ o --
 Controllare visualizzazione errori
-Controllare che le variabili siano iniiallizate
-Errore nel caso solo right expression
+Controllare che le variabili siano inizializzate
 Controllare che il tipo void match solo con tipo void
 vedere fix 0 4 se è con size 4 o 5
-Controllare chiamata parametri
+Controllare &* o *& o &(*)
 

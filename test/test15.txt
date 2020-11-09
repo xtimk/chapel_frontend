@@ -4,7 +4,6 @@ var c : bool;
 
 proc main(l: int,ref z:int, kk: int)
 {
-   
 
     var m = &z;
     z = 2;

@@ -192,8 +192,13 @@ typeCheckerStatement statement = case statement of
     get
   StExp exp _semicolon -> do
     env <- get
-    let DataChecker _ errors = typeCheckerExpression env exp in do
+    case exp of 
+      EAss {} -> do
+        let DataChecker _ errors = typeCheckerExpression env exp
         modify $ addErrorsCurrentNode errors
+        get
+      _ -> do 
+        modify $ addErrorsCurrentNode [ ErrorChecker (getExpPos exp) $ ErrorOnlyRightExpression exp]
         get
   RetVal return exp _semicolon -> do
     (_s,tree,current_id) <- get
