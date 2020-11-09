@@ -496,12 +496,12 @@ tacGeneratorAssignment leftExp assign rightExp = do
   let temp = Temp ThreeAddressCode.TAC.Var idTemp locLeft tyLeft
   case operation of 
     Nullary temp1 temp2 -> case assign of
-      AssgnEq (PAssignmEq _) -> return ((TACEntry Nothing operation):tacs, temp)
+      AssgnEq (PAssignmEq _) -> return (TACEntry Nothing operation:tacs, temp)
       AssgnPlEq (PAssignmPlus _) -> do
-        let entryAdd = TACEntry Nothing $ Binary temp temp1 Plus temp2
+        let entryAdd = TACEntry Nothing $ Binary temp1 temp1 Plus temp2
         return (entryAdd:tacs, temp)
     IndexLeft variable@(Temp _ _ _ ty) index tempRight -> case assign of 
-      AssgnEq (PAssignmEq _) -> return ((TACEntry Nothing operation):tacs, temp)
+      AssgnEq (PAssignmEq _) -> return (TACEntry Nothing operation:tacs, temp)
       AssgnPlEq (PAssignmPlus (loc,_)) -> do
         idTempAdd <- newtemp
         let tempAdd = Temp ThreeAddressCode.TAC.Var idTempAdd loc ty
@@ -509,24 +509,34 @@ tacGeneratorAssignment leftExp assign rightExp = do
         let entryadd = TACEntry Nothing $ Binary tempAdd temp Plus tempRight 
         let entryFinal = TACEntry Nothing $ IndexLeft variable index tempAdd
         return ((entryFinal:entryadd:entryArrayValue:[]) ++ tacs, temp)
+    ReferenceLeft tempLeft@(Temp _ _ _ ty) tempRight -> case assign of
+      AssgnEq (PAssignmEq _) -> return (TACEntry Nothing operation:tacs, temp)
+      AssgnPlEq (PAssignmPlus (loc,_)) -> do
+        idRefValue <- newtemp
+        let tempRefValue = Temp ThreeAddressCode.TAC.Var idRefValue loc ty
+        let entryPointerValue = TACEntry Nothing $ ReferenceRight tempRefValue tempLeft
+        idTempAdd <- newtemp
+        let tempAdd = Temp ThreeAddressCode.TAC.Var idTempAdd loc ty
+        let entryadd = TACEntry Nothing $ Binary tempAdd tempRefValue Plus tempRight 
+        let entryPointerAdd = TACEntry Nothing $ ReferenceLeft tempLeft tempAdd
+        return ((entryPointerAdd:entryadd:entryPointerValue:[]) ++ tacs, temp)
 
-
-tacGeneratorLeftExpression leftExp assgn tempRight = case leftExp of
+tacGeneratorLeftExpression leftExp _assgn tempRight = case leftExp of
   Evar identifier -> do
     (_, tempLeft) <- tacGeneratorExpression LeftExp leftExp
     tacEnv <- get 
-    let Variable loc ty = getVarTypeTAC identifier tacEnv
-    case ty of 
-      Pointer ty -> do
-        idRef <- newtemp
-        let refTemp = Temp ThreeAddressCode.TAC.Var idRef (getAssignPos assgn) ty 
-        let refEntry = TACEntry Nothing $ ReferenceLeft tempLeft tempRight
-        return ([], Nullary tempLeft tempRight, tempLeft)
-      _ -> return ([], Nullary tempLeft tempRight, tempLeft)
+    let Variable _loc ty = getVarTypeTAC identifier tacEnv
+    return ([], Nullary tempLeft tempRight, tempLeft)
   Earray expIdentifier arDeclaration -> do
     (_, tempLeft) <- tacGeneratorExpression LeftExp expIdentifier
     (tacsAdd, temp) <- tacGeneratorArrayIndexing' expIdentifier arDeclaration
     return (tacsAdd, IndexLeft tempLeft temp tempRight, tempLeft)
+  Epreop (Indirection _) e1 -> do
+    (_, tempLeft) <- tacGeneratorExpression LeftExp e1
+    return ([], ReferenceLeft tempLeft tempRight, tempLeft)
+
+
+  
 
 tacGenerationArrayPosition (ArrayInit _ expressions _ ) = tacGenerationArrayPosition' expressions
   where

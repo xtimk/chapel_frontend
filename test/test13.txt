@@ -2,10 +2,12 @@ var a = 1;
 var b = 2;
 var c : bool;
 
-proc main(l: int,ref z:int, kk: string)
+proc main(l: int,ref z:int, kk: int)
 {
-    var ghi = &kk;
-    *ghi = 10;
+    var ghi = &kk + &kk;
+
+    *ghi += 10;
+    
 
     do while
     {
