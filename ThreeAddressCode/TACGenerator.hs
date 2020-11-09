@@ -151,7 +151,7 @@ tacGeneratorStatement statement = case statement of
     res <- tacGeneratorBody body
     
     modify $ addIfSimpleLabels labelBegin labelFalse labelTrue
-    (resg,_) <- tacGeneratorGuard RightExp guard
+    (resg,_) <- tacGeneratorExpression RightExp guard
     popSequenceControlLabels
 
     pushLabel labelFalse
@@ -163,7 +163,7 @@ tacGeneratorStatement statement = case statement of
     labelFalse <- newlabel  $ getBodyEndPos body
 
     modify $ addIfSimpleLabels labelTrue labelFalse labelBegin
-    (resg',_) <- tacGeneratorGuard RightExp guard
+    (resg',_) <- tacGeneratorExpression RightExp guard
     let resg = attachLabelToFirstElem (Just labelBegin) resg'
     popSequenceControlLabels
     
@@ -177,7 +177,7 @@ tacGeneratorStatement statement = case statement of
     labelFalse <- newlabel $ getBodyEndPos body
     modify $ addIfSimpleLabels labelTrue labelFalse labelFalse
 
-    (resg,_) <- tacGeneratorGuard RightExp guard
+    (resg,_) <- tacGeneratorExpression RightExp guard
 
     popSequenceControlLabels
     pushLabel labelTrue
@@ -192,7 +192,7 @@ tacGeneratorStatement statement = case statement of
     latestLabel <- newlabel $ getBodyEndPos bodyElse 
 
     modify $ addIfSimpleLabels labelTrue labelFalse latestLabel
-    (resg,_) <- tacGeneratorGuard RightExp guard 
+    (resg,_) <- tacGeneratorExpression RightExp guard 
    
     popSequenceControlLabels
     pushLabel labelTrue
@@ -221,8 +221,6 @@ attachLabelToFirstElem (Just label) ((TACEntry Nothing _e):xs) = (TACEntry (Just
 attachLabelToFirstElem (Just label) ((TACEntry (Just _l) _e):xs) = (TACEntry (Just label) VoidOp):(TACEntry (Just _l) _e):xs
 attachLabelToFirstElem Nothing xs = xs
 
-tacGeneratorGuard = tacGeneratorExpression
-
 tacGeneratorExpression expType exp = case exp of
     EAss e1 assign e2 -> tacGeneratorAssignment e1 assign e2
     Eplus e1 (PEplus (loc,_)) e2 -> tacGeneratorExpression' expType e1 Plus e2 loc
@@ -244,17 +242,7 @@ tacGeneratorExpression expType exp = case exp of
     Epreop (Address (PDef (loc,_) )) e1 -> tacGeneratorAddress expType loc e1
     Earray expIdentifier arDeclaration -> tacGeneratorArrayIndexing expIdentifier arDeclaration
     EFun funidentifier _ passedparams _ -> tacGeneratorFunctionCall expType funidentifier passedparams
-    Evar identifier@(PIdent (_, id)) -> do
-      tacEnv <- get
-      let Variable loc ty = getVarTypeTAC identifier tacEnv
-      let varTemp =  Temp ThreeAddressCode.TAC.Var id loc ty
-      case ty of 
-        Reference tyRef -> do
-          idVal <- newtemp
-          let valTemp =  Temp ThreeAddressCode.TAC.Var idVal loc tyRef
-          let entryRef = TACEntry Nothing $ ReferenceRight valTemp varTemp
-          return ([entryRef], valTemp)
-        _ ->  return ([], Temp ThreeAddressCode.TAC.Var id loc ty)
+    Evar identifier -> tacGeneratorVariable expType identifier
     Econst (Estring (PString desc)) ->tacGeneratorConstant desc String
     Econst (Eint (PInteger desc)) -> tacGeneratorConstant desc Int
     Econst (Efloat (PDouble desc)) -> tacGeneratorConstant desc Real
@@ -262,8 +250,24 @@ tacGeneratorExpression expType exp = case exp of
     Econst (ETrue (PTrue desc)) -> tacGeneratorConstant desc Bool
     Econst (EFalse (PFalse desc)) -> tacGeneratorConstant desc Bool
 
-tacGeneratorAddress expType loc e1 = do
-  (tacs, temp@(Temp mod id l ty)) <- tacGeneratorExpression expType e1
+
+tacGeneratorVariable expType identifier@(PIdent (_, id)) = do
+  tacEnv <- get
+  let Variable loc ty = getVarTypeTAC identifier tacEnv
+  let varTemp =  Temp ThreeAddressCode.TAC.Var id loc ty
+  case ty of 
+    Reference tyRef -> case expType of
+      RightExp ->  do
+        idVal <- newtemp
+        let valTemp =  Temp ThreeAddressCode.TAC.Var idVal loc tyRef
+        let entryRef = TACEntry Nothing $ ReferenceRight valTemp varTemp
+        return ([entryRef], valTemp)
+      LeftExp ->  return ([], varTemp)
+    _ ->  return ([], varTemp)
+
+
+tacGeneratorAddress _expType loc e1 = do
+  (tacs, temp@(Temp mod id l ty)) <- tacGeneratorExpression LeftExp e1
   case ty of 
     Reference ty -> return (tacs, Temp mod id l ty)
     _ -> do
@@ -432,16 +436,16 @@ tacGeneratorFunctionCall expType identifier@(PIdent (_, id)) paramsPassed = do
   tacPar <- mapM tacGenerationTempParameter $ zip funParams tempPars
   let funTemp = Temp ThreeAddressCode.TAC.Var id loc retTy
   let tacsTemp = reverse $ map (tacGenerationEntryParameter.snd) tacPar
-  let tacs = tacsTemp ++ reverse (concatMap fst tacPar) ++ tacExp 
+  let tacs = reverse $ tacsTemp ++ concatMap fst tacPar ++ tacExp 
   case retTy of
     Utils.Type.Void -> do
       let tacEntry = TACEntry Nothing $ CallProc funTemp parameterLenght
-      return (tacEntry:tacs,funTemp)
+      return (tacs ++ [ tacEntry],funTemp)
     _ -> do
       idResFun <- newtemp
       let idResTemp = Temp ThreeAddressCode.TAC.Var idResFun loc retTy
       let tacEntry = TACEntry Nothing $ CallFun idResTemp funTemp parameterLenght
-      return (tacEntry:tacs, idResTemp)
+      return (tacs ++ [tacEntry], idResTemp)
 
 
 tacGeneratorFunctionParameter expType (PassedPar exp) =
@@ -522,11 +526,14 @@ tacGeneratorAssignment leftExp assign rightExp = do
         return ((entryPointerAdd:entryadd:entryPointerValue:[]) ++ tacs, temp)
 
 tacGeneratorLeftExpression leftExp _assgn tempRight = case leftExp of
-  Evar identifier -> do
-    (_, tempLeft) <- tacGeneratorExpression LeftExp leftExp
-    tacEnv <- get 
+  Evar identifier@(PIdent (_, id)) -> do
+    tacEnv <- get
+    let Variable loc ty = getVarTypeTAC identifier tacEnv
+    let varTemp =  Temp ThreeAddressCode.TAC.Var id loc ty
     let Variable _loc ty = getVarTypeTAC identifier tacEnv
-    return ([], Nullary tempLeft tempRight, tempLeft)
+    case ty of
+      Reference _ty -> return ([], ReferenceLeft varTemp tempRight, varTemp)
+      _ ->  return ([], Nullary varTemp tempRight, varTemp)
   Earray expIdentifier arDeclaration -> do
     (_, tempLeft) <- tacGeneratorExpression LeftExp expIdentifier
     (tacsAdd, temp) <- tacGeneratorArrayIndexing' expIdentifier arDeclaration
@@ -534,7 +541,7 @@ tacGeneratorLeftExpression leftExp _assgn tempRight = case leftExp of
   Epreop (Indirection _) e1 -> do
     (tacs, tempLeft) <- tacGeneratorExpression LeftExp e1
     return (tacs, ReferenceLeft tempLeft tempRight, tempLeft)
-    
+
 tacGenerationArrayPosition (ArrayInit _ expressions _ ) = tacGenerationArrayPosition' expressions
   where
     tacGenerationArrayPosition' [ExprDec x] = do

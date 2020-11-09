@@ -1,0 +1,12 @@
+var a = 1;
+var b = 2;
+var c : bool;
+
+proc main(l: int,ref z:int, kk: int)
+{
+   
+
+    var m = &z;
+    z = 2;
+
+}
