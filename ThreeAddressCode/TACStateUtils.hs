@@ -64,16 +64,14 @@ addIfSimpleLabels ltrue lfalse lbreak (_tac,_te, _t, _b, _labels, _label,_ft ) =
 popSequenceControlLabels :: TacMonad SequenceLazyEvalLabels
 popSequenceControlLabels = do
     (_tac,_te, _t, _b, ifLabels, _label, _ft ) <- get
-    case ifLabels of
-      _ -> do 
-        put (_tac,_te, _t, _b,tail ifLabels, _label, _ft )
-        return $ head ifLabels
+    put (_tac,_te, _t, _b,tail ifLabels, _label, _ft )
+    return $ head ifLabels
 
 setSequenceControlLabels a = do
   (_tac,_te, _t, _b, ifLabels, _label, _ft ) <- get
   put (_tac,_te, _t, _b, a:ifLabels, _label, _ft )
 
-isLabelFALL (name,pos) = name == "FALL"
+isLabelFALL (name,_) = name == "FALL"
 
 getLabelFromMaybe (Just (name,pos)) = (name,pos)
 

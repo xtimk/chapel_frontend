@@ -532,12 +532,9 @@ tacGeneratorLeftExpression leftExp _assgn tempRight = case leftExp of
     (tacsAdd, temp) <- tacGeneratorArrayIndexing' expIdentifier arDeclaration
     return (tacsAdd, IndexLeft tempLeft temp tempRight, tempLeft)
   Epreop (Indirection _) e1 -> do
-    (_, tempLeft) <- tacGeneratorExpression LeftExp e1
-    return ([], ReferenceLeft tempLeft tempRight, tempLeft)
-
-
-  
-
+    (tacs, tempLeft) <- tacGeneratorExpression LeftExp e1
+    return (tacs, ReferenceLeft tempLeft tempRight, tempLeft)
+    
 tacGenerationArrayPosition (ArrayInit _ expressions _ ) = tacGenerationArrayPosition' expressions
   where
     tacGenerationArrayPosition' [ExprDec x] = do
