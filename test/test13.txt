@@ -4,18 +4,8 @@ var c : bool;
 
 proc main(l: int,ref z:int, kk: int)
 {
-    var ghi = &kk + &kk;
-
-    *ghi += 10;
-    
-
-    do while
-    {
-        do while
-        {
-             var m = 10;
-        }(10 < 4)
-    }(4 <4)
-
-    var t4knot4kjo = 10;
+    var ghi : *int= &kk;
+    var go : **int = &ghi;
+    var gaga : ***int= &go;
+    ***gaga += 10;
 }
