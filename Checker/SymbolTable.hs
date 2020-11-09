@@ -1,6 +1,5 @@
 module Checker.SymbolTable where
 import Data.Map
-import AbsChapel hiding (Type, Mode)
 import Utils.Type
 import Utils.AbsUtils
 
@@ -8,9 +7,7 @@ type SymbolTable = Map String (String, EnvEntry)
 
 data EnvEntry = 
   Variable Loc Type
-  | Assignm Loc Type
-  | Function Loc [[EnvEntry]] Type 
---  | Constant Literal
+  | Function [(Loc,[EnvEntry])] Type 
  deriving (Show)
 
 

@@ -2,10 +2,22 @@ var a = 1;
 var b = 2;
 var c : bool;
 
+proc pluto()
+{
+
+}
+
+proc pluto(m:int)
+{
+
+}
+
 proc main(l: int,ref z:int)
 {
     a = 90;
 
+    pluto();
+    pluto(l);
 
     do while
     {
