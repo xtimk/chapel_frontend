@@ -12,4 +12,6 @@ proc main(l: int,ref z:int, kk: int)
     ***gaga += 10;
 
     l = *ghi + **go + ***gaga;
+
+    a + 5;
 }

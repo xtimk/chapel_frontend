@@ -6,8 +6,6 @@ import Utils.Type
 
 data SupMode = SupDecl | SupFun | SupBool | SupPlus | SupMinus |  SupArith | SupMod | Sup | SupRet
 
-
-
 supTac Int Int = Int
 supTac Int Real = Real
 supTac Real Int = Real
@@ -24,9 +22,10 @@ supTac ty1 (Reference ty2) = supTac ty1 ty2
 supTac (Pointer ty1) ty2 = supTac ty1 ty2
 supTac ty1 (Pointer ty2) = supTac ty1 ty2
 
-
-
---Infered 
+--Void 
+sup _ id loc Void _ = createIncompatible id loc Error Error
+sup _ id loc _ Void = createIncompatible id loc Error Error
+--Infered
 sup _ _ _ Infered ty = DataChecker ty []
 sup _ _ _ ty Infered = DataChecker ty []
 --Reference
@@ -45,25 +44,6 @@ sup mode _ loc Int point@(Pointer _p) = case mode of
   SupMinus -> DataChecker (Pointer _p) []
   _ -> DataChecker point [ErrorChecker loc $ ErrorCantOpToAddress Int]
 sup _ _ loc ty (Pointer _p) = DataChecker _p [ErrorChecker loc $ ErrorCantOpToAddress ty]
---Void 
-sup mode id loc ty1@Void ty2@Int = case mode of 
-  SupBool -> createIncompatible id loc ty1 ty2
-  SupRet -> createIncompatibleRet id loc ty1 ty2
-  _ -> createIncompatible id loc ty1 ty2
-sup mode id loc ty1@Void ty2@Real = case mode of
-  SupMod ->  createIncompatible id loc ty1 ty2
-  SupDecl -> createIncompatible id loc ty1 ty2
-  SupRet -> createIncompatibleRet id loc ty1 ty2
-  SupFun -> createIncompatible id loc ty1 ty2
-  SupBool -> DataChecker Bool []
-  _ -> DataChecker Real []
-sup mode id loc ty1@Void ty2@Char = case mode of 
-  SupFun -> createIncompatible id loc ty1 ty2
-  SupRet -> createIncompatibleRet id loc ty1 ty2
-  _ -> DataChecker Void []
-sup _ id loc ty1@Void ty2@String = createIncompatible id loc ty1 ty2
-sup _ id loc ty1@Void ty2@Bool = createIncompatible id loc ty1 ty2
-sup _ _ _ Void Void = DataChecker Void []
 --Int 
 sup mode _ _ Int Int = case mode of 
   SupBool -> DataChecker Bool []
@@ -80,7 +60,6 @@ sup mode id loc ty1@Int ty2@Char = case mode of
   _ -> DataChecker Int []
 sup _ id loc ty1@Int ty2@String = createIncompatible id loc ty1 ty2
 sup _ id loc ty1@Int ty2@Bool = createIncompatible id loc ty1 ty2
-sup _ id loc ty1@Int ty2@Void = createIncompatible id loc ty1 ty2
 --Real
 sup mode id loc ty1@Real ty2@Int = case mode of
   SupFun -> createIncompatible id loc ty1 ty2
@@ -102,7 +81,6 @@ sup mode id loc ty1@Real ty2@Bool = case mode of
   SupRet -> createIncompatibleRet id loc ty1 ty2
   SupFun -> createIncompatible id loc ty1 ty2
   _otherwhise -> createIncompatible id loc ty1 ty2
-sup _ id loc ty1@Real ty2@Void = createIncompatible id loc ty1 ty2
 --Char
 sup mode id loc ty1@Char ty2@Int = case mode of
   SupFun -> createIncompatible id loc ty1 ty2
@@ -127,7 +105,6 @@ sup mode id loc ty1@Char ty2@Bool = case mode of
   SupFun -> createIncompatible id loc ty1 ty2
   SupRet -> createIncompatibleRet id loc ty1 ty2
   _otherwhise -> createIncompatible id loc ty1 ty2
-sup _ id loc ty1@Char ty2@Void = createIncompatible id loc ty1 ty2
 --String
 sup mode id loc ty1@String ty2@Int = case mode of
   SupFun -> createIncompatible id loc ty1 ty2
@@ -153,7 +130,6 @@ sup mode id loc ty1@String ty2@Bool = case mode of
   SupFun -> createIncompatible id loc ty1 ty2
   SupRet -> createIncompatibleRet id loc ty1 ty2
   _otherwhise -> createIncompatible id loc ty1 ty2
-sup _ id loc ty1@String ty2@Void = createIncompatible id loc ty1 ty2
 --Bool
 sup mode id loc ty1@Bool ty2@Int = case mode of
   SupFun -> createIncompatible id loc ty1 ty2

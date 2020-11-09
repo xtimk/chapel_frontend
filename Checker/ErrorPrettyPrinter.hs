@@ -35,6 +35,7 @@ data DefinedError =
   ErrorCalledProcWithVariable String |
   ErrorNoPointerAddress Type String |
   ErrorAssignDecl |
+  ErrorOnlyRightExpression Exp |
   ErrorNotLeftExpression Exp AssgnmOp |
   ErrorOverloadingIncompatibleReturnType Loc Loc String Type Type
   deriving (Show)
@@ -75,6 +76,7 @@ printDefinedError tokens error = case error of
   ErrorOverloadingIncompatibleReturnType locStart (l,c) id ty1 ty2 -> "Overloading signature for function " ++ id ++ " must be of type " ++ show ty1 ++ " but was found type " ++ show ty2 ++ " in " ++ printTokens (getTokens tokens locStart (l,c - 1)) ++ "."
   ErrorBreakNotInsideAProcedure -> "Break command must be inside a while, dowhile, or if blocks."
   ErrorContinueNotInsideAProcedure -> "Continue command must be inside a while, dowhile, or if blocks."
+  ErrorOnlyRightExpression _exp -> "Statement must be an assignment or left expression"
 
 getTokens [] _ _ = []
 getTokens (x@(PT (Pn _ l c ) _ ):xs) start@(lstart, cstart) end@(lend, cend) 
