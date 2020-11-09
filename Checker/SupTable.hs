@@ -21,6 +21,8 @@ supTac Real Real = Real
 supTac Bool Bool = Bool
 supTac (Reference ty1) ty2 = supTac ty1 ty2
 supTac ty1 (Reference ty2) = supTac ty1 ty2
+supTac (Pointer ty1) ty2 = supTac ty1 ty2
+supTac ty1 (Pointer ty2) = supTac ty1 ty2
 
 
 
