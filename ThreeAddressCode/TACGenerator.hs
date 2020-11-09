@@ -98,7 +98,7 @@ tacGeneratorFunction (FunDec _ signature body) = do
   tacs <- tacGeneratorBody body 
   let ident@(PIdent (loc,id)) = getFunNamePident signature
   let tacVoid = TACEntry Nothing VoidOp
-  let Function _ _ retTy = getVarTypeTAC ident envTac
+  let Function _ retTy = getVarTypeTAC ident envTac
   case retTy of
     Utils.Type.Void -> do
       let entryVoid = TACEntry Nothing ReturnVoid
@@ -413,7 +413,7 @@ tacCheckerBinaryBoolean vtype loc e1 op e2 = do
       OR -> genLazyTacOR vtype loc e1 op e2 ltrue lfalse
       _ -> genLazyTacREL vtype loc e1 op e2 ltrue lfalse
 
-tacCheckerUnaryBoolean expType loc e1 = do
+tacCheckerUnaryBoolean expType _loc e1 = do
   labels <- popSequenceControlLabels
   setSequenceControlLabels labels
   case labels of
@@ -436,23 +436,22 @@ tacGeneratorFunctionCall expType identifier@(PIdent (_, id)) paramsPassed = do
   tacEnv <- get
   tacParameters <- mapM (tacGeneratorFunctionParameter expType) paramsPassed
   let tacExp = concatMap fst tacParameters
-      tempPars =  map snd tacParameters
-      funParams = getFunctionParams identifier tempPars tacEnv 
-      Function loc _ retTy = getVarTypeTAC identifier tacEnv
-      parameterLenght = length paramsPassed
-      funTemp = Temp ThreeAddressCode.TAC.Var id loc retTy in do
-        tacPar <- mapM tacGenerationTempParameter $ zip funParams tempPars
-        let 
-          tacsTemp = reverse $ map (tacGenerationEntryParameter.snd) tacPar
-          tacs = tacsTemp ++ reverse (concatMap fst tacPar) ++ tacExp in 
-          case retTy of
-            Utils.Type.Void -> let tacEntry = TACEntry Nothing $ CallProc funTemp parameterLenght in 
-                      return (tacEntry:tacs,funTemp)
-            _ -> do
-              idResFun <- newtemp
-              let idResTemp = Temp ThreeAddressCode.TAC.Var idResFun loc retTy
-                  tacEntry = TACEntry Nothing $ CallFun idResTemp funTemp parameterLenght in
-                    return (tacEntry:tacs, idResTemp)
+  let tempPars =  map snd tacParameters
+  let (loc,funParams) = getFunctionParams identifier tempPars tacEnv 
+  let Function _ retTy = getVarTypeTAC identifier tacEnv
+  let parameterLenght = length paramsPassed
+  tacPar <- mapM tacGenerationTempParameter $ zip funParams tempPars
+  let funTemp = Temp ThreeAddressCode.TAC.Var id loc retTy
+  let tacsTemp = reverse $ map (tacGenerationEntryParameter.snd) tacPar
+  let tacs = tacsTemp ++ reverse (concatMap fst tacPar) ++ tacExp 
+  case retTy of
+    Utils.Type.Void -> let tacEntry = TACEntry Nothing $ CallProc funTemp parameterLenght in 
+              return (tacEntry:tacs,funTemp)
+    _ -> do
+      idResFun <- newtemp
+      let idResTemp = Temp ThreeAddressCode.TAC.Var idResFun loc retTy
+          tacEntry = TACEntry Nothing $ CallFun idResTemp funTemp parameterLenght in
+            return (tacEntry:tacs, idResTemp)
 
 
 tacGeneratorFunctionParameter expType (PassedPar exp) =

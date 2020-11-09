@@ -16,10 +16,10 @@ startState = ([], Checker.BPTree.Node {Checker.BPTree.id = ("0", ((0::Int,0::Int
 typeChecker (Progr p) = typeCheckerModule p
 
 typeCheckerModule (Mod m) = do
-  modify (addFunctionOnCurrentNode "writeInt" (-1,-1) [[Variable (-1,-1) Int]] Utils.Type.Void)
-  modify (addFunctionOnCurrentNode "writeReal" (-1,-1) [[Variable (-1,-1) Real]] Utils.Type.Void)
-  modify (addFunctionOnCurrentNode "writeChar" (-1,-1) [[Variable  (-1,-1) Char]] Utils.Type.Void)
-  modify (addFunctionOnCurrentNode "writeString" (-1,-1) [[Variable  (-1,-1) String]] Utils.Type.Void)
+  modify (addFunctionOnCurrentNode "writeInt" (-1,-1) [Variable (-1,-1) Int] Utils.Type.Void)
+  modify (addFunctionOnCurrentNode "writeReal" (-1,-1) [Variable (-1,-1) Real] Utils.Type.Void)
+  modify (addFunctionOnCurrentNode "writeChar" (-1,-1) [Variable  (-1,-1) Char] Utils.Type.Void)
+  modify (addFunctionOnCurrentNode "writeString" (-1,-1) [Variable  (-1,-1) String] Utils.Type.Void)
   modify (addFunctionOnCurrentNode "readInt" (-1,-1) [] Utils.Type.Int)
   modify (addFunctionOnCurrentNode "readReal" (-1,-1) [] Utils.Type.Real)
   modify (addFunctionOnCurrentNode "readChar" (-1,-1) [] Utils.Type.Char)
@@ -48,12 +48,9 @@ typeCheckerFunction (FunDec (PProc (loc@(l,c),_) ) signature body@(BodyBlock  (P
     DataChecker Infered _ -> do
       let node = findNodeById current_id tree in
         modify (\(_s, tree,_i) -> (_s, updateTree (modFunRetType (getFunName signature) Utils.Type.Void node) tree , _i ))
-      get    
-    _otherwhise -> do 
-      --modify $ addErrorsCurrentNode [ErrorChecker (l,c) (ErrorMissingReturn (getFunName signature))]
       get
+    _ -> get
   get
-
 
 typeCheckerSignature locstart locEnd signature = case signature of
   SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' locstart locEnd identifier params Infered
@@ -71,30 +68,30 @@ typeCheckerSignature' locstart locEnd ident@(PIdent (loc,identifier)) params typ
             case entry of
               Nothing -> do
                 modify $ addErrorsCurrentNode errors
-                put (symtable, updateTree (addEntryNode identifier (Function loc [variables] types) node) tree, currentIdNode )
+                put (symtable, updateTree (addEntryNode identifier (Function [(loc,variables)] types) node) tree, currentIdNode )
                 get
               Just entryFound -> case entryFound of 
                 Variable locVar _ -> do
                   modify $ addErrorsCurrentNode [ErrorChecker loc $ ErrorVarAlreadyDeclared locVar identifier]
                   get
-                Function locFun varOfvar t -> 
-                  let errorsOverloading = typeCheckerSignatureOverloading identifier loc locFun variables varOfvar;
+                Function varOfvar t -> 
+                  let errorsOverloading = typeCheckerSignatureOverloading identifier loc variables varOfvar;
                       DataChecker _ errorsReturnType = sup SupFun identifier loc types t;
                       convertErrors = map (errorConvertOVerloadingReturn locstart locEnd) errorsReturnType in if null errors 
                   then do
-                    put (symtable, updateTree (modFunAddOverloading identifier variables node) tree, currentIdNode )
+                    put (symtable, updateTree (modFunAddOverloading identifier loc variables node) tree, currentIdNode )
                     modify $ addErrorsCurrentNode convertErrors
                     get
                   else do
                     modify $ addErrorsCurrentNode (errorsOverloading ++ convertErrors)
                     get 
 
-typeCheckerSignatureOverloading _ _ _ _ [] = []
-typeCheckerSignatureOverloading identifier loc locFun var (x:xs) = case (var,x) of
+typeCheckerSignatureOverloading _ _ _ [] = []
+typeCheckerSignatureOverloading identifier loc var ((locFun,x):xs) = case (var,x) of
   ([],[]) -> [ErrorChecker loc $ ErrorSignatureAlreadyDeclared locFun identifier]
-  ([],_) -> typeCheckerSignatureOverloading identifier loc locFun var xs
+  ([],_) -> typeCheckerSignatureOverloading identifier loc var xs
   _ -> let errors = typeCheckerSignatureOverloading' identifier loc locFun var x in if null errors
-    then typeCheckerSignatureOverloading identifier loc locFun var xs
+    then typeCheckerSignatureOverloading identifier loc var xs
     else errors
 
 typeCheckerSignatureOverloading' identifier loc locFun [] [] = [ErrorChecker loc $ ErrorSignatureAlreadyDeclared locFun identifier]
@@ -138,11 +135,9 @@ typeCheckerModeParameter mode ty = case mode of
   _ -> ty
   
 typeCheckerBody blkType identifier (BodyBlock  (POpenGraph (locStart,_)) xs (PCloseGraph (locEnd,_))  ) = do
-  -- create new child for the blk and enter in it
   (sym, tree, current_id) <- get
   let actualNode = findNodeById current_id tree; child = createChild identifier blkType locStart locEnd actualNode in
      put ([], addChild actualNode (setSymbolTable (DMap.fromList sym) child) tree, (identifier, (locStart, locEnd)))
-  -- process body
   mapM_ typeCheckerBody' xs
   modify(\(_s,_t,_) -> (_s,_t,current_id))
   get
@@ -162,7 +157,7 @@ typeCheckerSequenceStatement pos = do
   case findSequenceControlGetBlkType tree current_id of
     WhileBlk -> get
     DoWhileBlk -> get
-    _otherwhise -> do -- caso in cui trovo un break che non e' in while, dowhile ecc..
+    _otherwhise -> do
       modify $ addErrorsCurrentNode [ErrorChecker pos ErrorBreakNotInsideAProcedure]
       get
 
@@ -210,7 +205,7 @@ typeCheckerStatement statement = case statement of
 typeCheckerReturn (PReturn (pos, _ret)) tyret = do 
   (_s,tree,current_id) <- get
   case findProcedureGetBlkType tree current_id of
-    ProcedureBlk -> do -- devo controllare quì che il tipo di ritorno nel return sia compatibile con il tipo di ritorno della funzione
+    ProcedureBlk -> do
       case getFunRetType (_s,tree,current_id) of
         DataChecker Infered _ -> do
             modify $ setReturnType tyret
@@ -224,7 +219,7 @@ typeCheckerReturn (PReturn (pos, _ret)) tyret = do
               modify $ addErrorsCurrentNode errors
             get
       get
-    _otherwhise -> do -- caso in cui trovo un return che non e' dentro una procedura (ma si trova al livello esterno)
+    _otherwhise -> do
       get
       let node = findNodeById current_id tree ; errors = ErrorChecker pos ErrorReturnNotInsideAProcedure in
         modify (\(_s, tree,_i) -> (_s, updateTree (addErrorNode errors node) tree , _i ))
@@ -345,14 +340,14 @@ typeCheckerExpression environment exp = case exp of
     Ediv e1 (PEdiv (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
     Etimes e1 (PEtimes (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
     InnerExp _ e _ -> typeCheckerExpression environment e
-    Elthen e1 pElthen e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
-    Elor e1 pElor e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
-    Eland e1 pEland e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
-    Eneq e1 pEneq e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
-    Eeq e1 pEeq e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
-    Egrthen e1 pEgrthen e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
-    Ele e1 pEle e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
-    Ege e1 pEge e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
+    Elthen e1 _pElthen e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
+    Elor e1 _pElor e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
+    Eland e1 _pEland e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
+    Eneq e1 _pEneq e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
+    Eeq e1 _pEeq e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
+    Egrthen e1 _pEgrthen e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
+    Ele e1 _pEle e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
+    Ege e1 _pEge e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
     Epreop (Indirection _) e1 -> typeCheckerIndirection environment e1
     Epreop (Address _) e1 ->  typeCheckerAddress environment e1
     Epreop (Negation (PNeg (loc,_))) e1 ->  typeCheckerExpression' environment SupBool (getExpPos e1) e1 (Econst (ETrue (PTrue (loc,"true"))))
@@ -403,7 +398,7 @@ eFunTypeChecker funidentifier@(PIdent (loc,identifier)) passedparams environment
   case getEntry funidentifier environment of
     DataChecker Nothing errors -> DataChecker Error errors
     DataChecker (Just (Variable _ _)) _-> DataChecker Error [ErrorChecker loc $ ErrorCalledProcWithVariable identifier]
-    DataChecker (Just (Function _ paramss ty)) _-> 
+    DataChecker (Just (Function paramss ty)) _-> 
       let errorss = map (checkPassedParams funidentifier environment (DataChecker 0 []) passedparams) paramss; 
           errors = checkSignatureWithLessError errorss in DataChecker ty errors
 
@@ -414,12 +409,12 @@ checkSignatureWithLessError (err:errorss) =
     then err
     else otherErr
 
-checkPassedParams _  _ (DataChecker _ errors) [] [] = errors
-checkPassedParams (PIdent (loc,identifier)) _ (DataChecker actual errors) [] xs = ErrorChecker loc (ErrorCalledProcWrongArgs (actual + length xs) actual identifier):errors
-checkPassedParams (PIdent (loc,identifier)) _ (DataChecker actual errors) xs [] =  ErrorChecker loc (ErrorCalledProcWrongArgs actual (length xs + actual) identifier):errors
-checkPassedParams funidentifier environment (DataChecker actual errors) (p:passedParams) (e:expectedParams) =
+checkPassedParams _  _ (DataChecker _ errors) [] (_,[]) = errors
+checkPassedParams (PIdent (loc,identifier)) _ (DataChecker actual errors) [] (_,xs) = ErrorChecker loc (ErrorCalledProcWrongArgs (actual + length xs) actual identifier):errors
+checkPassedParams (PIdent (loc,identifier)) _ (DataChecker actual errors) xs (_,[]) =  ErrorChecker loc (ErrorCalledProcWrongArgs actual (length xs + actual) identifier):errors
+checkPassedParams funidentifier environment (DataChecker actual errors) (p:passedParams) (locOver,e:expectedParams) =
   let err = checkCorrectTypeOfParam (actual + 1) funidentifier p e environment in 
-    checkPassedParams funidentifier environment (DataChecker (actual + 1) (errors ++ err)) passedParams expectedParams
+    checkPassedParams funidentifier environment (DataChecker (actual + 1) (errors ++ err)) passedParams (locOver,expectedParams)
 
 checkCorrectTypeOfParam actual (PIdent (_, identifier)) (PassedPar exp) (Variable _ tyVar) environment = 
   let DataChecker tyExp errorsExp = typeCheckerExpression environment exp;

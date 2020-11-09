@@ -111,18 +111,18 @@ modFunRetType identifier tye (Node id (BP symboltable statements errors blocktyp
     parentID = parent, 
     children = children}
 
-modFunAddOverloading identifier vars (Node id (BP symboltable statements errors blocktype) parent children) = 
+modFunAddOverloading identifier loc vars (Node id (BP symboltable statements errors blocktype) parent children) = 
     Checker.BPTree.Node {Checker.BPTree.id = id,
-    val = BP {symboltable = DMap.adjust (addFunVariables vars) identifier symboltable, statements = statements, errors = errors, blocktype = blocktype}, 
+    val = BP {symboltable = DMap.adjust (addFunVariables (loc,vars)) identifier symboltable, statements = statements, errors = errors, blocktype = blocktype}, 
     parentID = parent, 
     children = children}
 
-alterRetType tye (s,(Function _a _b _ )) = (s,(Function _a _b tye))
-addFunVariables vars (s,(Function _a varOfVar _t )) = (s,(Function _a (vars:varOfVar) _t))
+alterRetType tye (s,(Function  _b _ )) = (s,(Function  _b tye))
+addFunVariables vars (s,(Function varOfVar _t )) = (s,(Function (vars:varOfVar) _t))
 
             
 addFunctionOnCurrentNode identifier loc variables types (_s,tree,currentId) = 
-    let entry = Function loc variables types in
+    let entry = Function [(loc,variables)] types in
     (_s,updateTree (addEntryNode identifier entry (findNodeById currentId tree)) tree, currentId)
 addEntryNode identifier entry (Node id (BP symboltable _st _e _bt) _p _c) = 
     Checker.BPTree.Node {Checker.BPTree.id = id,
@@ -171,7 +171,7 @@ getVarType (PIdent ((l,c), identifier)) (_,tree,currentNode) =
     let symtable = uniteSymTables $ bpPathToList currentNode tree in
         case DMap.lookup identifier symtable of
             Just (_,Variable _ t) -> DataChecker t []
-            Just (_,Function _ _ t) -> DataChecker t []
+            Just (_,Function _ t) -> DataChecker t []
             Nothing -> DataChecker Error [ErrorChecker (l,c) $ ErrorVarNotDeclared identifier]
 
 getVarTypeTAC (PIdent (loc, identifier)) (_,_,_,tree,_,_,_)  = 
@@ -181,18 +181,18 @@ getVarTypeTAC (PIdent (loc, identifier)) (_,_,_,tree,_,_,_)  =
             Just (_,var) -> var
 
 getFunctionParams identifier paramsPassed env = 
-    let Function _ params _ = getVarTypeTAC identifier env in 
+    let Function params _ = getVarTypeTAC identifier env in 
         head $ filter (matchParams paramsPassed) params
 
-matchParams [] [] = True
-matchParams _ [] = False
+matchParams [] (_,[]) = True
+matchParams _ (_,[]) = False
 matchParams [] _ = False
-matchParams  ((Temp _ _ _ y):ys) ((Variable _ ty):xs) = y == ty && matchParams ys xs 
+matchParams  ((Temp _ _ _ y):ys) (loc,(Variable _ ty:xs)) = y == ty && matchParams ys (loc,xs) 
 
 getFunParams (PIdent (_, identifier)) (_,tree,currentNode) = 
     let symtable = uniteSymTables $ bpPathToList currentNode tree in
         case DMap.lookup identifier symtable of
-            Just (_,Function _ params _) -> params
+            Just (_,Function params _) -> params
 
 getFunRetType env@(s,tree,current_id) = 
   let (Node (id, _) (BP _ _ _ blkTy) pId _) = findNodeById current_id tree in
