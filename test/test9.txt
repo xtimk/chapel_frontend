@@ -4,7 +4,10 @@ var c = 3;
 
 proc main(l: int, ref z:int, m:char, o:bool, f:string)
 {
-     var ggf:int = main(z+z+z,l,m,o,f);
+     return;
+     var ggf = main(z+z+z,l,m,o,f);
+
+     ggf = 10;
 
      main(l,z,m,o,f);
 
