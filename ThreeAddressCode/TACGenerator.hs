@@ -146,7 +146,7 @@ tacGeneratorStatement statement = case statement of
     labelBegin <- newlabel $ getBodyStartPos body
     labelTrue <- newlabelFALL $ getBodyStartPos body
     labelFalse <- newlabel $ getBodyEndPos body 
-
+    
     pushLabel $ labelBegin
     res <- tacGeneratorBody body
     
@@ -155,7 +155,8 @@ tacGeneratorStatement statement = case statement of
     popSequenceControlLabels
 
     pushLabel labelFalse
-    return (res ++ take (length resg -1 ) resg ) 
+    return (res ++ resg) 
+    --return (res ++ resg ) -- take (length resg -1 ) resg ) 
 
   While _pwhile (SGuard _ guard _) body -> do
     labelBegin <- newlabel $ getBodyStartPos body
@@ -247,8 +248,8 @@ tacGeneratorExpression expType exp = case exp of
     Econst (Eint (PInteger desc)) -> tacGeneratorConstant desc Int
     Econst (Efloat (PDouble desc)) -> tacGeneratorConstant desc Real
     Econst (Echar (PChar desc)) -> tacGeneratorConstant desc Char
-    Econst (ETrue (PTrue desc)) -> tacGeneratorConstant desc Bool
-    Econst (EFalse (PFalse desc)) -> tacGeneratorConstant desc Bool
+    Econst (ETrue (PTrue (loc,_))) -> tacCheckerBinaryBoolean expType loc exp ThreeAddressCode.TAC.EQ exp
+    Econst (EFalse (PFalse (loc,_))) ->  tacCheckerBinaryBoolean expType loc exp ThreeAddressCode.TAC.NEQ exp
 
 
 tacGeneratorVariable expType identifier@(PIdent (_, id)) = do
@@ -378,24 +379,76 @@ genLazyTacOR vtype loc e1 _op e2 ltrue lfalse =
           else do
               pushLabel l1true
               return (tacs, temp2)
-
+              
 genLazyTacREL vtype _ e1 op e2 ltrue lfalse = do
-  (tac1,temp1) <- tacGeneratorExpression vtype e1
-  (tac2,temp2) <- tacGeneratorExpression vtype e2
+  (tacs,temp1@(Temp mode1 _ _ ty), temp2) <- genLazyTacREL' vtype e1 e2
   case (isLabelFALL ltrue, isLabelFALL lfalse) of
-    (True,True) -> return (tac1 ++ tac2, temp1)
-    (_, True) -> do
-      let aa = TACEntry Nothing (RelCondJump temp1 op temp2 ltrue)
-      return (tac1 ++ tac2 ++ [aa], temp2)
+    (True,True) -> return (tacs, temp1)
+    (_, True) ->
+      case (mode1, ty) of
+        (ThreeAddressCode.TAC.Fix, Bool) -> genLazyTacRel'' temp1 temp2 op ltrue
+        _ -> do
+          let aa = TACEntry Nothing (RelCondJump temp1 op temp2 ltrue)
+          return (tacs ++ [aa], temp2)
     (True, _) -> do
-      let (ope, t1, t2) = notRel op temp1 temp2
-      let aa = TACEntry Nothing (RelCondJump t1 ope t2 lfalse) 
-      return (tac1 ++ tac2 ++ [aa], temp2)
-    (_,_) -> do
-      let aa = TACEntry Nothing (RelCondJump temp1 op temp2 ltrue)
-      let bb = TACEntry Nothing (UnconJump lfalse) 
-      return (tac1 ++ tac2 ++ (aa:bb:[]) , temp2)
+      let ope = notRel op
+      case (mode1, ty) of
+        (ThreeAddressCode.TAC.Fix, Bool) -> genLazyTacRel'' temp1 temp2 ope lfalse
+        _ -> do 
+          let aa = TACEntry Nothing (RelCondJump temp1 ope temp2 lfalse) 
+          return (tacs ++ [aa], temp2)
+    (_,_) ->
+      case (mode1, ty) of
+        (ThreeAddressCode.TAC.Fix, Bool) -> genLazyTacRel'' temp1 temp2 op ltrue
+        _ -> do 
+          let aa = TACEntry Nothing (RelCondJump temp1 op temp2 ltrue)
+          let bb = TACEntry Nothing (UnconJump lfalse) 
+          return (tacs ++ (aa:bb:[]) , temp2)
 
+genLazyTacREL' vtype e1 e2 = case (e1,e2) of
+  (Econst (ETrue (PTrue desc1)), Econst (EFalse (PFalse desc2))) -> do
+    (_,temp1) <- tacGeneratorConstant desc1 Bool 
+    (_,temp2) <- tacGeneratorConstant desc2 Bool 
+    return ([], temp1, temp2)
+  (Econst (EFalse (PFalse desc1)), Econst (ETrue (PTrue desc2))) -> do
+    (_,temp1) <- tacGeneratorConstant desc1 Bool 
+    (_,temp2) <- tacGeneratorConstant desc2 Bool 
+    return ([], temp1, temp2)
+  (Econst (ETrue (PTrue desc1)), Econst (ETrue (PTrue desc2))) -> do
+    (_,temp1) <- tacGeneratorConstant desc1 Bool 
+    (_,temp2) <- tacGeneratorConstant desc2 Bool 
+    return ([], temp1, temp2)
+  (Econst (EFalse (PFalse desc1)), Econst (EFalse (PFalse desc2))) -> do
+    (_,temp1) <- tacGeneratorConstant desc1 Bool 
+    (_,temp2) <- tacGeneratorConstant desc2 Bool 
+    return ([], temp1, temp2)
+  _ -> do
+    (tac1,temp1) <- tacGeneratorExpression vtype e1
+    (tac2,temp2) <- tacGeneratorExpression vtype e2
+    return (tac1 ++ tac2, temp1, temp2)
+
+    
+genLazyTacRel'' (Temp mode1 id1 loc ty) (Temp _ id2 _ _) op label = do
+  let tempTrue = Temp mode1 "true" loc ty
+  let tempFalse = Temp mode1 "false" loc ty
+  case op of
+    ThreeAddressCode.TAC.NEQ -> 
+      if id1 /= id2
+      then  return ([TACEntry Nothing $ BoolTrueCondJump tempTrue label], tempTrue)
+      else  return ([TACEntry Nothing $ BoolTrueCondJump tempFalse label], tempFalse)
+    ThreeAddressCode.TAC.EQ -> 
+      if id1 == id2
+      then return ([TACEntry Nothing $ BoolTrueCondJump tempTrue label], tempTrue)
+      else return ([TACEntry Nothing $ BoolTrueCondJump tempFalse label], tempFalse)
+ 
+tacCheckerUnaryBoolean expType _loc e1 = do
+  labels <- popSequenceControlLabels
+  setSequenceControlLabels labels
+  case labels of
+      (SequenceLazyEvalLabels ltrue lfalse lbreak) -> do
+        modify $ addIfSimpleLabels lfalse ltrue lbreak
+        (tac1,temp1) <- tacGeneratorExpression expType e1
+        return (tac1, temp1)
 
 tacCheckerBinaryBoolean vtype loc e1 op e2 = do
   labels <- popSequenceControlLabels
@@ -406,24 +459,15 @@ tacCheckerBinaryBoolean vtype loc e1 op e2 = do
       OR -> genLazyTacOR vtype loc e1 op e2 ltrue lfalse
       _ -> genLazyTacREL vtype loc e1 op e2 ltrue lfalse
 
-tacCheckerUnaryBoolean expType _loc e1 = do
-  labels <- popSequenceControlLabels
-  setSequenceControlLabels labels
-  case labels of
-      (SequenceLazyEvalLabels ltrue lfalse lbreak) -> do
-        modify $ addIfSimpleLabels lfalse ltrue lbreak
-        (tac1,temp1) <- tacGeneratorExpression expType e1
-        return (tac1, temp1)
-
-
-notRel ThreeAddressCode.TAC.LT t1 t2 = (GTE, t1, t2)
-notRel ThreeAddressCode.TAC.LTE t1 t2 = (ThreeAddressCode.TAC.GT, t1, t2)
-notRel ThreeAddressCode.TAC.GT t1 t2 = (LTE, t1, t2)
-notRel ThreeAddressCode.TAC.GTE t1 t2 = (ThreeAddressCode.TAC.LT, t1, t2)
-notRel ThreeAddressCode.TAC.EQ t1 t2 = (NEQ, t1, t2)
+notRel ThreeAddressCode.TAC.LT = GTE
+notRel ThreeAddressCode.TAC.LTE= ThreeAddressCode.TAC.GT
+notRel ThreeAddressCode.TAC.GT = LTE
+notRel ThreeAddressCode.TAC.GTE = ThreeAddressCode.TAC.LT
+notRel ThreeAddressCode.TAC.EQ = NEQ
+notRel NEQ = ThreeAddressCode.TAC.EQ
 -- non dovrei mai arrivare a chiamare i due casi sotto, se ci arrivo c'e qualcosa di sbagliato
--- notRel ThreeAddressCode.TAC.AND t1 t2 = (OR, t1, t2)
--- notRel ThreeAddressCode.TAC.OR t1 t2 = (AND, t1, t2)
+-- notRel ThreeAddressCode.TAC.AND = OR
+-- notRel ThreeAddressCode.TAC.OR = AND
 
 tacGeneratorFunctionCall expType identifier@(PIdent (_, id)) paramsPassed = do
   tacEnv <- get
@@ -493,10 +537,8 @@ tacGeneratorArrayIndexing' (Evar identifier) arrayDecl = do
   return (tacsAdd ++ tacsPos, temp)
 
 tacGeneratorAssignment leftExp assign rightExp = do
-  (tacRight,tempRight) <- tacGeneratorExpression RightExp rightExp
-  (tacLeft, operation, (Temp _ _ locLeft tyLeft)) <- tacGeneratorLeftExpression leftExp assign tempRight
+  (tacs, operation, (Temp _ _ locLeft tyLeft)) <- tacGeneratorLeftExpression leftExp assign rightExp
   idTemp <- newtemp
-  let tacs = tacRight ++ tacLeft 
   let temp = Temp ThreeAddressCode.TAC.Var idTemp locLeft tyLeft
   case operation of 
     Nullary temp1 temp2 -> case assign of
@@ -525,22 +567,36 @@ tacGeneratorAssignment leftExp assign rightExp = do
         let entryPointerAdd = TACEntry Nothing $ ReferenceLeft tempLeft tempAdd
         return ((entryPointerAdd:entryadd:entryPointerValue:[]) ++ tacs, temp)
 
-tacGeneratorLeftExpression leftExp _assgn tempRight = case leftExp of
-  Evar identifier@(PIdent (_, id)) -> do
-    tacEnv <- get
-    let Variable loc ty = getVarTypeTAC identifier tacEnv
-    let varTemp =  Temp ThreeAddressCode.TAC.Var id loc ty
-    let Variable _loc ty = getVarTypeTAC identifier tacEnv
-    case ty of
-      Reference _ty -> return ([], ReferenceLeft varTemp tempRight, varTemp)
-      _ ->  return ([], Nullary varTemp tempRight, varTemp)
-  Earray expIdentifier arDeclaration -> do
-    (_, tempLeft) <- tacGeneratorExpression LeftExp expIdentifier
-    (tacsAdd, temp) <- tacGeneratorArrayIndexing' expIdentifier arDeclaration
-    return (tacsAdd, IndexLeft tempLeft temp tempRight, tempLeft)
-  Epreop (Indirection _) e1 -> do
-    (tacs, tempLeft) <- tacGeneratorExpression LeftExp e1
-    return (tacs, ReferenceLeft tempLeft tempRight, tempLeft)
+tacGeneratorLeftExpression leftExp _assgn rightExp = do
+  (tacLeft, opWithoutTempRight, tempLeft@(Temp _ _ _ ty)) <- tacGeneratorLeftExpression' leftExp
+  (tacRight,tempRight) <-  tacGeneratorRightExpression ty
+  return (tacRight ++ tacLeft, opWithoutTempRight tempRight, tempLeft)
+    where
+      tacGeneratorRightExpression ty = case ty of 
+          Bool -> do
+            labelTrue <- newlabelFALL $ getExpPos leftExp
+            labelFalse <- newlabel $ getExpPos rightExp
+            modify $ addIfSimpleLabels labelTrue labelFalse labelFalse
+            (resg,tempBool) <- tacGeneratorExpression RightExp rightExp 
+            popSequenceControlLabels
+            return (resg,tempBool)
+          _ -> tacGeneratorExpression RightExp rightExp 
+      tacGeneratorLeftExpression' leftExp = case leftExp of
+        Evar {} -> do
+          (_, varTemp@(Temp _ _ _ ty)) <- tacGeneratorExpression LeftExp leftExp
+          case ty of
+            Reference _ty -> return ([], ReferenceLeft varTemp, varTemp)
+            _ ->  return ([], Nullary varTemp, varTemp)
+        Earray expIdentifier arDeclaration -> do
+          (_, tempLeft) <- tacGeneratorExpression LeftExp expIdentifier
+          (tacsAdd, temp) <- tacGeneratorArrayIndexing' expIdentifier arDeclaration
+          return (tacsAdd, IndexLeft tempLeft temp, tempLeft)
+        Epreop (Indirection _) e1 -> do
+          (tacs, tempLeft) <- tacGeneratorExpression LeftExp e1
+          return (tacs, ReferenceLeft tempLeft, tempLeft)
+
+
+      
 
 tacGenerationArrayPosition (ArrayInit _ expressions _ ) = tacGenerationArrayPosition' expressions
   where

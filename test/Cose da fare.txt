@@ -8,6 +8,6 @@ Controllare dimensioni in lunghezza degli array
 Vedere se mettere ++ o --
 Controllare visualizzazione errori
 Controllare che le variabili siano inizializzate
-vedere fix 0 4 se è con size 4 o 5
 Controllare &* o *& o &(*)
+Controllare boolean statement
 

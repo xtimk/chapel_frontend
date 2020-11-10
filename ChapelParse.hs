@@ -82,7 +82,7 @@ parseTest filepath = do
     Bad s    -> do putStrLn s
                    exitFailure
     Ok  tree -> do putStrLn "\nParse Successful!"
-                   showTree 2 tree
+                   --showTree 2 tree
 
                    --putStrLn "\n\n ** After Type Checker **\n\n"
                    --print (evalState (typeChecker tree) startState)
@@ -102,8 +102,8 @@ parseTest filepath = do
                     if null errors 
                     then let tac = evalState (tacGenerator tree) (startTacState (getTree bpTree)) in do
 
-                      putStrLn "\n\n ** TAC **"
-                      putStrLn $ show tac
+                     -- putStrLn "\n\n ** TAC **"
+                      --putStrLn $ show tac
                       putStrLn "\n\n ** Pretty TAC **"
                       printTacEntries (getTac tac)
                       exitSuccess

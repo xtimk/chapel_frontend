@@ -11,7 +11,8 @@ printTacEntry' operation = case operation of
     Unary temp1 uop  temp2 -> printTacTemp temp1 ++ " = " ++ printTacUop uop ++ printTacTemp temp2
     Nullary temp1 temp2 ->  printTacTemp temp1 ++ " = " ++ printTacTemp temp2
     UnconJump label -> "goto " ++ printLabelGoto label
-    BoolCondJump temp label -> "if " ++ printTacTemp temp ++ " goto " ++ printLabelGoto label
+    BoolTrueCondJump temp label -> "if " ++ printTacTemp temp ++ " goto " ++ printLabelGoto label
+    BoolFalseCondJump temp label -> "ifFalse " ++ printTacTemp temp ++ " goto " ++ printLabelGoto label
     RelCondJump temp1 rel temp2 label -> "if " ++ printTacTemp temp1 ++ printTacRel rel ++ printTacTemp temp2 ++ " goto " ++ printLabelGoto label
     IndexLeft temp1 temp2 temp3 ->  printTacTemp temp1 ++ "[" ++ printTacTemp temp2 ++ "]" ++ " = " ++ printTacTemp temp3
     IndexRight temp1 temp2 temp3 -> printTacTemp temp1 ++ " = " ++  printTacTemp temp2 ++  "[" ++ printTacTemp temp3 ++ "]"
