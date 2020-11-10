@@ -43,17 +43,10 @@ typeCheckerExt (x:xs) = case x of
 typeCheckerFunction (FunDec (PProc (loc@(l,c),_) ) signature body@(BodyBlock  (POpenGraph (locGraph,_)) _ _)) = do
   typeCheckerSignature loc locGraph signature
   typeCheckerBody ProcedureBlk (createId' l c (getFunName signature)) body
-  env@(_s,tree,current_id) <- get
-  case getVarType (getFunNamePident signature) env of
-    DataChecker Infered _ -> do
-      let node = findNodeById current_id tree in
-        modify (\(_s, tree,_i) -> (_s, updateTree (modFunRetType (getFunName signature) Utils.Type.Void node) tree , _i ))
-      get
-    _ -> get
   get
 
 typeCheckerSignature locstart locEnd signature = case signature of
-  SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' locstart locEnd identifier params Infered
+  SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' locstart locEnd identifier params Utils.Type.Void
   SignWRet identifier (FunParams _ params _) _ types -> typeCheckerSignature' locstart locEnd identifier params (convertTypeSpecToTypeInferred types)
 
 typeCheckerSignature' locstart locEnd ident@(PIdent (loc,identifier)) params types = 
@@ -187,8 +180,8 @@ typeCheckerStatement statement = case statement of
     get
   StExp (EFun funidentifier _ params _) _semicolon-> do
     environment <- get
-    let DataChecker _ errors = eFunTypeChecker funidentifier params environment in
-      modify $ addErrorsCurrentNode errors
+    let DataChecker _ errors = eFunTypeChecker funidentifier params environment
+    modify $ addErrorsCurrentNode errors
     get
   StExp exp _semicolon -> do
     env <- get
@@ -202,77 +195,68 @@ typeCheckerStatement statement = case statement of
         get
   RetVal return exp _semicolon -> do
     (_s,tree,current_id) <- get
-    let DataChecker tyret errs2 = typeCheckerExpression (_s,tree,current_id) exp in do
-      modify $ addErrorsCurrentNode errs2
-      typeCheckerReturn return tyret
+    let DataChecker tyret errs2 = typeCheckerExpression (_s,tree,current_id) exp 
+    modify $ addErrorsCurrentNode errs2
+    typeCheckerReturn return tyret
   RetVoid return _semicolon -> typeCheckerReturn return Utils.Type.Void
 
 typeCheckerReturn (PReturn (pos, _ret)) tyret = do 
   (_s,tree,current_id) <- get
   case findProcedureGetBlkType tree current_id of
     ProcedureBlk -> do
-      case getFunRetType (_s,tree,current_id) of
-        DataChecker Infered _ -> do
-            modify $ setReturnType tyret
-            get
-        _oth -> let
-          (DataChecker tyfun errs1) = getFunRetType (_s,tree,current_id);
-          (DataChecker _ errs) = sup SupRet (getFunNameFromEnv (_s,tree,current_id)) pos tyfun tyret in
-          do
-            get
-            let errors = errs1 ++ errs in
-              modify $ addErrorsCurrentNode errors
-            get
+      let DataChecker tyfun errs1 = getFunRetType (_s,tree,current_id);
+      let DataChecker _ errs = sup SupRet (getFunNameFromEnv (_s,tree,current_id)) pos tyret tyfun 
+      let errors = errs1 ++ errs 
+      modify $ addErrorsCurrentNode errors
       get
     _otherwhise -> do
-      get
-      let node = findNodeById current_id tree ; errors = ErrorChecker pos ErrorReturnNotInsideAProcedure in
-        modify (\(_s, tree,_i) -> (_s, updateTree (addErrorNode errors node) tree , _i ))
+      let node = findNodeById current_id tree ; errors = ErrorChecker pos ErrorReturnNotInsideAProcedure
+      modify (\(_s, tree,_i) -> (_s, updateTree (addErrorNode errors node) tree , _i ))
       get
   get
 
 typeCheckerGuard (SGuard _ expression _) = do
-   (_s,tree,current_id) <- get
-   let DataChecker ty errors = typeCheckerExpression (_s,tree,current_id) expression in do
-     modify $ addErrorsCurrentNode errors
-     case ty of
-       Bool -> get
-       _otherwhise -> do
-        modify $ addErrorsCurrentNode  [ErrorChecker (getExpPos expression) ErrorGuardNotBoolean]
-        get
+  (_s,tree,current_id) <- get
+  let DataChecker ty errors = typeCheckerExpression (_s,tree,current_id) expression
+  modify $ addErrorsCurrentNode errors
+  case ty of
+    Bool -> get
+    _otherwhise -> do
+    modify $ addErrorsCurrentNode  [ErrorChecker (getExpPos expression) ErrorGuardNotBoolean]
+    get
 
 typeCheckerDeclaration x = do
   environment <- get
   case x of
     NoAssgmDec ids _colon types -> typeCheckerIdentifiers ids Nothing (convertTypeSpecToTypeInferred types) Infered
-    AssgmDec ids assignment exp ->
-      let DataChecker ty errors = typeCheckerDeclExpression environment exp in do
-            typeCheckerIdentifiers ids (Just assignment) Infered ty
-            modify $ addErrorsCurrentNode errors
-            get
-    AssgmTypeDec ids _colon types assignment exp -> 
-      let DataChecker ty errors = typeCheckerDeclExpression environment exp in do
-            typeCheckerIdentifiers ids (Just assignment) (convertTypeSpecToTypeInferred types) ty
-            modify $ addErrorsCurrentNode errors
-            get
+    AssgmDec ids assignment exp -> do
+      let DataChecker ty errors = typeCheckerDeclExpression environment exp
+      typeCheckerIdentifiers ids (Just assignment) Infered ty
+      modify $ addErrorsCurrentNode errors
+      get
+    AssgmTypeDec ids _colon types assignment exp -> do
+      let DataChecker ty errors = typeCheckerDeclExpression environment exp
+      typeCheckerIdentifiers ids (Just assignment) (convertTypeSpecToTypeInferred types) ty
+      modify $ addErrorsCurrentNode errors
+      get
     NoAssgmArrayFixDec ids _colon array -> typeCheckerIdentifiersArray ids Nothing array Infered Infered
     NoAssgmArrayDec ids _colon array types -> typeCheckerIdentifiersArray ids  Nothing array (convertTypeSpecToTypeInferred types) Infered
-    AssgmArrayTypeDec ids _colon array types assignment exp ->  
-      let DataChecker ty errors = typeCheckerDeclExpression environment exp in do
-            typeCheckerIdentifiersArray ids (Just assignment) array (convertTypeSpecToTypeInferred types) ty
-            modify $ addErrorsCurrentNode errors
-            get
-    AssgmArrayDec ids _colon array assignment exp ->  
-      let DataChecker ty errors = typeCheckerDeclExpression environment exp in do
-            typeCheckerIdentifiersArray ids (Just assignment) array Infered ty
-            modify $ addErrorsCurrentNode errors
-            get
+    AssgmArrayTypeDec ids _colon array types assignment exp -> do
+      let DataChecker ty errors = typeCheckerDeclExpression environment exp
+      typeCheckerIdentifiersArray ids (Just assignment) array (convertTypeSpecToTypeInferred types) ty
+      modify $ addErrorsCurrentNode errors
+      get
+    AssgmArrayDec ids _colon array assignment exp -> do
+      let DataChecker ty errors = typeCheckerDeclExpression environment exp
+      typeCheckerIdentifiersArray ids (Just assignment) array Infered ty
+      modify $ addErrorsCurrentNode errors
+      get
 
 typeCheckerIdentifiersArray ids assgn array typeLeft typeRight = do
   environment <- get
-  let DataChecker typeArray errors = typeCheckerBuildArrayType environment array typeLeft in do
-    modify (addErrorsCurrentNode errors)
-    typeCheckerIdentifiers ids assgn typeArray typeRight
+  let DataChecker typeArray errors = typeCheckerBuildArrayType environment array typeLeft
+  modify (addErrorsCurrentNode errors)
+  typeCheckerIdentifiers ids assgn typeArray typeRight
   get
 
 typeCheckerBuildArrayType environment (ArrayDeclIndex _ array _) = typeCheckerBuildArrayType' environment array
@@ -302,10 +286,12 @@ typeCheckerAssignmentDecl assgnm = case assgnm of
   Just (AssgnPlEq (PAssignmPlus (loc,_))) -> [ErrorChecker loc ErrorAssignDecl]
 
 typeCheckerVariable (PIdent ((l,c), identifier)) tree types currentIdNode = 
-  let node = findNodeById currentIdNode tree in case DMap.lookup identifier (getSymbolTable node) of
-      Just (_, Variable (varAlreadyDecLine,varAlreadyDecColumn) _) -> 
-        updateTree (addErrorsNode node [ErrorChecker (varAlreadyDecLine,varAlreadyDecColumn) $ ErrorVarAlreadyDeclared (l,c) identifier]) tree
-      Nothing -> updateTree (addEntryNode identifier (Variable (l,c) types) node) tree
+  let node = findNodeById currentIdNode tree in case types of
+    Infered ->  updateTree (addErrorsNode node [ErrorChecker (l,c) $ NoDecucibleType identifier]) tree
+    _ -> case DMap.lookup identifier (getSymbolTable node) of
+              Just (_, Variable (varAlreadyDecLine,varAlreadyDecColumn) _) -> 
+                updateTree (addErrorsNode node [ErrorChecker (varAlreadyDecLine,varAlreadyDecColumn) $ ErrorVarAlreadyDeclared (l,c) identifier]) tree
+              Nothing -> updateTree (addEntryNode identifier (Variable (l,c) types) node) tree
 
 typeCheckerDeclExpression environment decExp = case decExp of
   ExprDecArray (ArrayInit _ expression _) -> foldl (typeCheckerDeclArrayExp environment) (DataChecker (Array Infered (Fix 0, Fix 0)) []) expression
@@ -322,20 +308,22 @@ typeCheckerBuildArrayParameter enviroment array = case array of
   ArrayDimBound elements -> typeCheckerBuildArrayBound enviroment (ArratBoundConst $ Eint $ PInteger ((-1,-1), "0") ) elements 
 
 typeCheckerBuildArrayBound enviroment lBound rBound = 
-  let DataChecker leftBound leftErrors = typeCheckerBuildArrayBound' lBound; DataChecker rightBound rightErrors = typeCheckerBuildArrayBound' rBound in DataChecker (leftBound, rightBound) (leftErrors ++ rightErrors)
-  where
-    typeCheckerBuildArrayBound' bound = case bound of 
-      ArrayBoundIdent id@(PIdent (loc,name)) -> case getVarType id enviroment of 
-       DataChecker Error err -> DataChecker (Fix $ -1) (modErrorsPos loc err)
-       DataChecker Int _-> DataChecker (Var name) []
-       DataChecker types _-> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundNotCorrectType types name]
-      ArratBoundConst constant -> case constant of
-        Efloat (PDouble (loc, id)) -> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundArray Real id]
-        Echar (PChar (loc,id)) -> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundArray  Char id]
-        ETrue (PTrue (loc,id)) -> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundArray  Bool id]
-        EFalse (PFalse (loc,id)) -> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundArray  Bool id]
-        Estring (PString (loc,id)) -> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundArray  String id]
-        Eint (PInteger (_,dimension)) -> DataChecker (Fix $ read dimension) []
+  let DataChecker leftBound leftErrors = typeCheckerBuildArrayBound' lBound; 
+      DataChecker rightBound rightErrors = typeCheckerBuildArrayBound' rBound in  
+         DataChecker (leftBound, rightBound) (leftErrors ++ rightErrors)
+            where
+              typeCheckerBuildArrayBound' bound = case bound of 
+                ArrayBoundIdent id@(PIdent (loc,name)) -> case getVarType id enviroment of 
+                  DataChecker Error err -> DataChecker (Fix $ -1) (modErrorsPos loc err)
+                  DataChecker Int _-> DataChecker (Var name) []
+                  DataChecker types _-> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundNotCorrectType types name]
+                ArratBoundConst constant -> case constant of
+                  Efloat (PDouble (loc, id)) -> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundArray Real id]
+                  Echar (PChar (loc,id)) -> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundArray  Char id]
+                  ETrue (PTrue (loc,id)) -> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundArray  Bool id]
+                  EFalse (PFalse (loc,id)) -> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundArray  Bool id]
+                  Estring (PString (loc,id)) -> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundArray  String id]
+                  Eint (PInteger (_,dimension)) -> DataChecker (Fix $ read dimension) []
 
 typeCheckerExpression environment exp = case exp of
     EAss e1 assign e2 -> typeCheckerAssignment environment e1 assign e2

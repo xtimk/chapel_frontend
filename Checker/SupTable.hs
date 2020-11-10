@@ -23,8 +23,9 @@ supTac (Pointer ty1) ty2 = supTac ty1 ty2
 supTac ty1 (Pointer ty2) = supTac ty1 ty2
 
 --Void 
-sup _ id loc Void _ = createIncompatible id loc Error Error
-sup _ id loc _ Void = createIncompatible id loc Error Error
+sup _ _ _ Void Void =  DataChecker Void []
+sup _ id loc ty1@Void ty2 = DataChecker ty2 [ErrorChecker loc ErrorReturnNotVoid]
+sup _ _ loc ty1 Void = DataChecker ty1 [ErrorChecker loc ErrorFunctionVoid]
 --Infered
 sup _ _ _ Infered ty = DataChecker ty []
 sup _ _ _ ty Infered = DataChecker ty []

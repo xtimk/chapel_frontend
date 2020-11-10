@@ -37,7 +37,10 @@ data DefinedError =
   ErrorAssignDecl |
   ErrorOnlyRightExpression Exp |
   ErrorNotLeftExpression Exp AssgnmOp |
-  ErrorOverloadingIncompatibleReturnType Loc Loc String Type Type
+  ErrorOverloadingIncompatibleReturnType Loc Loc String Type Type |
+  ErrorFunctionVoid |
+  ErrorReturnNotVoid |
+  NoDecucibleType String 
   deriving (Show)
 
 data ErrorChecker =  ErrorChecker Loc DefinedError
@@ -77,6 +80,9 @@ printDefinedError tokens error = case error of
   ErrorBreakNotInsideAProcedure -> "Break command must be inside a while, dowhile, or if blocks."
   ErrorContinueNotInsideAProcedure -> "Continue command must be inside a while, dowhile, or if blocks."
   ErrorOnlyRightExpression _exp -> "Statement must be an assignment or left expression"
+  ErrorFunctionVoid -> "A procedure cannot return a value"
+  ErrorReturnNotVoid -> "Function must return a value"
+  NoDecucibleType id -> "Impossible infered type from expression for variable " ++ show id ++ "."
 
 getTokens [] _ _ = []
 getTokens (x@(PT (Pn _ l c ) _ ):xs) start@(lstart, cstart) end@(lend, cend) 
