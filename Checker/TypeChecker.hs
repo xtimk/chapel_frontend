@@ -56,34 +56,36 @@ typeCheckerSignature' locstart locEnd ident@(PIdent (loc,identifier)) params typ
       typeCheckerParams params
       (symtable, tree, currentIdNode) <- get
       let node = findNodeById currentIdNode tree
-          DataChecker entry errors = getEntry ident (symtable, tree, currentIdNode)
-          variables = reverse $ map (snd.snd) symtable in 
-            case entry of
-              Nothing -> do
-                modify $ addErrorsCurrentNode errors
-                put (symtable, updateTree (addEntryNode identifier (Function [(loc,variables)] types) node) tree, currentIdNode )
-                get
-              Just entryFound -> case entryFound of 
-                Variable locVar _ -> do
-                  modify $ addErrorsCurrentNode [ErrorChecker loc $ ErrorVarAlreadyDeclared locVar identifier]
-                  get
-                Function varOfvar t -> 
-                  let errorsOverloading = typeCheckerSignatureOverloading identifier loc variables varOfvar;
-                      DataChecker _ errorsReturnType = sup SupFun identifier loc types t;
-                      convertErrors = map (errorConvertOVerloadingReturn locstart locEnd) errorsReturnType in if null errors 
-                  then do
-                    put (symtable, updateTree (modFunAddOverloading identifier loc variables node) tree, currentIdNode )
-                    modify $ addErrorsCurrentNode convertErrors
-                    get
-                  else do
-                    modify $ addErrorsCurrentNode (errorsOverloading ++ convertErrors)
-                    get 
+      let DataChecker entry errors = getEntry ident (symtable, tree, currentIdNode)
+      let variables = reverse $ map (snd.snd) symtable
+      case entry of
+        Nothing -> do
+          modify $ addErrorsCurrentNode errors
+          put (symtable, updateTree (addEntryNode identifier (Function [(loc,variables)] types) node) tree, currentIdNode )
+          get
+        Just entryFound -> case entryFound of 
+          Variable locVar _ -> do
+            modify $ addErrorsCurrentNode [ErrorChecker loc $ ErrorVarAlreadyDeclared locVar identifier]
+            get
+          Function varOfvar t -> do
+            let errorsOverloading = typeCheckerSignatureOverloading identifier loc variables varOfvar
+            let DataChecker _ errorsReturnType = sup SupFun identifier loc types t
+            let convertErrors = map (errorConvertOVerloadingReturn locstart locEnd) errorsReturnType
+            if null errors 
+            then do
+              put (symtable, updateTree (modFunAddOverloading identifier loc variables node) tree, currentIdNode )
+              modify $ addErrorsCurrentNode convertErrors
+              get
+            else do
+              modify $ addErrorsCurrentNode (errorsOverloading ++ convertErrors)
+              get 
 
 typeCheckerSignatureOverloading _ _ _ [] = []
 typeCheckerSignatureOverloading identifier loc var ((locFun,x):xs) = case (var,x) of
   ([],[]) -> [ErrorChecker loc $ ErrorSignatureAlreadyDeclared locFun identifier]
   ([],_) -> typeCheckerSignatureOverloading identifier loc var xs
-  _ -> let errors = typeCheckerSignatureOverloading' identifier loc locFun var x in if null errors
+  _ -> let errors = typeCheckerSignatureOverloading' identifier loc locFun var x in 
+    if null errors
     then typeCheckerSignatureOverloading identifier loc var xs
     else errors
 

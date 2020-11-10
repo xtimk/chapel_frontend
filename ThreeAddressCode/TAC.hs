@@ -16,7 +16,8 @@ data TACOperation =
     Unary Temp Uop Temp |
     Nullary Temp Temp|
     UnconJump Label |
-    BoolCondJump Temp Label |
+    BoolTrueCondJump Temp Label |
+    BoolFalseCondJump Temp Label |
     RelCondJump Temp Rel Temp Label |
     IndexLeft Temp Temp Temp |
     IndexRight Temp Temp Temp |
