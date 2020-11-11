@@ -43,8 +43,9 @@ typeCheckerExt (x:xs) = case x of
 typeCheckerFunction (FunDec (PProc (loc@(l,c),_) ) signature body@(BodyBlock  (POpenGraph (locGraph,_)) _ _)) = do
   typeCheckerSignature loc locGraph signature
   typeCheckerBody ProcedureBlk (createId' l c (getFunName signature)) body
-  get
+  get  
 
+typeCheckerSignature :: Monad m => (Int, Int) -> (Int, Int) -> Signature -> StateT ([(String, (String, EnvEntry))], BPTree BP, (String, (Loc, Loc))) m ([(String, (String, EnvEntry))], BPTree BP, (String, (Loc, Loc)))
 typeCheckerSignature locstart locEnd signature = case signature of
   SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' locstart locEnd identifier params Utils.Type.Void
   SignWRet identifier (FunParams _ params _) _ types -> typeCheckerSignature' locstart locEnd identifier params (convertTypeSpecToTypeInferred types)
@@ -195,12 +196,18 @@ typeCheckerStatement statement = case statement of
       _ -> do 
         modify $ addErrorsCurrentNode [ ErrorChecker (getExpPos exp) $ ErrorOnlyRightExpression exp]
         get
-  RetVal return exp _semicolon -> do
+  ret@(RetVal return exp _semicolon) -> do
     (_s,tree,current_id) <- get
     let DataChecker tyret errs2 = typeCheckerExpression (_s,tree,current_id) exp 
     modify $ addErrorsCurrentNode errs2
     typeCheckerReturn return tyret
-  RetVoid return _semicolon -> typeCheckerReturn return Utils.Type.Void
+    modify $ addStatementCurrentNode ret
+    get
+
+  ret@(RetVoid return _semicolon) -> do
+    typeCheckerReturn return Utils.Type.Void
+    modify $ addStatementCurrentNode ret
+    get
 
 typeCheckerReturn (PReturn (pos, _ret)) tyret = do 
   (_s,tree,current_id) <- get
