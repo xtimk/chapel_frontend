@@ -554,10 +554,11 @@ tacGeneratorArrayIndexing' (Evar identifier) arrayDecl = do
   return (tacsAdd ++ tacsPos, temp)
 
 tacGeneratorAssignment leftExp assign rightExp = do
-  (tacs, operation, (Temp _ _ locLeft tyLeft)) <- tacGeneratorLeftExpression leftExp assign rightExp
+  (tacs, operation, retTemp@(Temp _ _ locLeft tyLeft)) <- tacGeneratorLeftExpression leftExp assign rightExp
   idTemp <- newtemp
   let temp = Temp ThreeAddressCode.TAC.Temporary idTemp locLeft tyLeft
   case operation of 
+    VoidOp -> return (tacs, retTemp)
     Nullary temp1 temp2 -> case assign of
       AssgnEq (PAssignmEq _) -> return (TACEntry Nothing operation:tacs, temp)
       AssgnPlEq (PAssignmPlus _) -> do
@@ -585,19 +586,13 @@ tacGeneratorAssignment leftExp assign rightExp = do
         return ((entryPointerAdd:entryadd:entryPointerValue:[]) ++ tacs, temp)
 
 tacGeneratorLeftExpression leftExp _assgn rightExp = do
-  (tacLeft, opWithoutTempRight, tempLeft@(Temp _ _ _ ty)) <- tacGeneratorLeftExpression' leftExp
-  (tacRight,tempRight) <-  tacGeneratorRightExpression ty
-  return (tacRight ++ tacLeft, opWithoutTempRight tempRight, tempLeft)
+  (tacLeft, opWithoutTempRight, tempLeft@(Temp _ _ loc ty)) <- tacGeneratorLeftExpression' leftExp
+  case ty of 
+    Bool -> tacGeneratorBooleanStatement (getExpPos leftExp) (getExpPos rightExp) (getAssignOpPos _assgn) rightExp tempLeft
+    _ -> do 
+      (tacRight,tempRight) <- tacGeneratorExpression RightExp rightExp 
+      return (tacRight ++ tacLeft, opWithoutTempRight tempRight, tempLeft)
     where
-      tacGeneratorRightExpression ty = case ty of 
-          Bool -> do
-            labelTrue <- newlabelFALL $ getExpPos leftExp
-            labelFalse <- newlabel $ getExpPos rightExp
-            modify $ addIfSimpleLabels labelTrue labelFalse labelFalse
-            (resg,tempBool) <- tacGeneratorExpression BooleanExp rightExp 
-            popSequenceControlLabels
-            return (resg,tempBool)
-          _ -> tacGeneratorExpression RightExp rightExp 
       tacGeneratorLeftExpression' leftExp = case leftExp of
         Evar {} -> do
           (_, varTemp@(Temp _ _ _ ty)) <- tacGeneratorExpression LeftExp leftExp
@@ -612,6 +607,20 @@ tacGeneratorLeftExpression leftExp _assgn rightExp = do
           (tacs, tempLeft) <- tacGeneratorExpression LeftExp e1
           return (tacs, ReferenceLeft tempLeft, tempLeft)
 
+tacGeneratorBooleanStatement locTrue locFalse locExit rightExp tempLeft@(Temp _ _ loc _) = do
+  labelTrue <- newlabelFALL locTrue
+  labelFalse <- newlabel $ locFalse
+  labelExit <- newlabel $ locExit
+  modify $ addIfSimpleLabels labelTrue labelFalse labelFalse
+  (resg,tempBool) <- tacGeneratorExpression BooleanExp rightExp 
+  popSequenceControlLabels
+  let tempTrue = Temp Fixed "true" loc Bool
+  let tempFalse = Temp Fixed "false" loc Bool
+  let tacTrue = TACEntry Nothing $ Nullary tempLeft tempTrue
+  let tacGoToExit = TACEntry Nothing $ UnconJump  labelExit
+  let tacFalse = TACEntry (Just labelFalse) $ Nullary tempLeft tempFalse
+  let tacExit = TACEntry (Just labelExit) VoidOp
+  return (tacExit:tacFalse:tacGoToExit:tacTrue: reverse resg,VoidOp,tempBool)
 
       
 
