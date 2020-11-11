@@ -233,8 +233,8 @@ tacGeneratorStatement statement = case statement of
   RetVoid _ret _semicolon -> return [TACEntry Nothing ReturnVoid] 
 
 attachLabelToFirstElem (Just label) [] = [TACEntry (Just label) VoidOp]
-attachLabelToFirstElem (Just label) ((TACEntry Nothing _e):xs) = (TACEntry (Just label) _e):xs
-attachLabelToFirstElem (Just label) ((TACEntry (Just _l) _e):xs) = (TACEntry (Just label) VoidOp):(TACEntry (Just _l) _e):xs
+attachLabelToFirstElem (Just label) ((TACEntry Nothing _e):xs) = TACEntry (Just label) _e:xs
+attachLabelToFirstElem (Just label) ((TACEntry (Just _l) _e):xs) = TACEntry (Just label) VoidOp:TACEntry (Just _l) _e:xs
 attachLabelToFirstElem Nothing xs = xs
 
 tacGeneratorBooleanStatement locTrue locFalse locExit locLeft rightExp = do
@@ -506,16 +506,6 @@ tacCheckerBinaryBoolean vtype loc e1 op e2 = do
       AND -> genLazyTacAND vtype loc e1 op e2 ltrue lfalse
       OR -> genLazyTacOR vtype loc e1 op e2 ltrue lfalse
       _ -> genLazyTacREL vtype loc e1 op e2 ltrue lfalse
-
-notRel ThreeAddressCode.TAC.LT = GTE
-notRel ThreeAddressCode.TAC.LTE= ThreeAddressCode.TAC.GT
-notRel ThreeAddressCode.TAC.GT = LTE
-notRel ThreeAddressCode.TAC.GTE = ThreeAddressCode.TAC.LT
-notRel ThreeAddressCode.TAC.EQ = NEQ
-notRel NEQ = ThreeAddressCode.TAC.EQ
--- non dovrei mai arrivare a chiamare i due casi sotto, se ci arrivo c'e qualcosa di sbagliato
--- notRel ThreeAddressCode.TAC.AND = OR
--- notRel ThreeAddressCode.TAC.OR = AND
 
 tacGeneratorFunctionCall expType identifier@(PIdent (_, id)) paramsPassed = do
   tacEnv <- get

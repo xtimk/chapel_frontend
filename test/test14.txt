@@ -23,7 +23,7 @@ proc main(l: int,ref z:int)
     }
 
     a = 10;
-    while(true && false && false&& false&& false&& !yu&& false&& false&& false) {
+    while(c == c) {
         a = 333;
     }
 }
