@@ -132,6 +132,14 @@ addEntryNode identifier entry (Node id (BP symboltable _st _e _bt) _p _c) =
 
 addErrorsCurrentNode errors (_s,tree,currentId) = (_s,updateTree (addErrorsNode (findNodeById currentId tree) errors) tree, currentId)
 
+addStatementCurrentNode statement (_s,tree,currentId) = (_s,updateTree (addStatementAux statement (findNodeById currentId tree)) tree, currentId)
+
+addStatementAux statement (Node id (BP symboltable statements errors blocktype) parent children) = 
+    Checker.BPTree.Node {Checker.BPTree.id = id,
+    val = BP {symboltable = symboltable, statements = statement:statements, errors = errors, blocktype = blocktype}, 
+    parentID = parent, 
+    children = children}
+
 
 addErrorsNode :: (Foldable t0) => BPTree BP -> t0 ErrorChecker -> BPTree BP
 addErrorsNode = foldr addErrorNode
