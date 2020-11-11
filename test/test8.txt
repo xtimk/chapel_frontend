@@ -10,7 +10,6 @@ proc lol(x : int, j : string)
 {
    { 
         f[a+d,3,4] += scemoChiLegge;
-        var sonostupido: bool =  5 >5;
     }
 
     {
