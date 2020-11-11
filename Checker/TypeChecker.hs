@@ -447,10 +447,5 @@ getDeclarationDimension environment (array:arrays) = let DataChecker dimension e
       _ -> DataChecker (dimension + 1) (errors ++ expErrors)
     expDecl -> DataChecker (dimension + 1) $ ErrorChecker (getExprDeclPos expDecl) ErrorArrayExpressionRequest : errors
 
-getSubarrayDimension types 0 = types
-getSubarrayDimension (Array subtype _) i = getSubarrayDimension subtype (i - 1)
-
-getArrayDimension (Array subtype _) = 1 + getArrayDimension subtype
-getArrayDimension _ = 0  
 
 
