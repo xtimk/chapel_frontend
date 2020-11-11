@@ -2,7 +2,7 @@ module Utils.AbsUtils where
 
 import AbsChapel
 
-data ExpType = LeftExp | RightExp
+data ExpType = LeftExp | RightExp | BooleanExp
 
 type Loc = (Int,Int)
 

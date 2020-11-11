@@ -5,7 +5,7 @@ var c : bool;
 proc main(l: int,ref z:int)
 {
 
-    while(false && true || 5 < 9  )
+    while(false && true && true && false || 5 < 9  )
     {
         a = 333;
     }

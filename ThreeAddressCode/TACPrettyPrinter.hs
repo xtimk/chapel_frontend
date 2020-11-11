@@ -34,8 +34,8 @@ printLabel Nothing = "         "
 printLabelGoto (lab,(l,c)) = lab ++ "@" ++ show l ++ "," ++ show c 
 
 printTacTemp (Temp mode id (l,c) _) = case mode of
-    Var -> id ++ "@" ++ show l ++ "," ++ show c
-    Fix -> id
+    Fixed -> id
+    _ -> id ++ "@" ++ show l ++ "," ++ show c
 
 printTacBop bop = case bop of
     Plus -> " + "

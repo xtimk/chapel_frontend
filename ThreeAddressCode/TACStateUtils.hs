@@ -9,7 +9,7 @@ import Utils.Type
 type TacMonad a = State ([TACEntry], Temp, Int, BPTree BP, [SequenceLazyEvalLabels], Maybe Label,  [TACEntry]) a
 
 
-startTacState bpTree = ([], Temp ThreeAddressCode.TAC.Fix "" (0::Int,0::Int) Int,  0, bpTree, [], Nothing, [])
+startTacState bpTree = ([], Temp ThreeAddressCode.TAC.Fixed "" (0::Int,0::Int) Int,  0, bpTree, [], Nothing, [])
 
 newtemp :: TacMonad String
 newtemp = do
