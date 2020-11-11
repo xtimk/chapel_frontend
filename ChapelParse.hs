@@ -90,6 +90,9 @@ parseTest filepath = do
                    let bpTree = evalState (typeChecker tree) startState
                        errors = getTreeErrors $ getTree bpTree in do
 
+                    let bp2 = typeCheckerReturns (getTree bpTree) in
+                      putStrLn $ show bp2
+
                     putStrLn "\n\n ** SYMBOL TABLE **"
                     print $ getSymTable bpTree
 
@@ -110,6 +113,33 @@ parseTest filepath = do
                     else 
                       exitSuccess
 
+
+typeCheckerReturns bp@(Node _ _ _ children) = andOfAList (map typeCheckerReturnPresence children)
+
+-- typeCheckerReturns' node@(Node id (BP symboltable statements errors blocktype) parent children) = 
+--   if blocktype == ProcedureBlk
+--     then
+--       if typeCheckerReturnPresence node
+--         then []
+--         else []
+--     else map typeCheckerReturns' children
+
+typeCheckerReturnPresence node@(Node id (BP symboltable statements errors blocktype) parent children) = 
+  do
+    if isAReturn node
+      then True
+      else orOfAList (map typeCheckerReturnPresence children)
+        
+isAReturn (Node id (BP symboltable statements errors blocktype) parent children) = 
+  if null statements
+    then False
+    else True
+
+orOfAList :: [Bool] -> Bool
+orOfAList = foldr (||) False
+
+andOfAList :: [Bool] -> Bool
+andOfAList = foldr (&&) True
 
 getSymTable (x,_,_) = x
 getTree (_,x,_) = x
