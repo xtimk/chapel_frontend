@@ -67,14 +67,14 @@ tacGeneratorDeclExpression'' lengths@(x:xs) ids (y:ys) = do
 
 --Vedere array qua
 tacGeneratorIdentifier temp@(Temp _ _ _ ty) (PIdent (loc, identifier)) =
-  return $ TACEntry Nothing $ Nullary (Temp ThreeAddressCode.TAC.Var identifier loc ty) temp
+  return $ TACEntry Nothing $ Nullary (Temp ThreeAddressCode.TAC.Variable identifier loc ty) temp
 
 tacGeneratorArrayIdentifier temp@(Temp _ _ _ _) _ lenghts id@(PIdent (_, identifier)) = do
   tacEnv <- get
-  let Variable loc ty = getVarTypeTAC id tacEnv
+  let Checker.SymbolTable.Variable loc ty = getVarTypeTAC id tacEnv
   let arrayPos = arrayCalculatePosition ty lenghts
-  let temp1 = Temp ThreeAddressCode.TAC.Var identifier loc ty
-  let temp2 = Temp ThreeAddressCode.TAC.Fix (show arrayPos) loc Int
+  let temp1 = Temp ThreeAddressCode.TAC.Variable identifier loc ty
+  let temp2 = Temp ThreeAddressCode.TAC.Fixed (show arrayPos) loc Int
   return $ TACEntry Nothing $ IndexLeft temp1 temp2 temp
 
 arrayCalculatePosition ty lengths = (sizeof ty) * (arrayCalculatePosition' (reverse (getArrayDimensions ty)) lengths)
@@ -151,7 +151,7 @@ tacGeneratorStatement statement = case statement of
     res <- tacGeneratorBody body
     
     modify $ addIfSimpleLabels labelBegin labelFalse labelTrue
-    (resg,_) <- tacGeneratorExpression RightExp guard
+    (resg,_) <- tacGeneratorExpression BooleanExp guard
     popSequenceControlLabels
 
     pushLabel labelFalse
@@ -164,7 +164,7 @@ tacGeneratorStatement statement = case statement of
     labelFalse <- newlabel  $ getBodyEndPos body
 
     modify $ addIfSimpleLabels labelTrue labelFalse labelBegin
-    (resg',_) <- tacGeneratorExpression RightExp guard
+    (resg',_) <- tacGeneratorExpression BooleanExp guard
     let resg = attachLabelToFirstElem (Just labelBegin) resg'
     popSequenceControlLabels
     
@@ -178,7 +178,7 @@ tacGeneratorStatement statement = case statement of
     labelFalse <- newlabel $ getBodyEndPos body
     modify $ addIfSimpleLabels labelTrue labelFalse labelFalse
 
-    (resg,_) <- tacGeneratorExpression RightExp guard
+    (resg,_) <- tacGeneratorExpression BooleanExp guard
 
     popSequenceControlLabels
     pushLabel labelTrue
@@ -193,7 +193,7 @@ tacGeneratorStatement statement = case statement of
     latestLabel <- newlabel $ getBodyEndPos bodyElse 
 
     modify $ addIfSimpleLabels labelTrue labelFalse latestLabel
-    (resg,_) <- tacGeneratorExpression RightExp guard 
+    (resg,_) <- tacGeneratorExpression BooleanExp guard 
    
     popSequenceControlLabels
     pushLabel labelTrue
@@ -254,13 +254,13 @@ tacGeneratorExpression expType exp = case exp of
 
 tacGeneratorVariable expType identifier@(PIdent (_, id)) = do
   tacEnv <- get
-  let Variable loc ty = getVarTypeTAC identifier tacEnv
-  let varTemp =  Temp ThreeAddressCode.TAC.Var id loc ty
+  let Checker.SymbolTable.Variable loc ty = getVarTypeTAC identifier tacEnv
+  let varTemp =  Temp ThreeAddressCode.TAC.Variable id loc ty
   case ty of 
     Reference tyRef -> case expType of
       RightExp ->  do
         idVal <- newtemp
-        let valTemp =  Temp ThreeAddressCode.TAC.Var idVal loc tyRef
+        let valTemp =  Temp ThreeAddressCode.TAC.Temporary idVal loc tyRef
         let entryRef = TACEntry Nothing $ ReferenceRight valTemp varTemp
         return ([entryRef], valTemp)
       LeftExp ->  return ([], varTemp)
@@ -273,7 +273,7 @@ tacGeneratorAddress _expType loc e1 = do
     Reference ty -> return (tacs, Temp mod id l ty)
     _ -> do
       defId <- newtemp
-      let defTemp = Temp ThreeAddressCode.TAC.Var defId loc ty
+      let defTemp = Temp ThreeAddressCode.TAC.Temporary defId loc ty
       let defTac = TACEntry Nothing $  DeferenceRight defTemp temp
       return (defTac:tacs,defTemp)
 
@@ -283,7 +283,7 @@ tacGeneratorPointer expType loc e1 = do
     Reference ty -> return (tacs, Temp mod id l ty)
     _ -> do
       refId <- newtemp
-      let refTemp = Temp ThreeAddressCode.TAC.Var refId loc ty
+      let refTemp = Temp ThreeAddressCode.TAC.Temporary refId loc ty
       let refTac = TACEntry Nothing $  ReferenceRight refTemp temp
       return (refTac:tacs,refTemp)
 
@@ -291,12 +291,12 @@ tacGeneratorExpression' exptype e1 op e2 loc = do
   (tac1,temp1@(Temp _ _ _ ty1)) <- tacGeneratorExpression exptype e1
   (tac2,temp2@(Temp _ _ _ ty2)) <- tacGeneratorExpression exptype e2
   idTemp <- newtemp
-  let temp = Temp ThreeAddressCode.TAC.Var idTemp loc (supTac ty1 ty2)
+  let temp = Temp ThreeAddressCode.TAC.Temporary idTemp loc (supTac ty1 ty2)
   let newEntry = TACEntry Nothing (Binary temp temp1 op temp2)
   let tac = newEntry:(tac1 ++ tac2)
   return (tac, temp)
 
-tacGeneratorConstant (loc, id) ty = return ([], Temp ThreeAddressCode.TAC.Fix id loc ty)
+tacGeneratorConstant (loc, id) ty = return ([], Temp ThreeAddressCode.TAC.Fixed id loc ty)
 
 genLazyTacAND vtype loc e1 _op e2 _ltrue lfalse = 
   if (isLabelFALL lfalse)
@@ -386,20 +386,20 @@ genLazyTacREL vtype _ e1 op e2 ltrue lfalse = do
     (True,True) -> return (tacs, temp1)
     (_, True) ->
       case (mode1, ty) of
-        (ThreeAddressCode.TAC.Fix, Bool) -> genLazyTacRel'' temp1 temp2 op ltrue
+        (ThreeAddressCode.TAC.Fixed, Bool) -> genLazyTacRel'' temp1 temp2 op ltrue
         _ -> do
           let aa = TACEntry Nothing (RelCondJump temp1 op temp2 ltrue)
           return (tacs ++ [aa], temp2)
     (True, _) -> do
       let ope = notRel op
       case (mode1, ty) of
-        (ThreeAddressCode.TAC.Fix, Bool) -> genLazyTacRel'' temp1 temp2 ope lfalse
+        (ThreeAddressCode.TAC.Fixed, Bool) -> genLazyTacRel'' temp1 temp2 ope lfalse
         _ -> do 
           let aa = TACEntry Nothing (RelCondJump temp1 ope temp2 lfalse) 
           return (tacs ++ [aa], temp2)
     (_,_) ->
       case (mode1, ty) of
-        (ThreeAddressCode.TAC.Fix, Bool) -> genLazyTacRel'' temp1 temp2 op ltrue
+        (ThreeAddressCode.TAC.Fixed, Bool) -> genLazyTacRel'' temp1 temp2 op ltrue
         _ -> do 
           let aa = TACEntry Nothing (RelCondJump temp1 op temp2 ltrue)
           let bb = TACEntry Nothing (UnconJump lfalse) 
@@ -478,7 +478,7 @@ tacGeneratorFunctionCall expType identifier@(PIdent (_, id)) paramsPassed = do
   let Function _ retTy = getVarTypeTAC identifier tacEnv
   let parameterLenght = length paramsPassed
   tacPar <- mapM tacGenerationTempParameter $ zip funParams tempPars
-  let funTemp = Temp ThreeAddressCode.TAC.Var id loc retTy
+  let funTemp = Temp ThreeAddressCode.TAC.Variable id loc retTy
   let tacsTemp = reverse $ map (tacGenerationEntryParameter.snd) tacPar
   let tacs = reverse $ tacsTemp ++ concatMap fst tacPar ++ tacExp 
   case retTy of
@@ -487,7 +487,7 @@ tacGeneratorFunctionCall expType identifier@(PIdent (_, id)) paramsPassed = do
       return (tacs ++ [ tacEntry],funTemp)
     _ -> do
       idResFun <- newtemp
-      let idResTemp = Temp ThreeAddressCode.TAC.Var idResFun loc retTy
+      let idResTemp = Temp ThreeAddressCode.TAC.Temporary idResFun loc retTy
       let tacEntry = TACEntry Nothing $ CallFun idResTemp funTemp parameterLenght
       return (tacs ++ [tacEntry], idResTemp)
 
@@ -496,36 +496,36 @@ tacGeneratorFunctionParameter expType (PassedPar exp) =
   case exp of
     Evar identifier@(PIdent (_, id)) -> do
       tacEnv <- get
-      let Variable loc ty = getVarTypeTAC identifier tacEnv
-      let varTemp =  Temp ThreeAddressCode.TAC.Var id loc ty 
+      let Checker.SymbolTable.Variable loc ty = getVarTypeTAC identifier tacEnv
+      let varTemp =  Temp ThreeAddressCode.TAC.Variable id loc ty 
       return ([], varTemp)
     _ -> tacGeneratorExpression expType exp
 
 
 tacGenerationEntryParameter temp = TACEntry Nothing $ SetParam temp
 
-tacGenerationTempParameter ((Variable locMode tyPar),temp@(Temp _ _ _ tyTemp)) = 
+tacGenerationTempParameter ((Checker.SymbolTable.Variable locMode tyPar),temp@(Temp _ _ _ tyTemp)) = 
     case (tyPar, tyTemp) of
       (Reference _, Reference _)  -> return ([], temp)
       (_, Reference tyFound) -> do
         idVal <- newtemp 
-        let valTemp = Temp ThreeAddressCode.TAC.Var idVal locMode tyFound
+        let valTemp = Temp ThreeAddressCode.TAC.Temporary idVal locMode tyFound
         let valEntry = TACEntry Nothing $ ReferenceRight valTemp temp
         return ([valEntry],valTemp )
       (Reference tyFound, _) -> do
         idRef <- newtemp
-        let refTemp = Temp ThreeAddressCode.TAC.Var idRef locMode tyFound
+        let refTemp = Temp ThreeAddressCode.TAC.Temporary idRef locMode tyFound
         let refEntry = TACEntry Nothing $ DeferenceRight refTemp temp
         return ([refEntry], refTemp)
       _ -> return ([], temp)
 
 tacGeneratorArrayIndexing var@(Evar identifier@(PIdent (_, id))) arrayDecl = do
   tacEnv <- get
-  let Variable loc ty = getVarTypeTAC identifier tacEnv
+  let Checker.SymbolTable.Variable loc ty = getVarTypeTAC identifier tacEnv
   (tacsAdd, temp) <- tacGeneratorArrayIndexing' var arrayDecl
   idArVal <- newtemp
-  let tempArrayVal = Temp ThreeAddressCode.TAC.Var idArVal loc ty 
-  let tempId = Temp ThreeAddressCode.TAC.Var id loc ty
+  let tempArrayVal = Temp ThreeAddressCode.TAC.Temporary idArVal loc ty 
+  let tempId = Temp ThreeAddressCode.TAC.Variable id loc ty
   let tacEntry = TACEntry Nothing $ IndexRight tempArrayVal tempId temp
   return (tacEntry:tacsAdd, tempArrayVal)
 
@@ -539,7 +539,7 @@ tacGeneratorArrayIndexing' (Evar identifier) arrayDecl = do
 tacGeneratorAssignment leftExp assign rightExp = do
   (tacs, operation, (Temp _ _ locLeft tyLeft)) <- tacGeneratorLeftExpression leftExp assign rightExp
   idTemp <- newtemp
-  let temp = Temp ThreeAddressCode.TAC.Var idTemp locLeft tyLeft
+  let temp = Temp ThreeAddressCode.TAC.Temporary idTemp locLeft tyLeft
   case operation of 
     Nullary temp1 temp2 -> case assign of
       AssgnEq (PAssignmEq _) -> return (TACEntry Nothing operation:tacs, temp)
@@ -550,7 +550,7 @@ tacGeneratorAssignment leftExp assign rightExp = do
       AssgnEq (PAssignmEq _) -> return (TACEntry Nothing operation:tacs, temp)
       AssgnPlEq (PAssignmPlus (loc,_)) -> do
         idTempAdd <- newtemp
-        let tempAdd = Temp ThreeAddressCode.TAC.Var idTempAdd loc ty
+        let tempAdd = Temp ThreeAddressCode.TAC.Temporary idTempAdd loc ty
         let entryArrayValue = TACEntry Nothing $ IndexRight temp variable index
         let entryadd = TACEntry Nothing $ Binary tempAdd temp Plus tempRight 
         let entryFinal = TACEntry Nothing $ IndexLeft variable index tempAdd
@@ -559,10 +559,10 @@ tacGeneratorAssignment leftExp assign rightExp = do
       AssgnEq (PAssignmEq _) -> return (TACEntry Nothing operation:tacs, temp)
       AssgnPlEq (PAssignmPlus (loc,_)) -> do
         idRefValue <- newtemp
-        let tempRefValue = Temp ThreeAddressCode.TAC.Var idRefValue loc ty
+        let tempRefValue = Temp ThreeAddressCode.TAC.Temporary idRefValue loc ty
         let entryPointerValue = TACEntry Nothing $ ReferenceRight tempRefValue tempLeft
         idTempAdd <- newtemp
-        let tempAdd = Temp ThreeAddressCode.TAC.Var idTempAdd loc ty
+        let tempAdd = Temp ThreeAddressCode.TAC.Temporary idTempAdd loc ty
         let entryadd = TACEntry Nothing $ Binary tempAdd tempRefValue Plus tempRight 
         let entryPointerAdd = TACEntry Nothing $ ReferenceLeft tempLeft tempAdd
         return ((entryPointerAdd:entryadd:entryPointerValue:[]) ++ tacs, temp)
@@ -577,7 +577,7 @@ tacGeneratorLeftExpression leftExp _assgn rightExp = do
             labelTrue <- newlabelFALL $ getExpPos leftExp
             labelFalse <- newlabel $ getExpPos rightExp
             modify $ addIfSimpleLabels labelTrue labelFalse labelFalse
-            (resg,tempBool) <- tacGeneratorExpression RightExp rightExp 
+            (resg,tempBool) <- tacGeneratorExpression BooleanExp rightExp 
             popSequenceControlLabels
             return (resg,tempBool)
           _ -> tacGeneratorExpression RightExp rightExp 
@@ -608,12 +608,12 @@ tacGenerationArrayPosition (ArrayInit _ expressions _ ) = tacGenerationArrayPosi
       (tacOther, tempOthers) <- tacGenerationArrayPosition' xs
       return ((tacExp ++ tacOther), tempExp:tempOthers)
 
-tacGenerationArrayPosAdd (Variable loc ty) temps = do
+tacGenerationArrayPosAdd (Checker.SymbolTable.Variable loc ty) temps = do
   (tacs, temp) <- tacGenerationArrayPosAdd' (tail (reverse (getArrayDimensions ty))) (reverse temps)
   idSize <- newtemp
   let size = sizeof ty
-  let tempSize = Temp ThreeAddressCode.TAC.Fix (show size) loc Int 
-  let tempResult =  Temp ThreeAddressCode.TAC.Var idSize loc Int 
+  let tempSize = Temp ThreeAddressCode.TAC.Fixed (show size) loc Int 
+  let tempResult =  Temp ThreeAddressCode.TAC.Temporary idSize loc Int 
   let sizeEntry =  TACEntry Nothing $ Binary tempResult temp Times tempSize
   return (sizeEntry:tacs,tempResult)
     where
@@ -622,9 +622,9 @@ tacGenerationArrayPosAdd (Variable loc ty) temps = do
         (tacs, temp) <- tacGenerationArrayPosAdd' xs ys
         idMultTemp <- newtemp
         idAddTemp <- newtemp
-        let tempLength = Temp ThreeAddressCode.TAC.Fix (show x) loc Int
-        let tempMult = Temp ThreeAddressCode.TAC.Var idMultTemp loc Int
-        let tempAdd = Temp ThreeAddressCode.TAC.Var idAddTemp loc Int
+        let tempLength = Temp ThreeAddressCode.TAC.Fixed (show x) loc Int
+        let tempMult = Temp ThreeAddressCode.TAC.Temporary idMultTemp loc Int
+        let tempAdd = Temp ThreeAddressCode.TAC.Temporary idAddTemp loc Int
         let mulEntry = TACEntry Nothing $ Binary tempMult temp Times tempLength
         let addEntry =  TACEntry Nothing $ Binary tempAdd y Plus tempMult
         return (addEntry:mulEntry:tacs,tempAdd)

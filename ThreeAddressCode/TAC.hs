@@ -41,7 +41,7 @@ data Uop = Neg
 data Rel =  LT | GT | LTE | GTE | EQ | NEQ | AND | OR
     deriving (Show)
 
-data TempMode = Fix | Var
+data TempMode = Fixed | Variable | Temporary
     deriving (Show)
     
 data TacChecker a = TacChecker {
