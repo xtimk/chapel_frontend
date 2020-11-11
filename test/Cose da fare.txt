@@ -1,13 +1,13 @@
 TYPE CHECKER
 
-Vedere che i return compaiono sempre (do, while, if, altre cagate)
+OBBLIGATORIO: Vedere che i return compaiono sempre (do, while, if, altre cagate)
 Dichiarazioni di funzioni e variabili in ordine sparso nel modulo principale
 Fare test vari
 Decidere se fare overload funzioni anche nelle funzioni dichiarate nelle funzioni
-Controllare dimensioni in lunghezza degli array
+OBBLIGATORIO: Controllare dimensioni in lunghezza degli array
 Vedere se mettere ++ o --
 Controllare visualizzazione errori
 Controllare che le variabili siano inizializzate
 Controllare &* o *& o &(*)
-Controllare boolean statement
+OBBLIGATORIO: Controllare boolean statement
 
