@@ -2,25 +2,28 @@ var a = 1;
 var b = 2;
 var c : bool;
 
+var f = [[[5 > 6, 7 < 8],[6 < 8,4 <849]],[[66 + 7 < 40,6 < 9 && c],[c == c,c]]];
+
 proc main(l: int,ref z:int)
 {
-    var yu :bool;
+    var i : *int = &b;
+
+    var yu, g, hhh, kewef, wfekoefwi, djffj :bool = 4 + 4 > 5 && 5 <8;
     
-    yu = 4 + 4 > 5 && 5 <8;
 
  a = 10;
 
-    if(!yu && true) then
+    if(!yu && true&& true&& true&& true&& false) then
     {
         a = 111;
     }
-
-    a = 10;
-    while(true && false && false) {
-        a = 333;
+    else
+    {
+        a = 11;
     }
 
-    
-
-
+    a = 10;
+    while(c == c) {
+        a = 333;
+    }
 }

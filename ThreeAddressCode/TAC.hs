@@ -64,3 +64,14 @@ sizeof ty = case ty of
     Real -> 8 
     Char -> 1
     Bool -> 1
+
+
+notRel ThreeAddressCode.TAC.LT = GTE
+notRel ThreeAddressCode.TAC.LTE= ThreeAddressCode.TAC.GT
+notRel ThreeAddressCode.TAC.GT = LTE
+notRel ThreeAddressCode.TAC.GTE = ThreeAddressCode.TAC.LT
+notRel ThreeAddressCode.TAC.EQ = NEQ
+notRel NEQ = ThreeAddressCode.TAC.EQ
+-- non dovrei mai arrivare a chiamare i due casi sotto, se ci arrivo c'e qualcosa di sbagliato
+-- notRel ThreeAddressCode.TAC.AND = OR
+-- notRel ThreeAddressCode.TAC.OR = AND
