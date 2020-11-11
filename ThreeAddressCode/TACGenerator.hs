@@ -217,7 +217,7 @@ tacGeneratorStatement statement = case statement of
     return $ tacEntry:tacs
   RetVoid _ret _semicolon -> return [TACEntry Nothing ReturnVoid] 
 
-attachLabelToFirstElem _ [] = []
+attachLabelToFirstElem (Just label) [] = [TACEntry (Just label) VoidOp]
 attachLabelToFirstElem (Just label) ((TACEntry Nothing _e):xs) = (TACEntry (Just label) _e):xs
 attachLabelToFirstElem (Just label) ((TACEntry (Just _l) _e):xs) = (TACEntry (Just label) VoidOp):(TACEntry (Just _l) _e):xs
 attachLabelToFirstElem Nothing xs = xs
@@ -258,13 +258,21 @@ tacGeneratorVariable expType identifier@(PIdent (_, id)) = do
   let varTemp =  Temp ThreeAddressCode.TAC.Variable id loc ty
   case ty of 
     Reference tyRef -> case expType of
-      RightExp ->  do
+      RightExp -> createReferenceEntry loc tyRef varTemp
+      LeftExp ->  return ([], varTemp)
+      BooleanExp -> do
+        (tacs, valTemp) <- createReferenceEntry loc tyRef varTemp  
+        (tacsBool, boolTemp) <- tacGeneratorBooleanVariable valTemp
+        return (tacs ++ tacsBool,boolTemp)
+    _ -> case expType of 
+      BooleanExp -> tacGeneratorBooleanVariable varTemp
+      _ -> return ([], varTemp)
+    where 
+      createReferenceEntry loc tyRef varTemp = do
         idVal <- newtemp
         let valTemp =  Temp ThreeAddressCode.TAC.Temporary idVal loc tyRef
         let entryRef = TACEntry Nothing $ ReferenceRight valTemp varTemp
         return ([entryRef], valTemp)
-      LeftExp ->  return ([], varTemp)
-    _ ->  return ([], varTemp)
 
 
 tacGeneratorAddress _expType loc e1 = do
@@ -379,7 +387,16 @@ genLazyTacOR vtype loc e1 _op e2 ltrue lfalse =
           else do
               pushLabel l1true
               return (tacs, temp2)
-              
+
+tacGeneratorBooleanVariable varTemp = do
+  labels@(SequenceLazyEvalLabels ltrue lfalse _) <- popSequenceControlLabels
+  setSequenceControlLabels labels
+  case (isLabelFALL ltrue, isLabelFALL lfalse) of
+    (True,True) -> return ([], varTemp)
+    (_, True) -> return ([TACEntry Nothing $ BoolTrueCondJump varTemp ltrue], varTemp)
+    (True, _) -> return ([TACEntry Nothing $ BoolFalseCondJump varTemp lfalse], varTemp)
+    (_,_) -> return (TACEntry Nothing (BoolTrueCondJump varTemp ltrue):TACEntry Nothing (UnconJump lfalse):[], varTemp)
+
 genLazyTacREL vtype _ e1 op e2 ltrue lfalse = do
   (tacs,temp1@(Temp mode1 _ _ ty), temp2) <- genLazyTacREL' vtype e1 e2
   case (isLabelFALL ltrue, isLabelFALL lfalse) of
@@ -434,12 +451,12 @@ genLazyTacRel'' (Temp mode1 id1 loc ty) (Temp _ id2 _ _) op label = do
   case op of
     ThreeAddressCode.TAC.NEQ -> 
       if id1 /= id2
-      then  return ([TACEntry Nothing $ BoolTrueCondJump tempTrue label], tempTrue)
-      else  return ([TACEntry Nothing $ BoolTrueCondJump tempFalse label], tempFalse)
+      then return ([TACEntry Nothing $ UnconJump label], tempTrue) 
+      else return ([],tempFalse)
     ThreeAddressCode.TAC.EQ -> 
       if id1 == id2
-      then return ([TACEntry Nothing $ BoolTrueCondJump tempTrue label], tempTrue)
-      else return ([TACEntry Nothing $ BoolTrueCondJump tempFalse label], tempFalse)
+      then return ([TACEntry Nothing $ UnconJump label], tempTrue) 
+      else return ([],tempFalse)
  
 tacCheckerUnaryBoolean expType _loc e1 = do
   labels <- popSequenceControlLabels
