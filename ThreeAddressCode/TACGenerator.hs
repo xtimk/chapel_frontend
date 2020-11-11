@@ -50,15 +50,17 @@ tacGeneratorDeclExpression' assgn lengths temps decExp =
   case decExp of 
     ExprDecArray (ArrayInit _ expressions _ ) -> tacGeneratorDeclExpression'' assgn (0:lengths) temps expressions
     ExprDec exp -> do
-      let Temp _ _ loc ty = head temps
-      (tacEntry, temp, labelExit) <- tacGeneratorRightExpression' loc ty
+      let firstTemp@(Temp _ _ loc ty) = head temps
+      (tacEntry, temp, labelExit) <- tacGeneratorRightExpression' loc (getArrayType ty)
       if null lengths
         then do
-          res <- mapM (tacGeneratorIdentifier labelExit temp) temps
-          return $ reverse (res ++ tacEntry)
+          resFirst <- tacGeneratorIdentifier labelExit temp firstTemp
+          res <- mapM (tacGeneratorIdentifier Nothing temp) (tail temps)
+          return $ reverse tacEntry ++ [resFirst] ++ res
         else do
-          res <- mapM (tacGeneratorArrayIdentifier labelExit temp (getExpPos exp) lengths ) temps
-          return $ reverse (res ++ tacEntry)
+          resFirst <- tacGeneratorArrayIdentifier labelExit temp  (getExpPos exp) lengths firstTemp
+          res <- mapM (tacGeneratorArrayIdentifier Nothing temp (getExpPos exp) lengths ) (tail temps)
+          return $ reverse tacEntry ++ [resFirst] ++ res
         where
           tacGeneratorRightExpression' loc ty = case ty of 
             Bool -> tacGeneratorBooleanStatement loc (getAssignOpPos assgn) (getExpPos exp) loc exp
@@ -449,7 +451,7 @@ genLazyTacREL vtype _ e1 op e2 ltrue lfalse = do
         _ -> do 
           let aa = TACEntry Nothing (RelCondJump temp1 op temp2 ltrue)
           let bb = TACEntry Nothing (UnconJump lfalse) 
-          return (tacs ++ (aa:bb:[]) , temp2)
+          return (tacs ++ aa:bb:[] , temp2)
 
 genLazyTacREL' vtype e1 e2 = case (e1,e2) of
   (Econst (ETrue (PTrue desc1)), Econst (EFalse (PFalse desc2))) -> do

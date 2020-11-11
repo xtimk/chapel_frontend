@@ -14,3 +14,12 @@ instance Eq Type where
       (Reference ty1, ty2) -> ty1 == ty2
       (ty1,Reference ty2) -> ty1 == ty2
       (_,_) -> show x == show y
+
+getSubarrayDimension types 0 = types
+getSubarrayDimension (Array subtype _) i = getSubarrayDimension subtype (i - 1)
+
+getArrayDimension (Array subtype _) = 1 + getArrayDimension subtype
+getArrayDimension _ = 0  
+
+getArrayType (Array subtype _) =  getArrayType subtype
+getArrayType ty = ty  
