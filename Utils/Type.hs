@@ -21,5 +21,10 @@ getSubarrayDimension (Array subtype _) i = getSubarrayDimension subtype (i - 1)
 getArrayDimension (Array subtype _) = 1 + getArrayDimension subtype
 getArrayDimension _ = 0  
 
-getArrayType (Array subtype _) =  getArrayType subtype
-getArrayType ty = ty  
+
+getBasicType ty = case ty of
+  Array subType _ -> getBasicType subType
+  Reference subType -> getBasicType subType
+  Pointer subType -> getBasicType subType
+  subType -> subType
+   

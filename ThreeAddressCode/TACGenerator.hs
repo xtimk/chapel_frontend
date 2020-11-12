@@ -51,7 +51,7 @@ tacGeneratorDeclExpression' assgn lengths temps decExp =
     ExprDecArray (ArrayInit _ expressions _ ) -> tacGeneratorDeclExpression'' assgn (0:lengths) temps expressions
     ExprDec exp -> do
       let firstTemp@(Temp _ _ loc ty) = head temps
-      (tacEntry, temp, labelExit) <- tacGeneratorRightExpression' loc (getArrayType ty)
+      (tacEntry, temp, labelExit) <- tacGeneratorRightExpression' loc (getBasicType ty)
       if null lengths
         then do
           resFirst <- tacGeneratorIdentifier labelExit temp firstTemp
@@ -579,7 +579,6 @@ tacGeneratorAssignment leftExp assign rightExp = do
   idTemp <- newtemp
   let temp = Temp ThreeAddressCode.TAC.Temporary idTemp locLeft tyLeft
   case operation of 
-    VoidOp -> return (tacs, retTemp)
     Nullary temp1 temp2 -> case assign of
       AssgnEq (PAssignmEq _) -> return (TACEntry labelExit operation:tacs, temp)
       AssgnPlEq (PAssignmPlus _) -> do
@@ -595,11 +594,11 @@ tacGeneratorAssignment leftExp assign rightExp = do
         let entryFinal = TACEntry Nothing $ IndexLeft variable index tempAdd
         return (entryFinal:entryadd:entryArrayValue:tacs, temp)
     ReferenceLeft tempLeft@(Temp _ _ _ ty) tempRight -> case assign of
-      AssgnEq (PAssignmEq _) -> return (TACEntry Nothing operation:tacs, temp)
+      AssgnEq (PAssignmEq _) -> return (TACEntry labelExit operation:tacs, temp)
       AssgnPlEq (PAssignmPlus (loc,_)) -> do
         idRefValue <- newtemp
         let tempRefValue = Temp ThreeAddressCode.TAC.Temporary idRefValue loc ty
-        let entryPointerValue = TACEntry Nothing $ ReferenceRight tempRefValue tempLeft
+        let entryPointerValue = TACEntry labelExit $ ReferenceRight tempRefValue tempLeft
         idTempAdd <- newtemp
         let tempAdd = Temp ThreeAddressCode.TAC.Temporary idTempAdd loc ty
         let entryadd = TACEntry Nothing $ Binary tempAdd tempRefValue Plus tempRight 
@@ -608,7 +607,7 @@ tacGeneratorAssignment leftExp assign rightExp = do
 
 tacGeneratorLeftExpression leftExp assgn rightExp = do
   (tacLeft, opWithoutTempRight, tempLeft@(Temp _ _ _ ty)) <- tacGeneratorLeftExpression' leftExp
-  (tacRight, tempRight, labelExit) <- tacGeneratorRightExpression' rightExp ty
+  (tacRight, tempRight, labelExit) <- tacGeneratorRightExpression' rightExp (getBasicType ty)
   return (tacRight ++ tacLeft, opWithoutTempRight tempRight, tempLeft, labelExit)
     where
       tacGeneratorLeftExpression' leftExp = case leftExp of
