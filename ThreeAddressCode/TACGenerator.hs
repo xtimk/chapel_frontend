@@ -161,15 +161,18 @@ tacGeneratorStatement statement = case statement of
     labelTrue <- newlabelFALL (getBodyStartPos body) DoWhileLb
     labelFalse <- newlabel (getBodyEndPos body) DoWhileExitLb
     
-    pushLabel $ labelBegin
+    pushLabel labelBegin
     res <- tacGeneratorBody body
     
-    modify $ addIfSimpleLabels labelBegin labelFalse labelTrue
+    modify $ addIfSimpleLabels labelTrue labelFalse labelBegin
     (resg,_) <- tacGeneratorExpression BooleanExp guard
     popSequenceControlLabels
 
+    label <- popLabel
+    let gotob = TACEntry label $ UnconJump labelBegin
+
     pushLabel labelFalse
-    return (res ++ resg) 
+    return (res ++ resg ++ [gotob]) 
     --return (res ++ resg ) -- take (length resg -1 ) resg ) 
 
   While _pwhile (SGuard _ guard _) body -> do
