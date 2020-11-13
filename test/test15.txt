@@ -7,11 +7,10 @@ proc main(l: int,ref z:int, kk: int)
    
    var u:bool;
 
-  
-
-   u = c && u;
-
+   u = true || true || u == (c && u) && c;
    
    a = 199;
+
+   return;
 
 }
