@@ -1,13 +1,12 @@
-proc pluto(x : int) : int
-{
-    return 4;
-}
-
 proc main() : int {
     if (2 < 1) then {
         return 4;
     }
-    if (1 < 1) then {
+    else {
 
+    }
+    while (4 < 2)
+    {
+        return 4;
     }
 }

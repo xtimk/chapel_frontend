@@ -41,7 +41,7 @@ data DefinedError =
   ErrorFunctionVoid |
   ErrorReturnNotVoid |
   NoDecucibleType String |
-  ErrorFunctionWithNotEnoughReturns
+  ErrorFunctionWithNotEnoughReturns String
   deriving (Show)
 
 data ErrorChecker =  ErrorChecker Loc DefinedError
@@ -84,7 +84,7 @@ printDefinedError tokens error = case error of
   ErrorFunctionVoid -> "A procedure cannot return a value"
   ErrorReturnNotVoid -> "Function must return a value"
   NoDecucibleType id -> "Impossible infered type from expression for variable " ++ show id ++ "."
-  ErrorFunctionWithNotEnoughReturns -> "Not enough returns in function "
+  ErrorFunctionWithNotEnoughReturns funname -> "In function " ++ show funname ++ ": not enough returns"
 getTokens [] _ _ = []
 getTokens (x@(PT (Pn _ l c ) _ ):xs) start@(lstart, cstart) end@(lend, cend) 
   | l < lstart = getTokens xs start end
