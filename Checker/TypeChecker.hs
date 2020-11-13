@@ -455,4 +455,103 @@ getDeclarationDimension environment (array:arrays) = let DataChecker dimension e
     expDecl -> DataChecker (dimension + 1) $ ErrorChecker (getExprDeclPos expDecl) ErrorArrayExpressionRequest : errors
 
 
+-- funzione di typechecking che controlla se ci sono return nelle funzioni, 
+-- e che i return siano in tutti i path del codice
+typeCheckerReturns bp@(Node _ _ _ startnodes) = concat (map typeCheckerReturnPresenceFun startnodes)
 
+typeCheckerReturnPresenceFun :: BPTree BP -> [ErrorChecker]
+typeCheckerReturnPresenceFun (node@(Node (funname,(locstart,locend)) (BP _ rets _ ProcedureBlk) _ (children))) = 
+  if null rets
+    then
+      typeCheckerReturnPresence children funname (locstart,locend)
+    else
+      -- ho quasi finito: 
+      -- devo controllare se ci sono altri blocchi funzione nei children o dopo 
+      -- e verificare anche quelli
+      let declFunsInChildren = filter isNodeAProc children;        
+      in
+        concat (map typeCheckerReturnPresenceFun declFunsInChildren)
+
+typeCheckerReturnPresenceElse node@(Node id (BP _ rets _ IfElseBlk) _ (children)) funname (locstart, locend) =
+  if null rets
+    then typeCheckerReturnPresence children funname (locstart, locend)
+    else []
+
+getblkStartEndPos (Node (_,(act_locstart, act_locend)) (BP _ rets _ blocktype) _ (children)) = (act_locstart, act_locend)
+
+isNodeAProc node@(Node (_,(act_locstart, act_locend)) (BP _ rets _ blocktype) _ (children)) = blocktype == ProcedureBlk
+
+continueCheckerRetPresenceOnSubProcs children xs = 
+  let declFunsInChildren = filter isNodeAProc children;
+      declFunsAhead = filter isNodeAProc xs
+  in
+    let childrens = concat (map typeCheckerReturnPresenceFun declFunsInChildren)
+        aheads = concat (map typeCheckerReturnPresenceFun declFunsAhead) in
+        childrens ++ aheads
+
+typeCheckerReturnPresence [] funname (locstart, locend) = [ErrorChecker locstart $ ErrorFunctionWithNotEnoughReturns funname]
+
+typeCheckerReturnPresence (node@(Node (_,(act_locstart, act_locend)) (BP _ rets _ blocktype) _ (children)):xs) funname (locstart, locend) =
+  case blocktype of
+    IfSimpleBlk -> 
+      if null xs
+        then [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
+        else typeCheckerReturnPresence xs funname (act_locstart, act_locend)
+    IfThenBlk -> 
+      if null rets
+        then 
+          let errs1 = typeCheckerReturnPresence children funname (act_locstart, act_locend);
+              elset = typeCheckerReturnPresenceElse (head xs) funname (getblkStartEndPos (head xs)) in
+                case ((null errs1),(null elset)) of
+                  (True,True) ->
+                    -- ho quasi finito: ho trovato un return sia nell'if che nell'else, quindi questo blocco è ok
+                    -- devo però controllare se ci sono altri blocchi funzione nei children o dopo 
+                    -- e verificare anche quelli. Dato che lo devo fare molte volte ho
+                    -- creato una funzione apposta: continueCheckerRetPresenceOnSubProcs
+                    continueCheckerRetPresenceOnSubProcs children xs
+                  _otherwhise -> 
+                    -- sono nel caso in cui ho trovato un return nel then o nell'else o da nessuna parte,
+                    -- non posso ancora affermare che ci siano errori, 
+                    -- in quanto potrei avere dei blocchi if else successivi 
+                    -- dove ci sono i return, ad esempio.
+                    -- devo andare avanti con la computazione
+                    if null (tail xs)
+                      then [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
+                      else (typeCheckerReturnPresence (tail xs) funname (getblkStartEndPos (head (tail xs))))
+        else
+          let elset = typeCheckerReturnPresenceElse (head xs) funname (getblkStartEndPos (head xs)) in
+            case null elset of
+              True -> continueCheckerRetPresenceOnSubProcs children xs
+              _oth ->
+                if null (tail xs)
+                  then [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
+                  else (typeCheckerReturnPresence (tail xs) funname (getblkStartEndPos (head (tail xs))))
+
+    ProcedureBlk -> 
+        if null rets -- se non ci sono return al blocco base
+          then
+            let c = typeCheckerReturnPresence children funname (act_locstart, act_locend) in
+              case null c of
+                True -> continueCheckerRetPresenceOnSubProcs children xs
+                _oth -> [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
+          else continueCheckerRetPresenceOnSubProcs children xs
+    WhileBlk -> 
+      if null xs
+        then [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
+        else typeCheckerReturnPresence xs funname (act_locstart, act_locend)
+    DoWhileBlk -> 
+      if null rets
+        then
+          let errs = typeCheckerReturnPresence children funname (act_locstart, act_locend) in
+          case null errs of
+            True -> continueCheckerRetPresenceOnSubProcs children xs
+            _otherwhise ->
+              if null xs
+                then [ErrorChecker locstart $ ErrorFunctionWithNotEnoughReturns funname]
+                else typeCheckerReturnPresence xs funname (act_locstart, act_locend)
+        else continueCheckerRetPresenceOnSubProcs children xs
+    SimpleBlk -> 
+      if null rets
+        then
+          typeCheckerReturnPresence children funname (act_locstart, act_locend)
+        else continueCheckerRetPresenceOnSubProcs children xs
