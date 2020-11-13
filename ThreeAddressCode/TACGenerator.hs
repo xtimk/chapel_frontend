@@ -156,23 +156,41 @@ tacGeneratorStatement statement = case statement of
     label <- newlabel (getBpStartPos node) ContinueLb
     let continueEntry = TACEntry Nothing $ UnconJump label
     return [continueEntry]
-  DoWhile _pdo _while body (SGuard _ guard _) -> do
-    labelBegin <- newlabel (getBodyStartPos body) DoWhileLb
-    labelTrue <- newlabelFALL (getBodyStartPos body) DoWhileLb
-    labelFalse <- newlabel (getBodyEndPos body) DoWhileExitLb
-    
-    pushLabel labelBegin
-    res <- tacGeneratorBody body
-    
+  DoWhile (Pdo (loc,_)) _while body (SGuard _ guard _) -> do
+    labelJump <- newlabel loc VoidLb
+    let entryJump = TACEntry Nothing $ UnconJump labelJump
+
+    labelBegin <- newlabel (getBodyStartPos body) WhileLb
+    labelTrue <- newlabelFALL (getBodyStartPos body) WhileLb
+    labelFalse <- newlabel  (getBodyEndPos body) WhileExitLb
+
     modify $ addIfSimpleLabels labelTrue labelFalse labelBegin
-    (resg,_) <- tacGeneratorExpression BooleanExp guard
+    (resg',_) <- tacGeneratorExpression BooleanExp guard
+    let resg = entryJump:attachLabelToFirstElem (Just labelBegin) resg'
     popSequenceControlLabels
-
-    label <- popLabel
-    let gotob = TACEntry label $ UnconJump labelBegin
-
+    
+    res' <- tacGeneratorBody body
+    let res = attachLabelToFirstElem (Just labelJump) res' 
     pushLabel labelFalse
-    return (res ++ resg ++ [gotob]) 
+    let gotob = TACEntry Nothing $ UnconJump labelBegin
+    return (resg ++ res ++ [gotob]) 
+
+    --labelBegin <- newlabel (getBodyStartPos body) DoWhileLb
+    --labelTrue <- newlabelFALL (getBodyStartPos body) DoWhileLb
+   -- labelFalse <- newlabel (getBodyEndPos body) DoWhileExitLb
+    
+    --pushLabel labelBegin
+    --res <- tacGeneratorBody body
+    
+    --modify $ addIfSimpleLabels labelTrue labelFalse labelBegin
+    --(resg,_) <- tacGeneratorExpression BooleanExp guard
+    --popSequenceControlLabels
+
+    --label <- popLabel
+    --let gotob = TACEntry label $ UnconJump labelBegin
+
+    --pushLabel labelFalse
+    --return (res ++ resg ++ [gotob]) 
     --return (res ++ resg ) -- take (length resg -1 ) resg ) 
 
   While _pwhile (SGuard _ guard _) body -> do

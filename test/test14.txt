@@ -6,6 +6,9 @@ var f = [[[5 > 6, 7 < 8],[6 < 8,4 <849]],[[66 + 7 < 40,6 < 9 && c],[c == c,c]]];
 
 proc main(l: int,ref z:int)
 {
+    
+
+
     var i : *bool = &c;
     var gggg = [true, false];
     *i = 4 > 5 && 5 <8;
