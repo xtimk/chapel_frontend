@@ -113,8 +113,9 @@ parseTest filepath = do
                       exitSuccess
 
 
-typeCheckerReturns bp@(Node _ _ _ startnodes) = concat (map typeCheckerReturnPresenceFun startnodes)
+typeCheckerReturns bp@(Node _ _ _ startnodes) = map head (map typeCheckerReturnPresenceFun startnodes)
 
+typeCheckerReturnPresenceFun :: BPTree BP -> [ErrorChecker]
 typeCheckerReturnPresenceFun (node@(Node (funname,(locstart,locend)) (BP _ rets _ ProcedureBlk) _ (children))) = 
   if null rets
     then
