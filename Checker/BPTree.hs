@@ -156,9 +156,10 @@ updateTree actualNode@(Node idActual _ _ _) (Node idEntire  _a _b children) = if
 
 addChild (Node _ _ _ _) _ Checker.BPTree.Void = Checker.BPTree.Void
 addChild actualNode@(Node idActual val parentId childrenActualNode) childNodeToAdd (Node idEntire _a _b children)  = if idEntire == idActual
-    then Node idActual val parentId (reverse (childNodeToAdd:childrenActualNode))
+    then Node idActual val parentId (childrenActualNode ++ [childNodeToAdd])
     else Node idEntire _a _b (map (addChild actualNode childNodeToAdd) children)
 
+createChild :: String -> BlkType -> Loc -> Loc -> BPTree a -> BPTree BP
 createChild identifier blkType locStart locEnd (Node id _ _ _) = Checker.BPTree.Node 
     {Checker.BPTree.id = (identifier,(locStart,locEnd)), 
     parentID = Just id, 

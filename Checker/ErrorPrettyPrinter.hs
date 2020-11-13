@@ -41,7 +41,7 @@ data DefinedError =
   ErrorFunctionVoid |
   ErrorReturnNotVoid |
   NoDecucibleType String |
-  ErrorFunctionWithNotEnoughReturns |
+  ErrorFunctionWithNotEnoughReturns String |
   IncompatibleArrayDimension Int Int 
   deriving (Show)
 
@@ -85,7 +85,7 @@ printDefinedError tokens error = case error of
   ErrorFunctionVoid -> "A procedure cannot return a value"
   ErrorReturnNotVoid -> "Function must return a value"
   NoDecucibleType id -> "Impossible infered type from expression for variable " ++ show id ++ "."
-  ErrorFunctionWithNotEnoughReturns -> "Not enough returns in function "
+  ErrorFunctionWithNotEnoughReturns funname -> "In function " ++ show funname ++ ": not enough returns"
   IncompatibleArrayDimension dim1 dim2 -> "Incompatible array dimension. First is "++ show dim1 ++ " and second is " ++  show dim2 ++"."
 
 
