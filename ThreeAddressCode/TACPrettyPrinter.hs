@@ -27,11 +27,17 @@ printTacEntry' operation = case operation of
     VoidOp -> ""
 
 
-printLabel (Just ("FALL",_)) = "         "
-printLabel (Just (lab,(l,c))) = lab ++ "@" ++ show l ++ "," ++ show c ++ ": "
+printLabel (Just ("FALL",_, _)) = "         "
+printLabel (Just (lab,(l,c),ty)) = lab ++ printLabelType ty ++ "@" ++ show l ++ "," ++ show c ++ ": "
 printLabel Nothing = "         "
 
-printLabelGoto (lab,(l,c)) = lab ++ "@" ++ show l ++ "," ++ show c 
+printLabelType ty = case ty of
+    TrueBoolStmLb -> "true"
+    FalseBoolStmLb -> "false"
+    ExitBoolStmLb -> "exit"
+    _ -> ""
+
+printLabelGoto (lab,(l,c),ty) = lab ++ printLabelType ty ++ "@" ++ show l ++ "," ++ show c 
 
 printTacTemp (Temp mode id (l,c) _) = case mode of
     Fixed -> id

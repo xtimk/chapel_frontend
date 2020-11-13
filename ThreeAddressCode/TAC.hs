@@ -4,7 +4,17 @@ import Utils.AbsUtils
 import Utils.Type
 
 type TAC = [TACEntry]
-type Label = (String, Loc)
+type Label = (String, Loc, LabelType)
+
+data LabelType = 
+    TrueBoolStmLb | FalseBoolStmLb | ExitBoolStmLb | 
+    DoWhileLb | DoWhileExitLb |
+    WhileLb | WhileExitLb |
+    IfLb |  IfThenLb | ElseLb | 
+    FunLb |
+    BreakLb | ContinueLb | 
+    VoidLb
+    deriving (Show)
 
 data TACEntry = TACEntry {
     label :: Maybe Label,

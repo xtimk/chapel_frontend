@@ -17,13 +17,10 @@ newtemp = do
   put (_tac, _temp , k + 1 , _bp, _labels, _label, _ft)
   return $ int2AddrTempName k
 
---newlabel :: Loc -> TacMonad Label
-newlabel pos = do
-  (_tac, _temp , k , _bp, _labels, _label, _ft) <- get
-  put (_tac, _temp , k + 1 , _bp, _labels, _label, _ft)
-  return (int2Label k,pos)
 
-newlabelFALL pos = return ("FALL",pos)
+newlabel pos ty = return ("L", pos, ty)
+
+newlabelFALL pos ty = return ("FALL",pos, ty)
 
 popLabel :: TacMonad (Maybe Label)
 popLabel = do
@@ -71,9 +68,8 @@ setSequenceControlLabels a = do
   (_tac,_te, _t, _b, ifLabels, _label, _ft ) <- get
   put (_tac,_te, _t, _b, a:ifLabels, _label, _ft )
 
-isLabelFALL (name,_) = name == "FALL"
+isLabelFALL (name,_,_) = name == "FALL"
 
 getLabelFromMaybe (Just (name,pos)) = (name,pos)
 
 int2AddrTempName k = "t" ++ show k
-int2Label k = "L"
