@@ -5,22 +5,14 @@ proc main() : int {
     else {
 
     }
-    while (4 < 2)
-    {
-        return 4;
-    }
-}
+    return 5;
+    proc pluto() : int {
+        if (2 < 1) then {
+            return 4;
+        }
+        else {
 
+        }
+    };
 
-proc pluto() : int {
-    if (2 < 1) then {
-        return 4;
-    }
-    else {
-
-    }
-    while (4 < 2)
-    {
-        return 4;
-    }
 }

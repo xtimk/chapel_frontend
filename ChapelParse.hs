@@ -113,7 +113,7 @@ parseTest filepath = do
                       exitSuccess
 
 
-typeCheckerReturns bp@(Node _ _ _ startnodes) = map head (map typeCheckerReturnPresenceFun startnodes)
+typeCheckerReturns bp@(Node _ _ _ startnodes) = concat (map typeCheckerReturnPresenceFun startnodes)
 
 typeCheckerReturnPresenceFun :: BPTree BP -> [ErrorChecker]
 typeCheckerReturnPresenceFun (node@(Node (funname,(locstart,locend)) (BP _ rets _ ProcedureBlk) _ (children))) = 
@@ -121,7 +121,12 @@ typeCheckerReturnPresenceFun (node@(Node (funname,(locstart,locend)) (BP _ rets 
     then
       typeCheckerReturnPresence children funname (locstart,locend)
     else
-      []
+      -- ho quasi finito: 
+      -- devo controllare se ci sono altri blocchi funzione nei children o dopo 
+      -- e verificare anche quelli
+      let declFunsInChildren = filter isNodeAProc children;        
+      in
+        concat (map typeCheckerReturnPresenceFun declFunsInChildren)
 
 typeCheckerReturnPresenceElse node@(Node id (BP _ rets _ IfElseBlk) _ (children)) funname (locstart, locend) =
   if null rets
@@ -130,62 +135,130 @@ typeCheckerReturnPresenceElse node@(Node id (BP _ rets _ IfElseBlk) _ (children)
 
 getblkStartEndPos (Node (_,(act_locstart, act_locend)) (BP _ rets _ blocktype) _ (children)) = (act_locstart, act_locend)
 
+isNodeAProc node@(Node (_,(act_locstart, act_locend)) (BP _ rets _ blocktype) _ (children)) = blocktype == ProcedureBlk
+
+
 typeCheckerReturnPresence [] funname (locstart, locend) = [ErrorChecker locstart $ ErrorFunctionWithNotEnoughReturns funname]
 
 typeCheckerReturnPresence (node@(Node (_,(act_locstart, act_locend)) (BP _ rets _ blocktype) _ (children)):xs) funname (locstart, locend) =
   case blocktype of
-    IfSimpleBlk -> typeCheckerReturnPresence xs funname (act_locstart, act_locend)
+    IfSimpleBlk -> 
+      if null xs
+        then [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
+        else typeCheckerReturnPresence xs funname (act_locstart, act_locend)
     IfThenBlk -> 
       if null rets
         then 
           let errs1 = typeCheckerReturnPresence children funname (act_locstart, act_locend);
               elset = typeCheckerReturnPresenceElse (head xs) funname (getblkStartEndPos (head xs)) in
                 case ((null errs1),(null elset)) of
-                  (True,True) -> []
-                    -- if null (tail xs)
-                    --   then []
-                    --   else typeCheckerReturnPresence (tail xs) ids
+                  (True,True) -> 
+                    -- ho quasi finito: 
+                    -- devo controllare se ci sono altri blocchi funzione nei children o dopo 
+                    -- e verificare anche quelli
+                    let declFunsInChildren = filter isNodeAProc children;
+                        declFunsAhead = filter isNodeAProc xs
+                    in
+                      let childrens = concat (map typeCheckerReturnPresenceFun declFunsInChildren)
+                          aheads = concat (map typeCheckerReturnPresenceFun declFunsAhead) in
+                          childrens ++ aheads
                   _otherwhise -> 
+                    -- sono nel caso in cui ho trovato un return nel then o nell'else o da nessuna parte
+                    -- non posso affermare che ci siano errori, devo andare avanti con la computazione
                     if null (tail xs)
-                      then errs1 ++ elset
-                      else errs1 ++ elset ++ (typeCheckerReturnPresence (tail xs) funname (getblkStartEndPos (head (tail xs))))
+                      then [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
+                      else (typeCheckerReturnPresence (tail xs) funname (getblkStartEndPos (head (tail xs))))
         else
           let elset = typeCheckerReturnPresenceElse (head xs) funname (getblkStartEndPos (head xs)) in
             case null elset of
-              True -> []
+              True -> 
+                -- ho quasi finito: 
+                -- devo controllare se ci sono altri blocchi funzione nei children o dopo 
+                -- e verificare anche quelli
+                let declFunsInChildren = filter isNodeAProc children;
+                    declFunsAhead = filter isNodeAProc xs
+                in
+                  let childrens = concat (map typeCheckerReturnPresenceFun declFunsInChildren)
+                      aheads = concat (map typeCheckerReturnPresenceFun declFunsAhead) in
+                      childrens ++ aheads
               _oth ->
                 if null (tail xs)
-                  then elset
-                  else elset ++ (typeCheckerReturnPresence (tail xs) funname (getblkStartEndPos (head (tail xs))))
+                  then [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
+                  else (typeCheckerReturnPresence (tail xs) funname (getblkStartEndPos (head (tail xs))))
 
     ProcedureBlk -> 
-        if null rets
+        if null rets -- se non ci sono return al blocco base
           then
-            typeCheckerReturnPresence children funname (act_locstart, act_locend)
+            let c = typeCheckerReturnPresence children funname (act_locstart, act_locend) in
+              case null c of
+                True -> 
+                  -- ho quasi finito: 
+                  -- devo controllare se ci sono altri blocchi funzione nei children o dopo 
+                  -- e verificare anche quelli
+                  let declFunsInChildren = filter isNodeAProc children;
+                      declFunsAhead = filter isNodeAProc xs
+                  in
+                    let childrens = concat (map typeCheckerReturnPresenceFun declFunsInChildren)
+                        aheads = concat (map typeCheckerReturnPresenceFun declFunsAhead) in
+                        childrens ++ aheads
+                _oth -> [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
           else
-            []
+            -- ho quasi finito: 
+            -- devo controllare se ci sono altri blocchi funzione nei children o dopo 
+            -- e verificare anche quelli
+            let declFunsInChildren = filter isNodeAProc children;
+                declFunsAhead = filter isNodeAProc xs
+            in
+              let childrens = concat (map typeCheckerReturnPresenceFun declFunsInChildren)
+                  aheads = concat (map typeCheckerReturnPresenceFun declFunsAhead) in
+                  childrens ++ aheads
     WhileBlk -> 
       if null xs
-        then [ErrorChecker locstart $ ErrorFunctionWithNotEnoughReturns funname]
+        then [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
         else typeCheckerReturnPresence xs funname (act_locstart, act_locend)
     DoWhileBlk -> 
       if null rets
         then
           let errs = typeCheckerReturnPresence children funname (act_locstart, act_locend) in
           case null errs of
-            True -> []
+            True -> 
+              -- ho quasi finito: 
+              -- devo controllare se ci sono altri blocchi funzione nei children o dopo 
+              -- e verificare anche quelli
+              let declFunsInChildren = filter isNodeAProc children;
+                  declFunsAhead = filter isNodeAProc xs
+              in
+                let childrens = concat (map typeCheckerReturnPresenceFun declFunsInChildren)
+                    aheads = concat (map typeCheckerReturnPresenceFun declFunsAhead) in
+                    childrens ++ aheads
             _otherwhise ->
               if null xs
                 then [ErrorChecker locstart $ ErrorFunctionWithNotEnoughReturns funname]
                 else typeCheckerReturnPresence xs funname (act_locstart, act_locend)
         else
-          []
+          -- ho quasi finito: 
+          -- devo controllare se ci sono altri blocchi funzione nei children o dopo 
+          -- e verificare anche quelli
+          let declFunsInChildren = filter isNodeAProc children;
+              declFunsAhead = filter isNodeAProc xs
+          in
+            let childrens = concat (map typeCheckerReturnPresenceFun declFunsInChildren)
+                aheads = concat (map typeCheckerReturnPresenceFun declFunsAhead) in
+                childrens ++ aheads
     SimpleBlk -> 
       if null rets
         then
           typeCheckerReturnPresence children funname (act_locstart, act_locend)
         else
-          []      
+          -- ho quasi finito: 
+          -- devo controllare se ci sono altri blocchi funzione nei children o dopo 
+          -- e verificare anche quelli
+          let declFunsInChildren = filter isNodeAProc children;
+              declFunsAhead = filter isNodeAProc xs
+          in
+            let childrens = concat (map typeCheckerReturnPresenceFun declFunsInChildren)
+                aheads = concat (map typeCheckerReturnPresenceFun declFunsAhead) in
+                childrens ++ aheads
 
 getSymTable (x,_,_) = x
 getTree (_,x,_) = x
