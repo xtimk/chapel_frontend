@@ -9,7 +9,7 @@ proc main(l: int,ref z:int)
     var i : *bool = &c;
     var gggg = [true, false];
     *i = 4 > 5 && 5 <8;
-
+    u = (5< 8 == 4 > 5) && (5< 8 == 5 <9);
 
 
     gggg[1] =  4 > 5;
