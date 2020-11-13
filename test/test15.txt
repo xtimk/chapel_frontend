@@ -5,16 +5,17 @@ var c : bool;
 proc main(l: int,ref z:int, kk: int)
 {
    
-   do while 
-   {
-      a = 4;
-      
-   }((((6 < 8 || 6 < 8) && 6 < 8) || 6 < 8) && 6 < 8)
-
  do while 
    {
+      do while 
+      {
+         a = 0;
+         break;
+      }(c)
+
+      continue;
       a = 4;
-      
+      break;
    }(6 < 8 && 6 < 8)
 
 
