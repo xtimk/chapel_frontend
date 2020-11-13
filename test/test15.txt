@@ -5,12 +5,20 @@ var c : bool;
 proc main(l: int,ref z:int, kk: int)
 {
    
-   var u:bool;
+   do while 
+   {
+      a = 4;
+      
+   }((((6 < 8 || 6 < 8) && 6 < 8) || 6 < 8) && 6 < 8)
 
-   u = true || true || u == (c && u) && c;
-   
-   a = 199;
+ do while 
+   {
+      a = 4;
+      
+   }(6 < 8 && 6 < 8)
 
+
+  
    return;
 
 }
