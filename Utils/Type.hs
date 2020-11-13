@@ -21,6 +21,9 @@ getSubarrayDimension (Array subtype _) i = getSubarrayDimension subtype (i - 1)
 getArrayDimension (Array subtype _) = 1 + getArrayDimension subtype
 getArrayDimension _ = 0  
 
+getArrayLenght (Array _ (boundLeft, boundRight)) = case (boundLeft,boundRight) of
+  (Fix a, Fix b) -> b - a + 1
+  _ -> 0
 
 getBasicType ty = case ty of
   Array subType _ -> getBasicType subType
