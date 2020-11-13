@@ -41,7 +41,8 @@ data DefinedError =
   ErrorFunctionVoid |
   ErrorReturnNotVoid |
   NoDecucibleType String |
-  ErrorFunctionWithNotEnoughReturns String
+  ErrorFunctionWithNotEnoughReturns String |
+  IncompatibleArrayDimension Int Int 
   deriving (Show)
 
 data ErrorChecker =  ErrorChecker Loc DefinedError
@@ -85,6 +86,9 @@ printDefinedError tokens error = case error of
   ErrorReturnNotVoid -> "Function must return a value"
   NoDecucibleType id -> "Impossible infered type from expression for variable " ++ show id ++ "."
   ErrorFunctionWithNotEnoughReturns funname -> "In function " ++ show funname ++ ": not enough returns"
+  IncompatibleArrayDimension dim1 dim2 -> "Incompatible array dimension. First is "++ show dim1 ++ " and second is " ++  show dim2 ++"."
+
+
 getTokens [] _ _ = []
 getTokens (x@(PT (Pn _ l c ) _ ):xs) start@(lstart, cstart) end@(lend, cend) 
   | l < lstart = getTokens xs start end

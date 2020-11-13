@@ -161,11 +161,16 @@ sup mode _ _ ty Error =  case mode of
   _ -> DataChecker Error []
 --Array
 sup mode id loc ar1@(Array typesFirst dimensionFirst) ar2@(Array typesSecond _) = 
-  let DataChecker types errors = sup mode id  loc typesFirst typesSecond;
-      errorConverted = map (errorIncompatibleTypesChange ar1 ar2) errors in 
-  case types of 
-    Error -> DataChecker Error errorConverted
-    _ -> DataChecker (Array types dimensionFirst) errorConverted
+  let lenghtFirst = getArrayLenght ar1
+      lenghSecond = getArrayLenght ar2 in 
+  if lenghtFirst == lenghSecond
+  then 
+    let DataChecker types errors = sup mode id loc typesFirst typesSecond;
+        errorConverted = map (errorIncompatibleTypesChange ar1 ar2) errors in 
+    case types of 
+      Error -> DataChecker Error errorConverted
+      _ -> DataChecker (Array types dimensionFirst) errorConverted
+  else DataChecker Error [ErrorChecker loc $ IncompatibleArrayDimension lenghtFirst lenghSecond]
 sup mode id loc ty1@(Array _ _) ty2 = case mode of
   SupDecl -> createIncompatible id loc ty1 ty2
   SupRet -> createIncompatibleRet id loc ty1 ty2
