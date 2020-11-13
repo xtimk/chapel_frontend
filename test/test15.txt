@@ -4,8 +4,12 @@ var c : bool;
 
 proc main(l: int,ref z:int, kk: int)
 {
+   
+   var u:bool;
 
-    var m = &z;
-    z = 2;
+
+
+   c = false && false && c || 5 < 7;
+   
 
 }
