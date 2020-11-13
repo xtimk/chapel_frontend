@@ -10,3 +10,17 @@ proc main() : int {
         return 4;
     }
 }
+
+
+proc pluto() : int {
+    if (2 < 1) then {
+        return 4;
+    }
+    else {
+
+    }
+    while (4 < 2)
+    {
+        return 4;
+    }
+}
