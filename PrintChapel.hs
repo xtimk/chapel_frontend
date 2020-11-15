@@ -326,6 +326,7 @@ instance Print AbsChapel.Signature where
   prt i e = case e of
     AbsChapel.SignNoRet pident functionparams -> prPrec i 0 (concatD [prt 0 pident, prt 0 functionparams])
     AbsChapel.SignWRet pident functionparams pcolon type_ -> prPrec i 0 (concatD [prt 0 pident, prt 0 functionparams, prt 0 pcolon, prt 0 type_])
+    AbsChapel.SignWArRet pident functionparams pcolon ardecl type_ -> prPrec i 0 (concatD [prt 0 pident, prt 0 functionparams, prt 0 pcolon, prt 0 ardecl, prt 0 type_])
 
 instance Print AbsChapel.FunctionParams where
   prt i e = case e of

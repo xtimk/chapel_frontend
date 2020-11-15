@@ -45,10 +45,14 @@ typeCheckerFunction (FunDec (PProc (loc@(l,c),_) ) signature body@(BodyBlock  (P
   typeCheckerBody ProcedureBlk (createId' l c (getFunName signature)) body
   get  
 
-typeCheckerSignature :: Monad m => (Int, Int) -> (Int, Int) -> Signature -> StateT ([(String, (String, EnvEntry))], BPTree BP, (String, (Loc, Loc))) m ([(String, (String, EnvEntry))], BPTree BP, (String, (Loc, Loc)))
 typeCheckerSignature locstart locEnd signature = case signature of
   SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' locstart locEnd identifier params Utils.Type.Void
   SignWRet identifier (FunParams _ params _) _ types -> typeCheckerSignature' locstart locEnd identifier params (convertTypeSpecToTypeInferred types)
+  SignWArRet identifier (FunParams _ params _) _ array types -> do
+    environment <- get
+    let DataChecker typeArray errors = typeCheckerBuildArrayType environment array (convertTypeSpecToTypeInferred types)
+    modify $ addErrorsCurrentNode errors
+    typeCheckerSignature' locstart locEnd identifier params typeArray
 
 typeCheckerSignature' locstart locEnd ident@(PIdent (loc,identifier)) params types = 
   case types of

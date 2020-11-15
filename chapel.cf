@@ -68,6 +68,8 @@ position token PChar ('\'' ((char - ["'\\"]) | ('\\' ["'\\nt"])) '\'') ;
 position token PDouble (digit+ '.' digit+ ('e' '-'? digit+)?) ;
 position token PInteger (digit+) ;
 
+comment "//" ;
+comment "/*" "*/" ;
 
 Progr.  Program ::= Module ;
 
@@ -128,8 +130,9 @@ PConstMode.   DecMode ::= PConst ;
 FunDec.       Function ::= PProc Signature Body ;
 
 -- procedure structure
-SignNoRet.            Signature ::= PIdent FunctionParams ;
+SignNoRet.           Signature ::= PIdent FunctionParams ;
 SignWRet.            Signature ::= PIdent FunctionParams PColon Type;
+SignWArRet.         Signature ::= PIdent FunctionParams PColon ArDecl Type;
 
 
 FunParams.      FunctionParams ::= POpenParenthesis [Param] PCloseParenthesis ;

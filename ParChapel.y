@@ -268,6 +268,7 @@ Function : PProc Signature Body { AbsChapel.FunDec $1 $2 $3 }
 Signature :: { Signature }
 Signature : PIdent FunctionParams { AbsChapel.SignNoRet $1 $2 }
           | PIdent FunctionParams PColon Type { AbsChapel.SignWRet $1 $2 $3 $4 }
+          | PIdent FunctionParams PColon ArDecl Type { AbsChapel.SignWArRet $1 $2 $3 $4 $5 }
 FunctionParams :: { FunctionParams }
 FunctionParams : POpenParenthesis ListParam PCloseParenthesis { AbsChapel.FunParams $1 $2 $3 }
 ListParam :: { [Param] }

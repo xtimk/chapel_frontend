@@ -163,7 +163,7 @@ sup mode _ _ ty Error =  case mode of
 sup mode id loc ar1@(Array typesFirst dimensionFirst) ar2@(Array typesSecond _) = 
   let lenghtFirst = getArrayLenght ar1
       lenghSecond = getArrayLenght ar2 in 
-  if lenghtFirst == lenghSecond
+  if True --lenghtFirst == lenghSecond
   then 
     let DataChecker types errors = sup mode id loc typesFirst typesSecond;
         errorConverted = map (errorIncompatibleTypesChange ar1 ar2) errors in 

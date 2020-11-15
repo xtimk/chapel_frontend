@@ -201,6 +201,7 @@ data Function = FunDec PProc Signature Body
 data Signature
     = SignNoRet PIdent FunctionParams
     | SignWRet PIdent FunctionParams PColon Type
+    | SignWArRet PIdent FunctionParams PColon ArDecl Type
   deriving (Eq, Ord, Show, Read)
 
 data FunctionParams

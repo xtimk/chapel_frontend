@@ -210,6 +210,7 @@ transSignature :: Signature -> Result
 transSignature x = case x of
   SignNoRet pident functionparams -> failure x
   SignWRet pident functionparams pcolon type_ -> failure x
+  SignWArRet pident functionparams pcolon ardecl type_ -> failure x
 transFunctionParams :: FunctionParams -> Result
 transFunctionParams x = case x of
   FunParams popenparenthesis params pcloseparenthesis -> failure x
