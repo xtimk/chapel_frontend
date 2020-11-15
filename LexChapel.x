@@ -24,6 +24,8 @@ $u = [. \n]          -- universal: any character
    \,
 
 :-
+"//" [.]* ; -- Toss single line comments
+"/*" ([$u # \*] | \*+ [$u # [\* \/]])* ("*")+ "/" ;
 
 $white+ ;
 @rsyms

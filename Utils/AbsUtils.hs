@@ -11,9 +11,11 @@ getExprDeclPos (ExprDec exp) = getExpPos exp
 
 getFunName (SignNoRet (PIdent (_,identifier)) _) = identifier
 getFunName (SignWRet (PIdent (_,identifier)) _ _ _) = identifier
+getFunName (SignWArRet (PIdent (_,identifier)) _ _ _ _) = identifier
 
-getFunNamePident (SignNoRet r@(PIdent _) _) = r
+getFunNamePident (SignNoRet r@(PIdent _) _) = r 
 getFunNamePident (SignWRet r@(PIdent _) _ _ _) = r
+getFunNamePident (SignWArRet r@(PIdent _) _ _ _ _) = r
 
 
 getBodyStartPos (BodyBlock (POpenGraph (locStart,_)) _ _ ) = locStart

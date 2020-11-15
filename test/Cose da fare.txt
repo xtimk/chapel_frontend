@@ -9,5 +9,4 @@ Vedere se mettere ++ o --
 Controllare visualizzazione errori
 Controllare che le variabili siano inizializzate
 Controllare &* o *& o &(*)
-Continue nel do while devo anche rieseguire la guardia?
 

@@ -1,6 +1,6 @@
 var f: [2,5,10] int;
 var pippo : [0..1, 1..2] int;
-var a :int;
+var a,b :int = 10, b = 9;
 var d :int;
 var b :[0..2,2,2] int= [[[1,2],[3,4]],[[5,6],[7,8]]];
 var scemoChiLegge: int;
@@ -8,6 +8,8 @@ var c = f[1,1,b[1,2]];
 
 proc lol(x : int, j : string)
 {
+    a = 10;
+    var k5_k'k' = 0.8e10;
    { 
         f[a+d,3,4] += scemoChiLegge;
     }
@@ -15,5 +17,7 @@ proc lol(x : int, j : string)
     {
 
     }
+
+    return;
 }
 

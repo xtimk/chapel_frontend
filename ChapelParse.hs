@@ -53,7 +53,7 @@ run v p s = let ts = myLLexer s in case p ts of
 showTree :: (Show a, Print a) => Int -> a -> IO ()
 showTree v tree
  = do
-      putStrV v $ "\n[Abstract Syntax]\n\n" ++ show tree
+      -- putStrV v $ "\n[Abstract Syntax]\n\n" ++ show tree
       putStrV v $ "\n[Linearized tree]\n\n" ++ printTree tree
 
 usage :: IO ()
@@ -83,7 +83,7 @@ parseTest filepath = do
     Bad s    -> do putStrLn s
                    exitFailure
     Ok  tree -> do putStrLn "\nParse Successful!"
-                   --showTree 2 tree
+                   showTree 2 tree
 
                    --putStrLn "\n\n ** After Type Checker **\n\n"
                    --print (evalState (typeChecker tree) startState)
