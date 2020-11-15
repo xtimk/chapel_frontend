@@ -243,7 +243,6 @@ All other symbols are terminals.
   | //[DeclList]// | -> | //DeclList//
   |  |  **|**  | //DeclList// ``,`` //[DeclList]//
   | //DeclList// | -> | //[PIdent]// //PColon// //Type//
-  |  |  **|**  | //[PIdent]// //PColon// //ArDecl//
   |  |  **|**  | //[PIdent]// //PColon// //ArDecl// //Type//
   |  |  **|**  | //[PIdent]// //PColon// //Type// //AssgnmOp// //ExprDecl//
   |  |  **|**  | //[PIdent]// //PColon// //ArDecl// //Type// //AssgnmOp// //ExprDecl//

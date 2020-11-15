@@ -37,7 +37,6 @@ tacGeneratorDeclaration x =
     NoAssgmDec {} -> return []
     AssgmDec ids assgn exp -> tacGeneratorDeclExpression ids assgn exp
     AssgmTypeDec ids _ _ assgn exp -> tacGeneratorDeclExpression ids assgn exp
-    NoAssgmArrayFixDec {} -> return [] 
     NoAssgmArrayDec  {} -> return []
     AssgmArrayTypeDec ids _ _ _ assgn exp -> tacGeneratorDeclExpression ids assgn exp
     AssgmArrayDec ids _ _ assgn exp -> tacGeneratorDeclExpression ids assgn exp

@@ -91,12 +91,14 @@ Decl.     Declaration ::= DecMode [DeclList] PSemicolon;
 (:).      [DeclList] ::= DeclList "," [DeclList];
 
 NoAssgmDec.          DeclList ::= [PIdent] PColon Type ;
-NoAssgmArrayFixDec.  DeclList ::= [PIdent] PColon ArDecl ;
 NoAssgmArrayDec.     DeclList ::= [PIdent] PColon ArDecl Type ;
 AssgmTypeDec.        DeclList ::= [PIdent] PColon Type AssgnmOp ExprDecl ;
 AssgmArrayTypeDec.   DeclList ::= [PIdent] PColon ArDecl Type AssgnmOp ExprDecl ;
 AssgmArrayDec.       DeclList ::= [PIdent] PColon ArDecl AssgnmOp ExprDecl ;
 AssgmDec.            DeclList ::= [PIdent] AssgnmOp ExprDecl ;
+
+
+
 
 ExprDecArray.        ExprDecl ::= ArInit;
 ExprDec.             ExprDecl ::= Exp;

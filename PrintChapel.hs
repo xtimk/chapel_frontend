@@ -268,7 +268,6 @@ instance Print [AbsChapel.DeclList] where
 instance Print AbsChapel.DeclList where
   prt i e = case e of
     AbsChapel.NoAssgmDec pidents pcolon type_ -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 type_])
-    AbsChapel.NoAssgmArrayFixDec pidents pcolon ardecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl])
     AbsChapel.NoAssgmArrayDec pidents pcolon ardecl type_ -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl, prt 0 type_])
     AbsChapel.AssgmTypeDec pidents pcolon type_ assgnmop exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 type_, prt 0 assgnmop, prt 0 exprdecl])
     AbsChapel.AssgmArrayTypeDec pidents pcolon ardecl type_ assgnmop exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl, prt 0 type_, prt 0 assgnmop, prt 0 exprdecl])

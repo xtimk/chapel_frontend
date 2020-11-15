@@ -175,7 +175,6 @@ transDeclaration x = case x of
 transDeclList :: DeclList -> Result
 transDeclList x = case x of
   NoAssgmDec pidents pcolon type_ -> failure x
-  NoAssgmArrayFixDec pidents pcolon ardecl -> failure x
   NoAssgmArrayDec pidents pcolon ardecl type_ -> failure x
   AssgmTypeDec pidents pcolon type_ assgnmop exprdecl -> failure x
   AssgmArrayTypeDec pidents pcolon ardecl type_ assgnmop exprdecl -> failure x

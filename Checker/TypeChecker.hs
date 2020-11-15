@@ -252,7 +252,6 @@ typeCheckerDeclaration x = do
       typeCheckerIdentifiers ids (Just assignment) (convertTypeSpecToTypeInferred types) ty
       modify $ addErrorsCurrentNode errors
       get
-    NoAssgmArrayFixDec ids _colon array -> typeCheckerIdentifiersArray ids Nothing array Infered Infered
     NoAssgmArrayDec ids _colon array types -> typeCheckerIdentifiersArray ids  Nothing array (convertTypeSpecToTypeInferred types) Infered
     AssgmArrayTypeDec ids _colon array types assignment exp -> do
       let DataChecker ty errors = typeCheckerDeclExpression environment exp
