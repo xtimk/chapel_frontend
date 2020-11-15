@@ -233,7 +233,6 @@ ListDeclList : DeclList { (:[]) $1 }
              | DeclList ',' ListDeclList { (:) $1 $3 }
 DeclList :: { DeclList }
 DeclList : ListPIdent PColon Type { AbsChapel.NoAssgmDec $1 $2 $3 }
-         | ListPIdent PColon ArDecl { AbsChapel.NoAssgmArrayFixDec $1 $2 $3 }
          | ListPIdent PColon ArDecl Type { AbsChapel.NoAssgmArrayDec $1 $2 $3 $4 }
          | ListPIdent PColon Type AssgnmOp ExprDecl { AbsChapel.AssgmTypeDec $1 $2 $3 $4 $5 }
          | ListPIdent PColon ArDecl Type AssgnmOp ExprDecl { AbsChapel.AssgmArrayTypeDec $1 $2 $3 $4 $5 $6 }

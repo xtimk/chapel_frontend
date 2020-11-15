@@ -167,7 +167,6 @@ data Declaration = Decl DecMode [DeclList] PSemicolon
 
 data DeclList
     = NoAssgmDec [PIdent] PColon Type
-    | NoAssgmArrayFixDec [PIdent] PColon ArDecl
     | NoAssgmArrayDec [PIdent] PColon ArDecl Type
     | AssgmTypeDec [PIdent] PColon Type AssgnmOp ExprDecl
     | AssgmArrayTypeDec [PIdent] PColon ArDecl Type AssgnmOp ExprDecl
