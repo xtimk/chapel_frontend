@@ -166,12 +166,12 @@ data Declaration = Decl DecMode [DeclList] PSemicolon
   deriving (Eq, Ord, Show, Read)
 
 data DeclList
-    = NoAssgmDec [PIdent] PColon Type
-    | NoAssgmArrayDec [PIdent] PColon ArDecl Type
-    | AssgmTypeDec [PIdent] PColon Type AssgnmOp ExprDecl
-    | AssgmArrayTypeDec [PIdent] PColon ArDecl Type AssgnmOp ExprDecl
-    | AssgmArrayDec [PIdent] PColon ArDecl AssgnmOp ExprDecl
+    = NoAssgmArrayDec [PIdent] PColon TypeSpec
+    | AssgmTypeDec [PIdent] PColon TypeSpec AssgnmOp ExprDecl
     | AssgmDec [PIdent] AssgnmOp ExprDecl
+  deriving (Eq, Ord, Show, Read)
+
+data TypeSpec = TypeSpecNorm Type | TypeSpecAr ArDecl Type
   deriving (Eq, Ord, Show, Read)
 
 data ExprDecl = ExprDecArray ArInit | ExprDec Exp
@@ -199,8 +199,7 @@ data Function = FunDec PProc Signature Body
 
 data Signature
     = SignNoRet PIdent FunctionParams
-    | SignWRet PIdent FunctionParams PColon Type
-    | SignWArRet PIdent FunctionParams PColon ArDecl Type
+    | SignWRet PIdent FunctionParams PColon TypeSpec
   deriving (Eq, Ord, Show, Read)
 
 data FunctionParams
@@ -208,8 +207,8 @@ data FunctionParams
   deriving (Eq, Ord, Show, Read)
 
 data Param
-    = ParNoMode [PIdent] PColon Type
-    | ParWMode Mode [PIdent] PColon Type
+    = ParNoMode [PIdent] PColon TypeSpec
+    | ParWMode Mode [PIdent] PColon TypeSpec
   deriving (Eq, Ord, Show, Read)
 
 data PassedParam = PassedPar Exp

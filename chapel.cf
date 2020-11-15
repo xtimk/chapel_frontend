@@ -90,14 +90,12 @@ Decl.     Declaration ::= DecMode [DeclList] PSemicolon;
 (:[]).    [DeclList] ::= DeclList;
 (:).      [DeclList] ::= DeclList "," [DeclList];
 
-NoAssgmDec.          DeclList ::= [PIdent] PColon Type ;
-NoAssgmArrayDec.     DeclList ::= [PIdent] PColon ArDecl Type ;
-AssgmTypeDec.        DeclList ::= [PIdent] PColon Type AssgnmOp ExprDecl ;
-AssgmArrayTypeDec.   DeclList ::= [PIdent] PColon ArDecl Type AssgnmOp ExprDecl ;
-AssgmArrayDec.       DeclList ::= [PIdent] PColon ArDecl AssgnmOp ExprDecl ;
+NoAssgmArrayDec.     DeclList ::= [PIdent] PColon TypeSpec ;
+AssgmTypeDec.        DeclList ::= [PIdent] PColon TypeSpec AssgnmOp ExprDecl ;
 AssgmDec.            DeclList ::= [PIdent] AssgnmOp ExprDecl ;
 
-
+TypeSpecNorm.        TypeSpec ::= Type;
+TypeSpecAr.          TypeSpec ::= ArDecl Type;
 
 
 ExprDecArray.        ExprDecl ::= ArInit;
@@ -133,8 +131,7 @@ FunDec.       Function ::= PProc Signature Body ;
 
 -- procedure structure
 SignNoRet.           Signature ::= PIdent FunctionParams ;
-SignWRet.            Signature ::= PIdent FunctionParams PColon Type;
-SignWArRet.         Signature ::= PIdent FunctionParams PColon ArDecl Type;
+SignWRet.            Signature ::= PIdent FunctionParams PColon TypeSpec;
 
 
 FunParams.      FunctionParams ::= POpenParenthesis [Param] PCloseParenthesis ;
@@ -145,8 +142,8 @@ FunParams.      FunctionParams ::= POpenParenthesis [Param] PCloseParenthesis ;
 
 
 -- parameters of procedures
-ParNoMode.     Param ::= [PIdent] PColon Type ;
-ParWMode.      Param  ::= Mode [PIdent] PColon Type ;
+ParNoMode.     Param ::= [PIdent] PColon TypeSpec ;
+ParWMode.      Param  ::= Mode [PIdent] PColon TypeSpec ;
 
 
 [].       [PassedParam] ::= ;

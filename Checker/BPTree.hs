@@ -199,7 +199,7 @@ getFunctionParams identifier paramsPassed env =
 matchParams [] (_,[]) = True
 matchParams _ (_,[]) = False
 matchParams [] _ = False
-matchParams  ((Temp _ _ _ y):ys) (loc,(Checker.SymbolTable.Variable _ ty:xs)) = y == ty && matchParams ys (loc,xs) 
+matchParams  ((Temp _ _ _ y):ys) (loc,Checker.SymbolTable.Variable _ ty:xs) = y == ty && matchParams ys (loc,xs) 
 
 getFunParams (PIdent (_, identifier)) (_,tree,currentNode) = 
     let symtable = uniteSymTables $ bpPathToList currentNode tree in

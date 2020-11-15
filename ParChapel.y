@@ -232,12 +232,12 @@ ListDeclList :: { [DeclList] }
 ListDeclList : DeclList { (:[]) $1 }
              | DeclList ',' ListDeclList { (:) $1 $3 }
 DeclList :: { DeclList }
-DeclList : ListPIdent PColon Type { AbsChapel.NoAssgmDec $1 $2 $3 }
-         | ListPIdent PColon ArDecl Type { AbsChapel.NoAssgmArrayDec $1 $2 $3 $4 }
-         | ListPIdent PColon Type AssgnmOp ExprDecl { AbsChapel.AssgmTypeDec $1 $2 $3 $4 $5 }
-         | ListPIdent PColon ArDecl Type AssgnmOp ExprDecl { AbsChapel.AssgmArrayTypeDec $1 $2 $3 $4 $5 $6 }
-         | ListPIdent PColon ArDecl AssgnmOp ExprDecl { AbsChapel.AssgmArrayDec $1 $2 $3 $4 $5 }
+DeclList : ListPIdent PColon TypeSpec { AbsChapel.NoAssgmArrayDec $1 $2 $3 }
+         | ListPIdent PColon TypeSpec AssgnmOp ExprDecl { AbsChapel.AssgmTypeDec $1 $2 $3 $4 $5 }
          | ListPIdent AssgnmOp ExprDecl { AbsChapel.AssgmDec $1 $2 $3 }
+TypeSpec :: { TypeSpec }
+TypeSpec : Type { AbsChapel.TypeSpecNorm $1 }
+         | ArDecl Type { AbsChapel.TypeSpecAr $1 $2 }
 ExprDecl :: { ExprDecl }
 ExprDecl : ArInit { AbsChapel.ExprDecArray $1 }
          | Exp { AbsChapel.ExprDec $1 }
@@ -266,8 +266,7 @@ Function :: { Function }
 Function : PProc Signature Body { AbsChapel.FunDec $1 $2 $3 }
 Signature :: { Signature }
 Signature : PIdent FunctionParams { AbsChapel.SignNoRet $1 $2 }
-          | PIdent FunctionParams PColon Type { AbsChapel.SignWRet $1 $2 $3 $4 }
-          | PIdent FunctionParams PColon ArDecl Type { AbsChapel.SignWArRet $1 $2 $3 $4 $5 }
+          | PIdent FunctionParams PColon TypeSpec { AbsChapel.SignWRet $1 $2 $3 $4 }
 FunctionParams :: { FunctionParams }
 FunctionParams : POpenParenthesis ListParam PCloseParenthesis { AbsChapel.FunParams $1 $2 $3 }
 ListParam :: { [Param] }
@@ -275,8 +274,8 @@ ListParam : {- empty -} { [] }
           | Param { (:[]) $1 }
           | Param ',' ListParam { (:) $1 $3 }
 Param :: { Param }
-Param : ListPIdent PColon Type { AbsChapel.ParNoMode $1 $2 $3 }
-      | Mode ListPIdent PColon Type { AbsChapel.ParWMode $1 $2 $3 $4 }
+Param : ListPIdent PColon TypeSpec { AbsChapel.ParNoMode $1 $2 $3 }
+      | Mode ListPIdent PColon TypeSpec { AbsChapel.ParWMode $1 $2 $3 $4 }
 ListPassedParam :: { [PassedParam] }
 ListPassedParam : {- empty -} { [] }
                 | PassedParam { (:[]) $1 }

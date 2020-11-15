@@ -242,12 +242,11 @@ All other symbols are terminals.
   | //Declaration// | -> | //DecMode// //[DeclList]// //PSemicolon//
   | //[DeclList]// | -> | //DeclList//
   |  |  **|**  | //DeclList// ``,`` //[DeclList]//
-  | //DeclList// | -> | //[PIdent]// //PColon// //Type//
-  |  |  **|**  | //[PIdent]// //PColon// //ArDecl// //Type//
-  |  |  **|**  | //[PIdent]// //PColon// //Type// //AssgnmOp// //ExprDecl//
-  |  |  **|**  | //[PIdent]// //PColon// //ArDecl// //Type// //AssgnmOp// //ExprDecl//
-  |  |  **|**  | //[PIdent]// //PColon// //ArDecl// //AssgnmOp// //ExprDecl//
+  | //DeclList// | -> | //[PIdent]// //PColon// //TypeSpec//
+  |  |  **|**  | //[PIdent]// //PColon// //TypeSpec// //AssgnmOp// //ExprDecl//
   |  |  **|**  | //[PIdent]// //AssgnmOp// //ExprDecl//
+  | //TypeSpec// | -> | //Type//
+  |  |  **|**  | //ArDecl// //Type//
   | //ExprDecl// | -> | //ArInit//
   |  |  **|**  | //Exp//
   | //ArInit// | -> | //POpenBracket// //[ExprDecl]// //PCloseBracket//
@@ -266,14 +265,13 @@ All other symbols are terminals.
   |  |  **|**  | //PConst//
   | //Function// | -> | //PProc// //Signature// //Body//
   | //Signature// | -> | //PIdent// //FunctionParams//
-  |  |  **|**  | //PIdent// //FunctionParams// //PColon// //Type//
-  |  |  **|**  | //PIdent// //FunctionParams// //PColon// //ArDecl// //Type//
+  |  |  **|**  | //PIdent// //FunctionParams// //PColon// //TypeSpec//
   | //FunctionParams// | -> | //POpenParenthesis// //[Param]// //PCloseParenthesis//
   | //[Param]// | -> | **eps**
   |  |  **|**  | //Param//
   |  |  **|**  | //Param// ``,`` //[Param]//
-  | //Param// | -> | //[PIdent]// //PColon// //Type//
-  |  |  **|**  | //Mode// //[PIdent]// //PColon// //Type//
+  | //Param// | -> | //[PIdent]// //PColon// //TypeSpec//
+  |  |  **|**  | //Mode// //[PIdent]// //PColon// //TypeSpec//
   | //[PassedParam]// | -> | **eps**
   |  |  **|**  | //PassedParam//
   |  |  **|**  | //PassedParam// ``,`` //[PassedParam]//
