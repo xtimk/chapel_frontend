@@ -40,6 +40,38 @@ typeCheckerExt (x:xs) = case x of
         typeCheckerFunction fun
         typeCheckerExt xs
 
+
+
+typeCheckerDeclaration x = do
+  environment <- get
+  case x of
+    AssgmTypeDec ids _colon types assignment exp -> do
+      let DataChecker tyRight errors = typeCheckerDeclExpression environment exp
+      tyLeft <- typeCheckerTypeSpecification types
+      typeCheckerIdentifiers ids (Just assignment) tyLeft tyRight
+      modify $ addErrorsCurrentNode errors
+      get
+    NoAssgmArrayDec ids _colon types -> do
+      ty <- typeCheckerTypeSpecification types
+      typeCheckerIdentifiers ids Nothing ty Infered
+    AssgmDec ids assignment exp -> do
+      let DataChecker ty errors = typeCheckerDeclExpression environment exp
+      modify $ addErrorsCurrentNode errors
+      typeCheckerIdentifiers ids (Just assignment) Infered ty
+      get
+
+typeCheckerTypeSpecification tySpec = case tySpec of
+  TypeSpecNorm ty -> return (convertTypeSpecToTypeInferred ty)
+  TypeSpecAr ar ty -> do
+    environment <- get
+    let DataChecker typeArray errors = typeCheckerBuildArrayType environment ar (convertTypeSpecToTypeInferred ty)
+    modify (addErrorsCurrentNode errors)
+    return typeArray
+
+typeCheckerIdentifiers identifiers assgn typeLeft typeRight = do
+  mapM_ (typeCheckerIdentifier assgn typeLeft typeRight) identifiers
+  get
+
 typeCheckerFunction (FunDec (PProc (loc@(l,c),_) ) signature body@(BodyBlock  (POpenGraph (locGraph,_)) _ _)) = do
   typeCheckerSignature loc locGraph signature
   typeCheckerBody ProcedureBlk (createId' l c (getFunName signature)) body
@@ -47,12 +79,9 @@ typeCheckerFunction (FunDec (PProc (loc@(l,c),_) ) signature body@(BodyBlock  (P
 
 typeCheckerSignature locstart locEnd signature = case signature of
   SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' locstart locEnd identifier params Utils.Type.Void
-  SignWRet identifier (FunParams _ params _) _ types -> typeCheckerSignature' locstart locEnd identifier params (convertTypeSpecToTypeInferred types)
-  SignWArRet identifier (FunParams _ params _) _ array types -> do
-    environment <- get
-    let DataChecker typeArray errors = typeCheckerBuildArrayType environment array (convertTypeSpecToTypeInferred types)
-    modify $ addErrorsCurrentNode errors
-    typeCheckerSignature' locstart locEnd identifier params typeArray
+  SignWRet identifier (FunParams _ params _) _ types -> do
+    tyLeft <- typeCheckerTypeSpecification types
+    typeCheckerSignature' locstart locEnd identifier params tyLeft
 
 typeCheckerSignature' locstart locEnd ident@(PIdent (loc,identifier)) params types = 
   case types of
@@ -114,9 +143,9 @@ typeCheckerParam x = case x of
     mapM_ (typeCheckerParam' (convertMode mode) types) identifiers
     get
 
-typeCheckerParam' mode types identifier = 
-  let typefound = convertTypeSpecToTypeInferred types in do 
-    modify (typeCheckerParam'' identifier mode typefound)
+typeCheckerParam' mode tySpec identifier = do 
+    ty <- typeCheckerTypeSpecification tySpec
+    modify (typeCheckerParam'' identifier mode ty)
     get
 
 typeCheckerParam'' (PIdent (loc,identifier)) mode ty env@(sym,_t,_i) = case typeCheckerParam''' sym identifier of
@@ -238,38 +267,6 @@ typeCheckerGuard (SGuard _ expression _) = do
     modify $ addErrorsCurrentNode  [ErrorChecker (getExpPos expression) ErrorGuardNotBoolean]
     get
 
-typeCheckerDeclaration x = do
-  environment <- get
-  case x of
-    NoAssgmDec ids _colon types -> typeCheckerIdentifiers ids Nothing (convertTypeSpecToTypeInferred types) Infered
-    AssgmDec ids assignment exp -> do
-      let DataChecker ty errors = typeCheckerDeclExpression environment exp
-      typeCheckerIdentifiers ids (Just assignment) Infered ty
-      modify $ addErrorsCurrentNode errors
-      get
-    AssgmTypeDec ids _colon types assignment exp -> do
-      let DataChecker ty errors = typeCheckerDeclExpression environment exp
-      typeCheckerIdentifiers ids (Just assignment) (convertTypeSpecToTypeInferred types) ty
-      modify $ addErrorsCurrentNode errors
-      get
-    NoAssgmArrayDec ids _colon array types -> typeCheckerIdentifiersArray ids  Nothing array (convertTypeSpecToTypeInferred types) Infered
-    AssgmArrayTypeDec ids _colon array types assignment exp -> do
-      let DataChecker ty errors = typeCheckerDeclExpression environment exp
-      typeCheckerIdentifiersArray ids (Just assignment) array (convertTypeSpecToTypeInferred types) ty
-      modify $ addErrorsCurrentNode errors
-      get
-    AssgmArrayDec ids _colon array assignment exp -> do
-      let DataChecker ty errors = typeCheckerDeclExpression environment exp
-      typeCheckerIdentifiersArray ids (Just assignment) array Infered ty
-      modify $ addErrorsCurrentNode errors
-      get
-
-typeCheckerIdentifiersArray ids assgn array typeLeft typeRight = do
-  environment <- get
-  let DataChecker typeArray errors = typeCheckerBuildArrayType environment array typeLeft
-  modify (addErrorsCurrentNode errors)
-  typeCheckerIdentifiers ids assgn typeArray typeRight
-  get
 
 typeCheckerBuildArrayType environment (ArrayDeclIndex _ array _) = typeCheckerBuildArrayType' environment array
   where
@@ -278,9 +275,6 @@ typeCheckerBuildArrayType environment (ArrayDeclIndex _ array _) = typeCheckerBu
       let DataChecker bounds errors = typeCheckerBuildArrayParameter enviroment array; DataChecker typesFound othersErrors = typeCheckerBuildArrayType' enviroment arrays types in 
         DataChecker (Array typesFound bounds) (errors ++ othersErrors)
 
-typeCheckerIdentifiers identifiers assgn typeLeft typeRight = do
-  mapM_ (typeCheckerIdentifier assgn typeLeft typeRight) identifiers
-  get
 
 typeCheckerIdentifier assgn typeLeft typeRight id@(PIdent (loc, identifier)) = do
   (_s,_,current_id) <- get

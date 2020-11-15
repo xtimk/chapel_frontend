@@ -267,14 +267,16 @@ instance Print [AbsChapel.DeclList] where
 
 instance Print AbsChapel.DeclList where
   prt i e = case e of
-    AbsChapel.NoAssgmDec pidents pcolon type_ -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 type_])
-    AbsChapel.NoAssgmArrayDec pidents pcolon ardecl type_ -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl, prt 0 type_])
-    AbsChapel.AssgmTypeDec pidents pcolon type_ assgnmop exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 type_, prt 0 assgnmop, prt 0 exprdecl])
-    AbsChapel.AssgmArrayTypeDec pidents pcolon ardecl type_ assgnmop exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl, prt 0 type_, prt 0 assgnmop, prt 0 exprdecl])
-    AbsChapel.AssgmArrayDec pidents pcolon ardecl assgnmop exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 ardecl, prt 0 assgnmop, prt 0 exprdecl])
+    AbsChapel.NoAssgmArrayDec pidents pcolon typespec -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 typespec])
+    AbsChapel.AssgmTypeDec pidents pcolon typespec assgnmop exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 typespec, prt 0 assgnmop, prt 0 exprdecl])
     AbsChapel.AssgmDec pidents assgnmop exprdecl -> prPrec i 0 (concatD [prt 0 pidents, prt 0 assgnmop, prt 0 exprdecl])
   prtList _ [x] = concatD [prt 0 x]
   prtList _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
+
+instance Print AbsChapel.TypeSpec where
+  prt i e = case e of
+    AbsChapel.TypeSpecNorm type_ -> prPrec i 0 (concatD [prt 0 type_])
+    AbsChapel.TypeSpecAr ardecl type_ -> prPrec i 0 (concatD [prt 0 ardecl, prt 0 type_])
 
 instance Print AbsChapel.ExprDecl where
   prt i e = case e of
@@ -324,8 +326,7 @@ instance Print AbsChapel.Function where
 instance Print AbsChapel.Signature where
   prt i e = case e of
     AbsChapel.SignNoRet pident functionparams -> prPrec i 0 (concatD [prt 0 pident, prt 0 functionparams])
-    AbsChapel.SignWRet pident functionparams pcolon type_ -> prPrec i 0 (concatD [prt 0 pident, prt 0 functionparams, prt 0 pcolon, prt 0 type_])
-    AbsChapel.SignWArRet pident functionparams pcolon ardecl type_ -> prPrec i 0 (concatD [prt 0 pident, prt 0 functionparams, prt 0 pcolon, prt 0 ardecl, prt 0 type_])
+    AbsChapel.SignWRet pident functionparams pcolon typespec -> prPrec i 0 (concatD [prt 0 pident, prt 0 functionparams, prt 0 pcolon, prt 0 typespec])
 
 instance Print AbsChapel.FunctionParams where
   prt i e = case e of
@@ -336,8 +337,8 @@ instance Print [AbsChapel.Param] where
 
 instance Print AbsChapel.Param where
   prt i e = case e of
-    AbsChapel.ParNoMode pidents pcolon type_ -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 type_])
-    AbsChapel.ParWMode mode pidents pcolon type_ -> prPrec i 0 (concatD [prt 0 mode, prt 0 pidents, prt 0 pcolon, prt 0 type_])
+    AbsChapel.ParNoMode pidents pcolon typespec -> prPrec i 0 (concatD [prt 0 pidents, prt 0 pcolon, prt 0 typespec])
+    AbsChapel.ParWMode mode pidents pcolon typespec -> prPrec i 0 (concatD [prt 0 mode, prt 0 pidents, prt 0 pcolon, prt 0 typespec])
   prtList _ [] = concatD []
   prtList _ [x] = concatD [prt 0 x]
   prtList _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]

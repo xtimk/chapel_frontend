@@ -174,12 +174,13 @@ transDeclaration x = case x of
   Decl decmode decllists psemicolon -> failure x
 transDeclList :: DeclList -> Result
 transDeclList x = case x of
-  NoAssgmDec pidents pcolon type_ -> failure x
-  NoAssgmArrayDec pidents pcolon ardecl type_ -> failure x
-  AssgmTypeDec pidents pcolon type_ assgnmop exprdecl -> failure x
-  AssgmArrayTypeDec pidents pcolon ardecl type_ assgnmop exprdecl -> failure x
-  AssgmArrayDec pidents pcolon ardecl assgnmop exprdecl -> failure x
+  NoAssgmArrayDec pidents pcolon typespec -> failure x
+  AssgmTypeDec pidents pcolon typespec assgnmop exprdecl -> failure x
   AssgmDec pidents assgnmop exprdecl -> failure x
+transTypeSpec :: TypeSpec -> Result
+transTypeSpec x = case x of
+  TypeSpecNorm type_ -> failure x
+  TypeSpecAr ardecl type_ -> failure x
 transExprDecl :: ExprDecl -> Result
 transExprDecl x = case x of
   ExprDecArray arinit -> failure x
@@ -208,15 +209,14 @@ transFunction x = case x of
 transSignature :: Signature -> Result
 transSignature x = case x of
   SignNoRet pident functionparams -> failure x
-  SignWRet pident functionparams pcolon type_ -> failure x
-  SignWArRet pident functionparams pcolon ardecl type_ -> failure x
+  SignWRet pident functionparams pcolon typespec -> failure x
 transFunctionParams :: FunctionParams -> Result
 transFunctionParams x = case x of
   FunParams popenparenthesis params pcloseparenthesis -> failure x
 transParam :: Param -> Result
 transParam x = case x of
-  ParNoMode pidents pcolon type_ -> failure x
-  ParWMode mode pidents pcolon type_ -> failure x
+  ParNoMode pidents pcolon typespec -> failure x
+  ParWMode mode pidents pcolon typespec -> failure x
 transPassedParam :: PassedParam -> Result
 transPassedParam x = case x of
   PassedPar exp -> failure x

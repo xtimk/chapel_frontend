@@ -34,12 +34,9 @@ tacGeneratorExt (x:xs) = case x of
 
 tacGeneratorDeclaration x =
   case x of
-    NoAssgmDec {} -> return []
     AssgmDec ids assgn exp -> tacGeneratorDeclExpression ids assgn exp
     AssgmTypeDec ids _ _ assgn exp -> tacGeneratorDeclExpression ids assgn exp
     NoAssgmArrayDec  {} -> return []
-    AssgmArrayTypeDec ids _ _ _ assgn exp -> tacGeneratorDeclExpression ids assgn exp
-    AssgmArrayDec ids _ _ assgn exp -> tacGeneratorDeclExpression ids assgn exp
 
 tacGeneratorDeclExpression ids assgn exp = do
   temps <- mapM tacGeneratorIdentifierTemp ids
@@ -173,24 +170,6 @@ tacGeneratorStatement statement = case statement of
     pushLabel labelFalse
     let gotob = TACEntry Nothing $ UnconJump labelBegin
     return (resg ++ res ++ [gotob]) 
-
-    --labelBegin <- newlabel (getBodyStartPos body) DoWhileLb
-    --labelTrue <- newlabelFALL (getBodyStartPos body) DoWhileLb
-   -- labelFalse <- newlabel (getBodyEndPos body) DoWhileExitLb
-    
-    --pushLabel labelBegin
-    --res <- tacGeneratorBody body
-    
-    --modify $ addIfSimpleLabels labelTrue labelFalse labelBegin
-    --(resg,_) <- tacGeneratorExpression BooleanExp guard
-    --popSequenceControlLabels
-
-    --label <- popLabel
-    --let gotob = TACEntry label $ UnconJump labelBegin
-
-    --pushLabel labelFalse
-    --return (res ++ resg ++ [gotob]) 
-    --return (res ++ resg ) -- take (length resg -1 ) resg ) 
 
   While _pwhile (SGuard _ guard _) body -> do
     labelBegin <- newlabel (getBodyStartPos body) WhileLb
@@ -556,7 +535,7 @@ tacGeneratorFunctionCall expType identifier@(PIdent (_, id)) paramsPassed = do
       idResFun <- newtemp
       let idResTemp = Temp ThreeAddressCode.TAC.Temporary idResFun loc retTy
       let tacEntry = TACEntry Nothing $ CallFun idResTemp funTemp parameterLenght
-      return (tacs ++ [tacEntry], idResTemp)
+      return (tacEntry :reverse tacs , idResTemp)
 
 
 tacGeneratorFunctionParameter expType (PassedPar exp) =
@@ -590,11 +569,16 @@ tacGeneratorArrayIndexing var@(Evar identifier@(PIdent (_, id))) arrayDecl = do
   tacEnv <- get
   let Checker.SymbolTable.Variable loc ty = getVarTypeTAC identifier tacEnv
   (tacsAdd, temp) <- tacGeneratorArrayIndexing' var arrayDecl
+  let tySubArray = calculateSubArrayTy ty arrayDecl
   idArVal <- newtemp
-  let tempArrayVal = Temp ThreeAddressCode.TAC.Temporary idArVal loc ty 
+  let tempArrayVal = Temp ThreeAddressCode.TAC.Temporary idArVal loc tySubArray 
   let tempId = Temp ThreeAddressCode.TAC.Variable id loc ty
   let tacEntry = TACEntry Nothing $ IndexRight tempArrayVal tempId temp
   return (tacEntry:tacsAdd, tempArrayVal)
+    where
+      calculateSubArrayTy ty (ArrayInit _ expressions _ ) = 
+        getSubarrayDimension ty (length expressions)
+
 
 tacGeneratorArrayIndexing' (Evar identifier) arrayDecl = do
   tacEnv <- get
