@@ -338,7 +338,7 @@ Exp6 : Exp6 PEtimes Exp7 { AbsChapel.Etimes $1 $2 $3 }
      | Exp6 PEmod Exp7 { AbsChapel.Emod $1 $2 $3 }
      | Exp7 { $1 }
 Exp7 :: { Exp }
-Exp7 : UnaryOperator Exp8 { AbsChapel.Epreop $1 $2 } | Exp8 { $1 }
+Exp7 : UnaryOperator Exp7 { AbsChapel.Epreop $1 $2 } | Exp8 { $1 }
 Exp8 :: { Exp }
 Exp8 : Exp9 ArInit { AbsChapel.Earray $1 $2 } | Exp9 { $1 }
 Exp9 :: { Exp }

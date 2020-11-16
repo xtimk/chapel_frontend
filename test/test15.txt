@@ -2,32 +2,8 @@ var a :int= 20 ;
 var b = 2;
 var l :[10,20] int;
 
-proc pippo(ref i:int)
-{
-return;
-}
-
-proc pippo(i:string)
-{
-   return;
-}
-
-proc pippo(i:int)
-{
-   return;
-}
-
-proc pippo()
-{
-   return;
-}
 
 proc main(kk:int) : string
-{
-   pippo("ciao");
-   pippo(ref "ciao");
-   pippo(kk);
-   pippo(ref kk);
-   pippo();
-   return "ciao";
+{  var l = *a;
+   var z = *&*&*&*&*l;
 }

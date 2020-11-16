@@ -319,7 +319,7 @@ All other symbols are terminals.
   |  |  **|**  | //Exp6// //PEdiv// //Exp7//
   |  |  **|**  | //Exp6// //PEmod// //Exp7//
   |  |  **|**  | //Exp7//
-  | //Exp7// | -> | //UnaryOperator// //Exp8//
+  | //Exp7// | -> | //UnaryOperator// //Exp7//
   |  |  **|**  | //Exp8//
   | //Exp8// | -> | //Exp9// //ArInit//
   |  |  **|**  | //Exp9//
