@@ -538,7 +538,7 @@ tacGeneratorFunctionCall expType identifier@(PIdent (_, id)) paramsPassed = do
       idResFun <- newtemp
       let idResTemp = Temp ThreeAddressCode.TAC.Temporary idResFun loc retTy
       let tacEntry = TACEntry Nothing $ CallFun idResTemp funTemp parameterLenght
-      return (reverse tacs ++ [tacEntry], idResTemp)
+      return (tacs ++ [tacEntry], idResTemp)
 
 
 tacGeneratorFunctionParameter expType paramPassed = case paramPassed of

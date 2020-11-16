@@ -42,7 +42,8 @@ data DefinedError =
   ErrorReturnNotVoid |
   NoDecucibleType String |
   ErrorFunctionWithNotEnoughReturns String |
-  IncompatibleArrayDimension Int Int 
+  IncompatibleArrayDimension Int Int |
+  ErrorCantUseExprInARefPassedVar
   deriving (Show)
 
 data ErrorChecker =  ErrorChecker Loc DefinedError
@@ -87,7 +88,7 @@ printDefinedError tokens error = case error of
   NoDecucibleType id -> "Impossible infered type from expression for variable " ++ show id ++ "."
   ErrorFunctionWithNotEnoughReturns funname -> "In function " ++ show funname ++ ": there is a possible path in the code with no returns."
   IncompatibleArrayDimension dim1 dim2 -> "Incompatible array dimension. First is "++ show dim1 ++ " and second is " ++  show dim2 ++"."
-
+  ErrorCantUseExprInARefPassedVar -> "You can't pass an expr by ref, but only a variable."
 
 getTokens [] _ _ = []
 getTokens (x@(PT (Pn _ l c ) _ ):xs) start@(lstart, cstart) end@(lend, cend) 
