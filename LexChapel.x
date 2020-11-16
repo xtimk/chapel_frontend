@@ -78,8 +78,6 @@ r e f
     { tok (\p s -> PT p (eitherResIdent (T_PRef . share) s)) }
 v a r
     { tok (\p s -> PT p (eitherResIdent (T_PVar . share) s)) }
-c o n s t
-    { tok (\p s -> PT p (eitherResIdent (T_PConst . share) s)) }
 p r o c
     { tok (\p s -> PT p (eitherResIdent (T_PProc . share) s)) }
 r e t u r n
@@ -177,7 +175,6 @@ data Tok =
  | T_PAssignmEq !String
  | T_PRef !String
  | T_PVar !String
- | T_PConst !String
  | T_PProc !String
  | T_PReturn !String
  | T_PTrue !String
@@ -264,7 +261,6 @@ prToken t = case t of
   PT _ (T_PAssignmEq s) -> s
   PT _ (T_PRef s) -> s
   PT _ (T_PVar s) -> s
-  PT _ (T_PConst s) -> s
   PT _ (T_PProc s) -> s
   PT _ (T_PReturn s) -> s
   PT _ (T_PTrue s) -> s

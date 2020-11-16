@@ -38,7 +38,6 @@ import ErrM
   L_PAssignmEq { PT _ (T_PAssignmEq _) }
   L_PRef { PT _ (T_PRef _) }
   L_PVar { PT _ (T_PVar _) }
-  L_PConst { PT _ (T_PConst _) }
   L_PProc { PT _ (T_PProc _) }
   L_PReturn { PT _ (T_PReturn _) }
   L_PTrue { PT _ (T_PTrue _) }
@@ -138,9 +137,6 @@ PRef  : L_PRef { PRef (mkPosToken $1)}
 
 PVar :: { PVar}
 PVar  : L_PVar { PVar (mkPosToken $1)}
-
-PConst :: { PConst}
-PConst  : L_PConst { PConst (mkPosToken $1)}
 
 PProc :: { PProc}
 PProc  : L_PProc { PProc (mkPosToken $1)}
@@ -261,7 +257,6 @@ ListPIdent : PIdent { (:[]) $1 }
            | PIdent ',' ListPIdent { (:) $1 $3 }
 DecMode :: { DecMode }
 DecMode : PVar { AbsChapel.PVarMode $1 }
-        | PConst { AbsChapel.PConstMode $1 }
 Function :: { Function }
 Function : PProc Signature Body { AbsChapel.FunDec $1 $2 $3 }
 Signature :: { Signature }

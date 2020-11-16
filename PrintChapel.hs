@@ -160,9 +160,6 @@ instance Print AbsChapel.PRef where
 instance Print AbsChapel.PVar where
   prt _ (AbsChapel.PVar (_,i)) = doc (showString i)
 
-instance Print AbsChapel.PConst where
-  prt _ (AbsChapel.PConst (_,i)) = doc (showString i)
-
 instance Print AbsChapel.PProc where
   prt _ (AbsChapel.PProc (_,i)) = doc (showString i)
 
@@ -317,7 +314,6 @@ instance Print [AbsChapel.PIdent] where
 instance Print AbsChapel.DecMode where
   prt i e = case e of
     AbsChapel.PVarMode pvar -> prPrec i 0 (concatD [prt 0 pvar])
-    AbsChapel.PConstMode pconst -> prPrec i 0 (concatD [prt 0 pconst])
 
 instance Print AbsChapel.Function where
   prt i e = case e of
