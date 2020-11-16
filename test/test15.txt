@@ -2,23 +2,32 @@ var a :int= 20 ;
 var b = 2;
 var l :[10,20] int;
 
-proc main(l: [1,2]int,ref z:int, kk: int) : string
+proc pippo(ref i:int)
 {
-var u = false;
-   var h = u == u && !(ref u == u);
+return;
+}
 
- var jjj = u == !u;
+proc pippo(i:string)
+{
+   return;
+}
 
-   var f = [[1],[21]];
-   //a = 10;
-      /*a = 10; */
-   return "10";
-   var i = [1];
-   {
+proc pippo(i:int)
+{
+   return;
+}
 
+proc pippo()
+{
+   return;
+}
 
-   }
-    
-    var t =  "ciao" +  main(f, b, 10);
-
+proc main(kk:int) : string
+{
+   pippo("ciao");
+   pippo(ref "ciao");
+   pippo(kk);
+   pippo(ref kk);
+   pippo();
+   return "ciao";
 }

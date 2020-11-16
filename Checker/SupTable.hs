@@ -30,8 +30,13 @@ sup _ _ loc ty1 Void = DataChecker ty1 [ErrorChecker loc ErrorFunctionVoid]
 sup _ _ _ Infered ty = DataChecker ty []
 sup _ _ _ ty Infered = DataChecker ty []
 --Reference
-sup mode id loc (Reference ty1) ty2 = sup mode id loc ty1 ty2
-sup mode id loc ty1 (Reference ty2) = sup mode id loc ty1 ty2
+sup mode id loc (Reference ty1Ref) (Reference ty2Ref) = sup mode id loc ty1Ref ty2Ref
+sup mode id loc ty1@(Reference ty1Ref) ty2 = case mode of 
+  SupFun -> createIncompatible id loc ty1 ty2
+  _ -> sup mode id loc ty1Ref ty2
+sup mode id loc ty1 ty2@(Reference ty2Ref) = case mode of 
+  SupFun -> createIncompatible id loc ty1 ty2
+  _ -> sup mode id loc ty1 ty2Ref
 --Pointer
 sup mode id loc (Pointer _p1) (Pointer _p2) = let DataChecker ty errors = sup mode id loc _p1 _p2 in
   DataChecker (Pointer ty) errors
@@ -201,4 +206,8 @@ convertTypeSpecToTypeInferred Tstring {} = String
 convertTypeSpecToTypeInferred Tbool {} = Bool
 convertTypeSpecToTypeInferred (TPointer _ ty) = Pointer $ convertTypeSpecToTypeInferred ty
 
-convertMode PRef {} = Ref
+convertMode (RefMode (PRef _) ) = Utils.Type.Ref
+
+convertTyMode mode ty = case mode of
+  Ref -> Reference ty
+  _ -> ty

@@ -12,8 +12,6 @@ data Bound = Var String | Fix Int
 instance Eq Type where
     x == y = case (x,y) of
       (Array ty1 _, Array ty2 _) -> ty1 == ty2
-      (Reference ty1, ty2) -> ty1 == ty2
-      (ty1,Reference ty2) -> ty1 == ty2
       (_,_) -> show x == show y
 
 getSubarrayDimension types 0 = types

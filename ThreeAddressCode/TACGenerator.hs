@@ -538,14 +538,20 @@ tacGeneratorFunctionCall expType identifier@(PIdent (_, id)) paramsPassed = do
       return (tacEntry :reverse tacs , idResTemp)
 
 
-tacGeneratorFunctionParameter expType (PassedPar exp) =
-  case exp of
-    Evar identifier@(PIdent (_, id)) -> do
-      tacEnv <- get
-      let Checker.SymbolTable.Variable loc ty = getVarTypeTAC identifier tacEnv
-      let varTemp =  Temp ThreeAddressCode.TAC.Variable id loc ty 
-      return ([], varTemp)
-    _ -> tacGeneratorExpression expType exp
+tacGeneratorFunctionParameter expType paramPassed = case paramPassed of
+  PassedParWMode mode exp ->  tacGeneratorFunctionParameterAux (convertMode mode) exp
+  PassedPar exp -> tacGeneratorFunctionParameterAux  Utils.Type.Normal exp
+  where 
+    tacGeneratorFunctionParameterAux mode exp = 
+      case exp of
+        Evar identifier@(PIdent (_, id)) -> do
+          tacEnv <- get
+          let Checker.SymbolTable.Variable loc ty = getVarTypeTAC identifier tacEnv
+          let varTemp =  Temp ThreeAddressCode.TAC.Variable id loc (convertTyMode mode ty) 
+          return ([], varTemp)
+        _ -> do
+          (tacs, Temp m id loc ty) <- tacGeneratorExpression expType exp
+          return (tacs, Temp m id loc (convertTyMode mode ty))
 
 tacGenerationEntryParameter temp = TACEntry Nothing $ SetParam temp
 

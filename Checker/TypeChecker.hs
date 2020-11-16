@@ -139,7 +139,7 @@ typeCheckerParam x = case x of
   ParNoMode identifiers _ types ->  do
     mapM_ (typeCheckerParam' Normal types) identifiers
     get
-  ParWMode (RefMode mode) identifiers  _ types ->  do
+  ParWMode mode identifiers  _ types ->  do
     mapM_ (typeCheckerParam' (convertMode mode) types) identifiers
     get
 
@@ -415,9 +415,16 @@ checkPassedParams funidentifier environment (DataChecker actual errors) (p:passe
   let err = checkCorrectTypeOfParam (actual + 1) funidentifier p e environment in 
     checkPassedParams funidentifier environment (DataChecker (actual + 1) (errors ++ err)) passedParams (locOver,expectedParams)
 
-checkCorrectTypeOfParam actual (PIdent (_, identifier)) (PassedPar exp) (Variable _ tyVar) environment = 
-  let DataChecker tyExp errorsExp = typeCheckerExpression environment exp;
-      DataChecker _ errorsVar = sup SupFun "" (getExpPos exp) tyExp tyVar in errorsIncompatibleTypesChangeToFun actual identifier (errorsVar ++ errorsExp)
+checkCorrectTypeOfParam actual (PIdent (_, identifier)) passedParam (Variable _ tyVar) environment = case passedParam of
+  PassedParWMode mode exp -> checkCorrectTypeOfParamAux (convertMode mode) exp
+  PassedPar exp -> checkCorrectTypeOfParamAux Utils.Type.Normal exp
+  where 
+    checkCorrectTypeOfParamAux mode exp = 
+      let DataChecker tyExp errorsExp = typeCheckerExpression environment exp
+          DataChecker _ errorsVar = sup SupFun "" (getExpPos exp) tyVar (convertTyMode mode tyExp) in 
+            errorsIncompatibleTypesChangeToFun actual identifier (errorsVar ++ errorsExp)
+
+
 
 errorsIncompatibleTypesChangeToFun pos id = map (errorIncompatibleTypesChangeToFun pos id)
 
