@@ -349,6 +349,7 @@ instance Print [AbsChapel.PassedParam] where
 instance Print AbsChapel.PassedParam where
   prt i e = case e of
     AbsChapel.PassedPar exp -> prPrec i 0 (concatD [prt 0 exp])
+    AbsChapel.PassedParWMode mode exp -> prPrec i 0 (concatD [prt 0 mode, prt 0 exp])
   prtList _ [] = concatD []
   prtList _ [x] = concatD [prt 0 x]
   prtList _ (x:xs) = concatD [prt 0 x, doc (showString ","), prt 0 xs]
@@ -405,27 +406,26 @@ instance Print AbsChapel.Mode where
 
 instance Print AbsChapel.Exp where
   prt i e = case e of
-    AbsChapel.EAss exp1 assgnmop exp2 -> prPrec i 0 (concatD [prt 0 exp1, prt 0 assgnmop, prt 4 exp2])
-    AbsChapel.Elor exp1 pelor exp2 -> prPrec i 4 (concatD [prt 4 exp1, prt 0 pelor, prt 5 exp2])
-    AbsChapel.Eland exp1 peland exp2 -> prPrec i 5 (concatD [prt 5 exp1, prt 0 peland, prt 8 exp2])
-    AbsChapel.Ebitand exp1 pdef exp2 -> prPrec i 8 (concatD [prt 8 exp1, prt 0 pdef, prt 9 exp2])
-    AbsChapel.Eeq exp1 peeq exp2 -> prPrec i 9 (concatD [prt 9 exp1, prt 0 peeq, prt 10 exp2])
-    AbsChapel.Eneq exp1 peneq exp2 -> prPrec i 9 (concatD [prt 9 exp1, prt 0 peneq, prt 10 exp2])
-    AbsChapel.Elthen exp1 pelthen exp2 -> prPrec i 10 (concatD [prt 10 exp1, prt 0 pelthen, prt 11 exp2])
-    AbsChapel.Egrthen exp1 pegrthen exp2 -> prPrec i 10 (concatD [prt 10 exp1, prt 0 pegrthen, prt 11 exp2])
-    AbsChapel.Ele exp1 pele exp2 -> prPrec i 10 (concatD [prt 10 exp1, prt 0 pele, prt 11 exp2])
-    AbsChapel.Ege exp1 pege exp2 -> prPrec i 10 (concatD [prt 10 exp1, prt 0 pege, prt 12 exp2])
-    AbsChapel.Eplus exp1 peplus exp2 -> prPrec i 12 (concatD [prt 12 exp1, prt 0 peplus, prt 13 exp2])
-    AbsChapel.Eminus exp1 peminus exp2 -> prPrec i 12 (concatD [prt 12 exp1, prt 0 peminus, prt 13 exp2])
-    AbsChapel.Etimes exp1 petimes exp2 -> prPrec i 13 (concatD [prt 13 exp1, prt 0 petimes, prt 14 exp2])
-    AbsChapel.Ediv exp1 pediv exp2 -> prPrec i 13 (concatD [prt 13 exp1, prt 0 pediv, prt 14 exp2])
-    AbsChapel.Emod exp1 pemod exp2 -> prPrec i 13 (concatD [prt 13 exp1, prt 0 pemod, prt 14 exp2])
-    AbsChapel.Epreop unaryoperator exp -> prPrec i 14 (concatD [prt 0 unaryoperator, prt 14 exp])
-    AbsChapel.Earray exp arinit -> prPrec i 15 (concatD [prt 15 exp, prt 0 arinit])
-    AbsChapel.InnerExp popenparenthesis exp pcloseparenthesis -> prPrec i 16 (concatD [prt 0 popenparenthesis, prt 0 exp, prt 0 pcloseparenthesis])
-    AbsChapel.EFun pident popenparenthesis passedparams pcloseparenthesis -> prPrec i 16 (concatD [prt 0 pident, prt 0 popenparenthesis, prt 0 passedparams, prt 0 pcloseparenthesis])
-    AbsChapel.Evar pident -> prPrec i 16 (concatD [prt 0 pident])
-    AbsChapel.Econst constant -> prPrec i 16 (concatD [prt 0 constant])
+    AbsChapel.EAss exp1 assgnmop exp2 -> prPrec i 0 (concatD [prt 0 exp1, prt 0 assgnmop, prt 1 exp2])
+    AbsChapel.Elor exp1 pelor exp2 -> prPrec i 1 (concatD [prt 1 exp1, prt 0 pelor, prt 2 exp2])
+    AbsChapel.Eland exp1 peland exp2 -> prPrec i 2 (concatD [prt 2 exp1, prt 0 peland, prt 3 exp2])
+    AbsChapel.Eeq exp1 peeq exp2 -> prPrec i 3 (concatD [prt 3 exp1, prt 0 peeq, prt 4 exp2])
+    AbsChapel.Eneq exp1 peneq exp2 -> prPrec i 3 (concatD [prt 3 exp1, prt 0 peneq, prt 4 exp2])
+    AbsChapel.Elthen exp1 pelthen exp2 -> prPrec i 4 (concatD [prt 4 exp1, prt 0 pelthen, prt 5 exp2])
+    AbsChapel.Egrthen exp1 pegrthen exp2 -> prPrec i 4 (concatD [prt 4 exp1, prt 0 pegrthen, prt 5 exp2])
+    AbsChapel.Ele exp1 pele exp2 -> prPrec i 4 (concatD [prt 4 exp1, prt 0 pele, prt 5 exp2])
+    AbsChapel.Ege exp1 pege exp2 -> prPrec i 4 (concatD [prt 4 exp1, prt 0 pege, prt 5 exp2])
+    AbsChapel.Eplus exp1 peplus exp2 -> prPrec i 5 (concatD [prt 5 exp1, prt 0 peplus, prt 6 exp2])
+    AbsChapel.Eminus exp1 peminus exp2 -> prPrec i 5 (concatD [prt 5 exp1, prt 0 peminus, prt 6 exp2])
+    AbsChapel.Etimes exp1 petimes exp2 -> prPrec i 6 (concatD [prt 6 exp1, prt 0 petimes, prt 7 exp2])
+    AbsChapel.Ediv exp1 pediv exp2 -> prPrec i 6 (concatD [prt 6 exp1, prt 0 pediv, prt 7 exp2])
+    AbsChapel.Emod exp1 pemod exp2 -> prPrec i 6 (concatD [prt 6 exp1, prt 0 pemod, prt 7 exp2])
+    AbsChapel.Epreop unaryoperator exp -> prPrec i 7 (concatD [prt 0 unaryoperator, prt 8 exp])
+    AbsChapel.Earray exp arinit -> prPrec i 8 (concatD [prt 9 exp, prt 0 arinit])
+    AbsChapel.InnerExp popenparenthesis exp pcloseparenthesis -> prPrec i 9 (concatD [prt 0 popenparenthesis, prt 0 exp, prt 0 pcloseparenthesis])
+    AbsChapel.EFun pident popenparenthesis passedparams pcloseparenthesis -> prPrec i 9 (concatD [prt 0 pident, prt 0 popenparenthesis, prt 0 passedparams, prt 0 pcloseparenthesis])
+    AbsChapel.Evar pident -> prPrec i 9 (concatD [prt 0 pident])
+    AbsChapel.Econst constant -> prPrec i 9 (concatD [prt 0 constant])
 
 instance Print AbsChapel.UnaryOperator where
   prt i e = case e of

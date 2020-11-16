@@ -308,15 +308,15 @@ tacGeneratorVariable expType identifier@(PIdent (_, id)) = do
   let varTemp =  Temp ThreeAddressCode.TAC.Variable id loc ty
   case ty of 
     Reference tyRef -> case expType of
-      RightExp -> createReferenceEntry loc tyRef varTemp
-      LeftExp ->  return ([], varTemp)
-      BooleanExp -> do
-        (tacs, valTemp) <- createReferenceEntry loc tyRef varTemp  
-        (tacsBool, boolTemp) <- tacGeneratorBooleanVariable valTemp
-        return (tacs ++ tacsBool,boolTemp)
-    _ -> case expType of 
-      BooleanExp -> tacGeneratorBooleanVariable varTemp
-      _ -> return ([], varTemp)
+      LeftExp ->  return ([], varTemp) 
+      _ ->  case tyRef of
+        Bool -> do
+          (tacs, tempRef) <- createReferenceEntry loc tyRef varTemp
+          (tacsBool, temp) <- tacGeneratorBooleanVariable  tempRef
+          return (tacs ++ tacsBool, temp)
+        _-> createReferenceEntry loc tyRef varTemp
+    Bool -> tacGeneratorBooleanVariable varTemp
+    _ -> return ([], varTemp)
     where 
       createReferenceEntry loc tyRef varTemp = do
         idVal <- newtemp

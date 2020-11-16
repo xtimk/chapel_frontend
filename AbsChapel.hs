@@ -211,7 +211,7 @@ data Param
     | ParWMode Mode [PIdent] PColon TypeSpec
   deriving (Eq, Ord, Show, Read)
 
-data PassedParam = PassedPar Exp
+data PassedParam = PassedPar Exp | PassedParWMode Mode Exp
   deriving (Eq, Ord, Show, Read)
 
 data Body = BodyBlock POpenGraph [BodyStatement] PCloseGraph
@@ -258,7 +258,6 @@ data Exp
     = EAss Exp AssgnmOp Exp
     | Elor Exp PElor Exp
     | Eland Exp PEland Exp
-    | Ebitand Exp PDef Exp
     | Eeq Exp PEeq Exp
     | Eneq Exp PEneq Exp
     | Elthen Exp PElthen Exp
