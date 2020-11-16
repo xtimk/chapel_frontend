@@ -73,15 +73,19 @@ typeCheckerIdentifiers identifiers assgn typeLeft typeRight = do
   get
 
 typeCheckerFunction (FunDec (PProc (loc@(l,c),_) ) signature body@(BodyBlock  (POpenGraph (locGraph,_)) _ _)) = do
-  typeCheckerSignature loc locGraph signature
-  typeCheckerBody ProcedureBlk (createId' l c (getFunName signature)) body
+  tyReturn <- typeCheckerSignature loc locGraph signature
+  typeCheckerBody (ProcedureBlk tyReturn) (createId' l c (getFunName signature)) body
   get  
 
 typeCheckerSignature locstart locEnd signature = case signature of
-  SignNoRet identifier (FunParams _ params _) -> typeCheckerSignature' locstart locEnd identifier params Utils.Type.Void
+  SignNoRet identifier (FunParams _ params _) -> do
+    let tyReturn = Utils.Type.Void
+    typeCheckerSignature' locstart locEnd identifier params tyReturn
+    return tyReturn
   SignWRet identifier (FunParams _ params _) _ types -> do
-    tyLeft <- typeCheckerTypeSpecification types
-    typeCheckerSignature' locstart locEnd identifier params tyLeft
+    tyReturn <- typeCheckerTypeSpecification types
+    typeCheckerSignature' locstart locEnd identifier params tyReturn
+    return tyReturn
 
 typeCheckerSignature' locstart locEnd ident@(PIdent (loc,identifier)) params types = 
   case types of
@@ -245,7 +249,7 @@ typeCheckerStatement statement = case statement of
 typeCheckerReturn (PReturn (pos, _ret)) tyret = do 
   (_s,tree,current_id) <- get
   case findProcedureGetBlkType tree current_id of
-    ProcedureBlk -> do
+    ProcedureBlk _ -> do
       let DataChecker tyfun errs1 = getFunRetType (_s,tree,current_id);
       let DataChecker _ errs = sup SupRet (getFunNameFromEnv (_s,tree,current_id)) pos tyret tyfun 
       let errors = errs1 ++ errs 
@@ -464,7 +468,7 @@ getDeclarationDimension environment (array:arrays) = let DataChecker dimension e
 typeCheckerReturns bp@(Node _ _ _ startnodes) = concat (map typeCheckerReturnPresenceFun startnodes)
 
 typeCheckerReturnPresenceFun :: BPTree BP -> [ErrorChecker]
-typeCheckerReturnPresenceFun (node@(Node (funname,(locstart,locend)) (BP _ rets _ ProcedureBlk) _ (children))) = 
+typeCheckerReturnPresenceFun (node@(Node (funname,(locstart,locend)) (BP _ rets _ (ProcedureBlk _)) _ (children))) = 
   if null rets
     then
       typeCheckerReturnPresence children funname (locstart,locend)
@@ -483,7 +487,9 @@ typeCheckerReturnPresenceElse node@(Node id (BP _ rets _ IfElseBlk) _ (children)
 
 getblkStartEndPos (Node (_,(act_locstart, act_locend)) (BP _ rets _ blocktype) _ (children)) = (act_locstart, act_locend)
 
-isNodeAProc node@(Node (_,(act_locstart, act_locend)) (BP _ rets _ blocktype) _ (children)) = blocktype == ProcedureBlk
+isNodeAProc node@(Node (_,(act_locstart, act_locend)) (BP _ rets _ blocktype) _ (children)) = case blocktype of
+   ProcedureBlk _ -> True
+   _ -> False
 
 continueCheckerRetPresenceOnSubProcs children xs = 
   let declFunsInChildren = filter isNodeAProc children;
@@ -531,7 +537,7 @@ typeCheckerReturnPresence (node@(Node (_,(act_locstart, act_locend)) (BP _ rets 
                   then [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
                   else (typeCheckerReturnPresence (tail xs) funname (getblkStartEndPos (head (tail xs))))
 
-    ProcedureBlk -> 
+    ProcedureBlk _ -> 
         if null rets -- se non ci sono return al blocco base
           then
             let c = typeCheckerReturnPresence children funname (act_locstart, act_locend) in
