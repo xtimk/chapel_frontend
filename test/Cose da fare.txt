@@ -9,4 +9,5 @@ Vedere se mettere ++ o --
 Controllare visualizzazione errori
 Controllare che le variabili siano inizializzate
 Controllare &* o *& o &(*)
+OBBLIGATORIO aggiungere il tipo di modo nel passaggio di parametri.
 

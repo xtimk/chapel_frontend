@@ -282,6 +282,7 @@ ListPassedParam : {- empty -} { [] }
                 | PassedParam ',' ListPassedParam { (:) $1 $3 }
 PassedParam :: { PassedParam }
 PassedParam : Exp { AbsChapel.PassedPar $1 }
+            | Mode Exp { AbsChapel.PassedParWMode $1 $2 }
 Body :: { Body }
 Body : POpenGraph ListBodyStatement PCloseGraph { AbsChapel.BodyBlock $1 (reverse $2) $3 }
 ListBodyStatement :: { [BodyStatement] }
@@ -317,48 +318,39 @@ AssgnmOp : PAssignmEq { AbsChapel.AssgnEq $1 }
 Mode :: { Mode }
 Mode : PRef { AbsChapel.RefMode $1 }
 Exp :: { Exp }
-Exp : Exp AssgnmOp Exp4 { AbsChapel.EAss $1 $2 $3 } | Exp4 { $1 }
+Exp : Exp AssgnmOp Exp1 { AbsChapel.EAss $1 $2 $3 } | Exp1 { $1 }
+Exp1 :: { Exp }
+Exp1 : Exp1 PElor Exp2 { AbsChapel.Elor $1 $2 $3 } | Exp2 { $1 }
+Exp2 :: { Exp }
+Exp2 : Exp2 PEland Exp3 { AbsChapel.Eland $1 $2 $3 } | Exp3 { $1 }
+Exp3 :: { Exp }
+Exp3 : Exp3 PEeq Exp4 { AbsChapel.Eeq $1 $2 $3 }
+     | Exp3 PEneq Exp4 { AbsChapel.Eneq $1 $2 $3 }
+     | Exp4 { $1 }
 Exp4 :: { Exp }
-Exp4 : Exp4 PElor Exp5 { AbsChapel.Elor $1 $2 $3 } | Exp5 { $1 }
+Exp4 : Exp4 PElthen Exp5 { AbsChapel.Elthen $1 $2 $3 }
+     | Exp4 PEgrthen Exp5 { AbsChapel.Egrthen $1 $2 $3 }
+     | Exp4 PEle Exp5 { AbsChapel.Ele $1 $2 $3 }
+     | Exp4 PEge Exp5 { AbsChapel.Ege $1 $2 $3 }
+     | Exp5 { $1 }
 Exp5 :: { Exp }
-Exp5 : Exp5 PEland Exp8 { AbsChapel.Eland $1 $2 $3 } | Exp6 { $1 }
-Exp8 :: { Exp }
-Exp8 : Exp8 PDef Exp9 { AbsChapel.Ebitand $1 $2 $3 } | Exp9 { $1 }
-Exp9 :: { Exp }
-Exp9 : Exp9 PEeq Exp10 { AbsChapel.Eeq $1 $2 $3 }
-     | Exp9 PEneq Exp10 { AbsChapel.Eneq $1 $2 $3 }
-     | Exp10 { $1 }
-Exp10 :: { Exp }
-Exp10 : Exp10 PElthen Exp11 { AbsChapel.Elthen $1 $2 $3 }
-      | Exp10 PEgrthen Exp11 { AbsChapel.Egrthen $1 $2 $3 }
-      | Exp10 PEle Exp11 { AbsChapel.Ele $1 $2 $3 }
-      | Exp10 PEge Exp12 { AbsChapel.Ege $1 $2 $3 }
-      | Exp11 { $1 }
-Exp12 :: { Exp }
-Exp12 : Exp12 PEplus Exp13 { AbsChapel.Eplus $1 $2 $3 }
-      | Exp12 PEminus Exp13 { AbsChapel.Eminus $1 $2 $3 }
-      | Exp13 { $1 }
-Exp13 :: { Exp }
-Exp13 : Exp13 PEtimes Exp14 { AbsChapel.Etimes $1 $2 $3 }
-      | Exp13 PEdiv Exp14 { AbsChapel.Ediv $1 $2 $3 }
-      | Exp13 PEmod Exp14 { AbsChapel.Emod $1 $2 $3 }
-      | Exp14 { $1 }
-Exp14 :: { Exp }
-Exp14 : UnaryOperator Exp14 { AbsChapel.Epreop $1 $2 }
-      | Exp15 { $1 }
-Exp15 :: { Exp }
-Exp15 : Exp15 ArInit { AbsChapel.Earray $1 $2 } | Exp16 { $1 }
+Exp5 : Exp5 PEplus Exp6 { AbsChapel.Eplus $1 $2 $3 }
+     | Exp5 PEminus Exp6 { AbsChapel.Eminus $1 $2 $3 }
+     | Exp6 { $1 }
 Exp6 :: { Exp }
-Exp6 : Exp7 { $1 }
+Exp6 : Exp6 PEtimes Exp7 { AbsChapel.Etimes $1 $2 $3 }
+     | Exp6 PEdiv Exp7 { AbsChapel.Ediv $1 $2 $3 }
+     | Exp6 PEmod Exp7 { AbsChapel.Emod $1 $2 $3 }
+     | Exp7 { $1 }
 Exp7 :: { Exp }
-Exp7 : Exp8 { $1 }
-Exp11 :: { Exp }
-Exp11 : Exp12 { $1 }
-Exp16 :: { Exp }
-Exp16 : POpenParenthesis Exp PCloseParenthesis { AbsChapel.InnerExp $1 $2 $3 }
-      | PIdent POpenParenthesis ListPassedParam PCloseParenthesis { AbsChapel.EFun $1 $2 $3 $4 }
-      | PIdent { AbsChapel.Evar $1 }
-      | Constant { AbsChapel.Econst $1 }
+Exp7 : UnaryOperator Exp8 { AbsChapel.Epreop $1 $2 } | Exp8 { $1 }
+Exp8 :: { Exp }
+Exp8 : Exp9 ArInit { AbsChapel.Earray $1 $2 } | Exp9 { $1 }
+Exp9 :: { Exp }
+Exp9 : POpenParenthesis Exp PCloseParenthesis { AbsChapel.InnerExp $1 $2 $3 }
+     | PIdent POpenParenthesis ListPassedParam PCloseParenthesis { AbsChapel.EFun $1 $2 $3 $4 }
+     | PIdent { AbsChapel.Evar $1 }
+     | Constant { AbsChapel.Econst $1 }
 UnaryOperator :: { UnaryOperator }
 UnaryOperator : PNeg { AbsChapel.Negation $1 }
               | PDef { AbsChapel.Address $1 }

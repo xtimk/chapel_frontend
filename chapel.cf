@@ -152,7 +152,8 @@ ParWMode.      Param  ::= Mode [PIdent] PColon TypeSpec ;
 
 
 -- parameters of procedures
-PassedPar.     PassedParam ::= Exp ;
+PassedPar.      PassedParam ::= Exp ;
+PassedParWMode. PassedParam ::= Mode Exp ;
 -- ParWMode.      PassedParam  ::= Mode [PIdent] PColon Type ;
 
 BodyBlock.       Body ::= POpenGraph [BodyStatement] PCloseGraph ;
@@ -194,46 +195,41 @@ AssgnPlEq. AssgnmOp ::= PAssignmPlus ;
 RefMode.   Mode ::= PRef ;
 
 
-EAss.        Exp ::= Exp AssgnmOp Exp4;
-Elor.        Exp4  ::= Exp4 PElor Exp5;
-Eland.       Exp5  ::= Exp5 PEland Exp8;
-Ebitand.     Exp8  ::= Exp8 PDef Exp9;
-Eeq.         Exp9  ::= Exp9 PEeq Exp10;
-Eneq.        Exp9  ::= Exp9 PEneq Exp10;
-Elthen.      Exp10 ::= Exp10 PElthen Exp11;
-Egrthen.     Exp10 ::= Exp10 PEgrthen Exp11;
-Ele.         Exp10 ::= Exp10 PEle Exp11;
-Ege.         Exp10 ::= Exp10 PEge Exp12;
-Eplus.       Exp12 ::= Exp12 PEplus Exp13;
-Eminus.      Exp12 ::= Exp12 PEminus Exp13;
-Etimes.      Exp13 ::= Exp13 PEtimes Exp14;
-Ediv.        Exp13 ::= Exp13 PEdiv Exp14;
-Emod.        Exp13 ::= Exp13 PEmod Exp14;
-Epreop.      Exp14 ::= UnaryOperator Exp14;
-Earray.      Exp15 ::= Exp15 ArInit ;
+EAss.        Exp ::= Exp AssgnmOp Exp1;
+Elor.        Exp1  ::= Exp1 PElor Exp2;
+Eland.       Exp2  ::= Exp2 PEland Exp3;
+Eeq.         Exp3  ::= Exp3 PEeq Exp4;
+Eneq.        Exp3  ::= Exp3 PEneq Exp4;
+Elthen.      Exp4 ::= Exp4 PElthen Exp5;
+Egrthen.     Exp4 ::= Exp4 PEgrthen Exp5;
+Ele.         Exp4 ::= Exp4 PEle Exp5;
+Ege.         Exp4 ::= Exp4 PEge Exp5;
+Eplus.       Exp5 ::= Exp5 PEplus Exp6;
+Eminus.      Exp5 ::= Exp5 PEminus Exp6;
+Etimes.      Exp6 ::= Exp6 PEtimes Exp7;
+Ediv.        Exp6 ::= Exp6 PEdiv Exp7;
+Emod.        Exp6 ::= Exp6 PEmod Exp7;
+Epreop.      Exp7 ::= UnaryOperator Exp8;
+Earray.      Exp8 ::= Exp9 ArInit ;
 
-_. Exp  ::= Exp4 ;
-_. Exp4  ::= Exp5 ;
-_. Exp5  ::= Exp6 ;
-_. Exp6  ::= Exp7 ;
-_. Exp7  ::= Exp8 ;
-_. Exp8  ::= Exp9 ;
-_. Exp9  ::= Exp10 ;
-_. Exp10 ::= Exp11 ;
-_. Exp11 ::= Exp12 ;
-_. Exp12 ::= Exp13 ;
-_. Exp13 ::= Exp14 ;
-_. Exp14 ::= Exp15 ;
-_. Exp15 ::= Exp16 ;
-InnerExp. Exp16 ::= POpenParenthesis Exp PCloseParenthesis ;
+_. Exp  ::= Exp1 ;
+_. Exp1 ::= Exp2 ;
+_. Exp2 ::= Exp3 ;
+_. Exp3 ::= Exp4 ;
+_. Exp4 ::= Exp5 ;
+_. Exp5 ::= Exp6 ;
+_. Exp6 ::= Exp7 ;
+_. Exp7 ::= Exp8 ;
+_. Exp8 ::= Exp9 ;
+InnerExp. Exp9 ::= POpenParenthesis Exp PCloseParenthesis ;
 
 Negation.      UnaryOperator ::= PNeg ;
 Address.      UnaryOperator ::= PDef ;
 Indirection.  UnaryOperator ::= PEtimes ;
 
-EFun.        Exp16 ::= PIdent POpenParenthesis [PassedParam] PCloseParenthesis ;
-Evar.        Exp16 ::= PIdent;
-Econst.      Exp16 ::= Constant;
+EFun.        Exp9 ::= PIdent POpenParenthesis [PassedParam] PCloseParenthesis ;
+Evar.        Exp9 ::= PIdent;
+Econst.      Exp9 ::= Constant;
 
 Estring.       Constant ::= PString;
 Efloat.        Constant ::= PDouble;

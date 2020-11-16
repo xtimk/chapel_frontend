@@ -276,6 +276,7 @@ All other symbols are terminals.
   |  |  **|**  | //PassedParam//
   |  |  **|**  | //PassedParam// ``,`` //[PassedParam]//
   | //PassedParam// | -> | //Exp//
+  |  |  **|**  | //Mode// //Exp//
   | //Body// | -> | //POpenGraph// //[BodyStatement]// //PCloseGraph//
   | //[BodyStatement]// | -> | **eps**
   |  |  **|**  | //BodyStatement// //[BodyStatement]//
@@ -302,37 +303,32 @@ All other symbols are terminals.
   | //AssgnmOp// | -> | //PAssignmEq//
   |  |  **|**  | //PAssignmPlus//
   | //Mode// | -> | //PRef//
-  | //Exp// | -> | //Exp// //AssgnmOp// //Exp4//
+  | //Exp// | -> | //Exp// //AssgnmOp// //Exp1//
+  |  |  **|**  | //Exp1//
+  | //Exp1// | -> | //Exp1// //PElor// //Exp2//
+  |  |  **|**  | //Exp2//
+  | //Exp2// | -> | //Exp2// //PEland// //Exp3//
+  |  |  **|**  | //Exp3//
+  | //Exp3// | -> | //Exp3// //PEeq// //Exp4//
+  |  |  **|**  | //Exp3// //PEneq// //Exp4//
   |  |  **|**  | //Exp4//
-  | //Exp4// | -> | //Exp4// //PElor// //Exp5//
+  | //Exp4// | -> | //Exp4// //PElthen// //Exp5//
+  |  |  **|**  | //Exp4// //PEgrthen// //Exp5//
+  |  |  **|**  | //Exp4// //PEle// //Exp5//
+  |  |  **|**  | //Exp4// //PEge// //Exp5//
   |  |  **|**  | //Exp5//
-  | //Exp5// | -> | //Exp5// //PEland// //Exp8//
+  | //Exp5// | -> | //Exp5// //PEplus// //Exp6//
+  |  |  **|**  | //Exp5// //PEminus// //Exp6//
   |  |  **|**  | //Exp6//
-  | //Exp8// | -> | //Exp8// //PDef// //Exp9//
+  | //Exp6// | -> | //Exp6// //PEtimes// //Exp7//
+  |  |  **|**  | //Exp6// //PEdiv// //Exp7//
+  |  |  **|**  | //Exp6// //PEmod// //Exp7//
+  |  |  **|**  | //Exp7//
+  | //Exp7// | -> | //UnaryOperator// //Exp8//
+  |  |  **|**  | //Exp8//
+  | //Exp8// | -> | //Exp9// //ArInit//
   |  |  **|**  | //Exp9//
-  | //Exp9// | -> | //Exp9// //PEeq// //Exp10//
-  |  |  **|**  | //Exp9// //PEneq// //Exp10//
-  |  |  **|**  | //Exp10//
-  | //Exp10// | -> | //Exp10// //PElthen// //Exp11//
-  |  |  **|**  | //Exp10// //PEgrthen// //Exp11//
-  |  |  **|**  | //Exp10// //PEle// //Exp11//
-  |  |  **|**  | //Exp10// //PEge// //Exp12//
-  |  |  **|**  | //Exp11//
-  | //Exp12// | -> | //Exp12// //PEplus// //Exp13//
-  |  |  **|**  | //Exp12// //PEminus// //Exp13//
-  |  |  **|**  | //Exp13//
-  | //Exp13// | -> | //Exp13// //PEtimes// //Exp14//
-  |  |  **|**  | //Exp13// //PEdiv// //Exp14//
-  |  |  **|**  | //Exp13// //PEmod// //Exp14//
-  |  |  **|**  | //Exp14//
-  | //Exp14// | -> | //UnaryOperator// //Exp14//
-  |  |  **|**  | //Exp15//
-  | //Exp15// | -> | //Exp15// //ArInit//
-  |  |  **|**  | //Exp16//
-  | //Exp6// | -> | //Exp7//
-  | //Exp7// | -> | //Exp8//
-  | //Exp11// | -> | //Exp12//
-  | //Exp16// | -> | //POpenParenthesis// //Exp// //PCloseParenthesis//
+  | //Exp9// | -> | //POpenParenthesis// //Exp// //PCloseParenthesis//
   |  |  **|**  | //PIdent// //POpenParenthesis// //[PassedParam]// //PCloseParenthesis//
   |  |  **|**  | //PIdent//
   |  |  **|**  | //Constant//

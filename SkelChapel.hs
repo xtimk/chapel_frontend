@@ -220,6 +220,7 @@ transParam x = case x of
 transPassedParam :: PassedParam -> Result
 transPassedParam x = case x of
   PassedPar exp -> failure x
+  PassedParWMode mode exp -> failure x
 transBody :: Body -> Result
 transBody x = case x of
   BodyBlock popengraph bodystatements pclosegraph -> failure x
@@ -263,7 +264,6 @@ transExp x = case x of
   EAss exp1 assgnmop exp2 -> failure x
   Elor exp1 pelor exp2 -> failure x
   Eland exp1 peland exp2 -> failure x
-  Ebitand exp1 pdef exp2 -> failure x
   Eeq exp1 peeq exp2 -> failure x
   Eneq exp1 peneq exp2 -> failure x
   Elthen exp1 pelthen exp2 -> failure x

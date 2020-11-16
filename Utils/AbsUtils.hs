@@ -30,7 +30,6 @@ getExpPos exp = case exp of
     EAss e1 _ _ -> getExpPos e1
     Elor e1 _ _ -> getExpPos e1
     Eland e1 _ _ -> getExpPos e1
-    Ebitand e1 _ _ -> getExpPos e1
     Eeq e1 _ _ -> getExpPos e1
     Eneq e1 _ _ -> getExpPos e1
     Elthen e1 _ _ -> getExpPos e1

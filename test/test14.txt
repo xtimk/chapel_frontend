@@ -1,6 +1,7 @@
 var a = 1;
 var b = 2;
 var c : bool;
+var u: bool;
 
 var f = [[[5 > 6, 7 < 8],[6 < 8,4 <849]],[[66 + 7 < 40,6 < 9 && c],[c == c,c]]];
 
@@ -21,6 +22,7 @@ proc main(l: int,ref z:int)
     do while 
     {
         a = 4;
+        return;
         
     }((((6 < 8 || 6 < 8) && 6 < 8) || 6 < 8) && 6 < 8)
 
