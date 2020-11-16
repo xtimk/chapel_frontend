@@ -1,13 +1,21 @@
 TYPE CHECKER
 
-OBBLIGATORIO: Vedere che i return compaiono sempre (do, while, if, altre cagate)
-Dichiarazioni di funzioni e variabili in ordine sparso nel modulo principale
-Fare test vari
-Decidere se fare overload funzioni anche nelle funzioni dichiarate nelle funzioni
-OBBLIGATORIO: Controllare dimensioni in lunghezza degli array
-Vedere se mettere ++ o --
-Controllare visualizzazione errori
-Controllare che le variabili siano inizializzate
-Controllare &* o *& o &(*)
-OBBLIGATORIO aggiungere il tipo di modo nel passaggio di parametri.
+Facoltativa: Dichiarazioni di funzioni e variabili in ordine sparso nel modulo principale
+Facoltativa: Vedere se mettere ++ o --
 
+OBBLIGATORIO: Controllare dimensioni in lunghezza degli array
+OBBLIGATORIO: Controllare suptable che sia conforme a quanto scritto nella relazione.
+OBBLIGATORIO: Print del TAC con i cast.
+OBBLIGATORIO: Controllare il ! nella valutazione lazy delle variabili booleane
+
+SEMI-OBBLIGATORIO: Introdurre il - unario.
+SEMI-OBBLIGATORIO: Controllare che le variabili siano inizializzate
+
+Fare test vari
+Controllare visualizzazione errori
+
+Fatte:
+
+OBBLIGATORIO: Vedere che i return compaiono sempre (do, while, if, altre cagate)
+OBBLIGATORIO aggiungere il tipo di modo nel passaggio di parametri.
+SEMI-OBBLIGATORIO: Controllare &* o *& o &(*) (avere *&*&*&*& in successione)
