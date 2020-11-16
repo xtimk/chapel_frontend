@@ -134,7 +134,6 @@ printTokens' (x@(PT (Pn _ l c ) token ):xs) = " " ++ case token of
   T_PAssignmEq id -> id ++ printTokens' xs
   T_PRef id -> id ++ printTokens' xs
   T_PVar id -> id ++ printTokens' xs
-  T_PConst id -> id ++ printTokens' xs
   T_PNeg id -> id ++ printTokens' xs
   T_PProc id -> id ++ printTokens' xs
   T_PReturn id -> id ++ printTokens' xs

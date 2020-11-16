@@ -81,9 +81,6 @@ transPRef x = case x of
 transPVar :: PVar -> Result
 transPVar x = case x of
   PVar string -> failure x
-transPConst :: PConst -> Result
-transPConst x = case x of
-  PConst string -> failure x
 transPProc :: PProc -> Result
 transPProc x = case x of
   PProc string -> failure x
@@ -202,7 +199,6 @@ transArBound x = case x of
 transDecMode :: DecMode -> Result
 transDecMode x = case x of
   PVarMode pvar -> failure x
-  PConstMode pconst -> failure x
 transFunction :: Function -> Result
 transFunction x = case x of
   FunDec pproc signature body -> failure x
