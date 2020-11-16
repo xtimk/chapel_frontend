@@ -75,9 +75,6 @@ newtype PRef = PRef ((Int,Int),String)
 newtype PVar = PVar ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
-newtype PConst = PConst ((Int,Int),String)
-  deriving (Eq, Ord, Show, Read)
-
 newtype PProc = PProc ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
@@ -191,7 +188,7 @@ data ArDim
 data ArBound = ArrayBoundIdent PIdent | ArratBoundConst Constant
   deriving (Eq, Ord, Show, Read)
 
-data DecMode = PVarMode PVar | PConstMode PConst
+data DecMode = PVarMode PVar
   deriving (Eq, Ord, Show, Read)
 
 data Function = FunDec PProc Signature Body
