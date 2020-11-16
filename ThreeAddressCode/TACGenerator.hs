@@ -256,7 +256,10 @@ tacGeneratorExpression expType exp = case exp of
     Epreop (Indirection (PEtimes (loc,_))) e1 -> tacGeneratorPointer expType loc e1 
     Epreop (Address (PDef (loc,_) )) e1 -> tacGeneratorAddress expType loc e1
     Earray expIdentifier arDeclaration -> tacGeneratorArrayIndexing expIdentifier arDeclaration
-    EFun funidentifier _ passedparams _ -> tacGeneratorFunctionCall expType funidentifier passedparams
+    EFun funidentifier _ passedparams _ -> 
+      do
+        (tacs, temp) <- tacGeneratorFunctionCall expType funidentifier passedparams
+        return (reverse tacs, temp)
     Evar identifier -> tacGeneratorVariable expType identifier
     Econst constant@(ETrue _) -> tacCheckExpressionConstantBoolean expType constant
     Econst constant@(EFalse _) ->  do
@@ -530,12 +533,12 @@ tacGeneratorFunctionCall expType identifier@(PIdent (_, id)) paramsPassed = do
   case retTy of
     Utils.Type.Void -> do
       let tacEntry = TACEntry Nothing $ CallProc funTemp parameterLenght
-      return (tacs ++ [ tacEntry],funTemp)
+      return (tacs ++ [tacEntry],funTemp)
     _ -> do
       idResFun <- newtemp
       let idResTemp = Temp ThreeAddressCode.TAC.Temporary idResFun loc retTy
       let tacEntry = TACEntry Nothing $ CallFun idResTemp funTemp parameterLenght
-      return (tacEntry :reverse tacs , idResTemp)
+      return (tacs ++ [tacEntry], idResTemp)
 
 
 tacGeneratorFunctionParameter expType paramPassed = case paramPassed of

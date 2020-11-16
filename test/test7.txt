@@ -6,13 +6,22 @@ proc main() : int {
 
     }
     return 5;
-    proc pluto() : int {
+    proc pluto(ref x : int) : int {
         if (2 < 1) then {
             return 4;
         }
         else {
-
+            return 6;
         }
     };
+
+    proc myvoid(){
+
+    };
+    var b = 5;
+    var a = &b;
+
+    pluto(ref b);
+    var asd = pluto(ref b);
 
 }
