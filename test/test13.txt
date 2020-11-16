@@ -6,12 +6,6 @@ proc main(l: int,ref z:int, kk: int)
 {
     
 
-    var ghi : *int= &kk;
-    var go : **int = &ghi;
-    var gaga : ***int= &go;
-    ***gaga += 10;
-
-    l = *ghi + **go + ***gaga;
 
     a + 5;
 }
