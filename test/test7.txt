@@ -6,7 +6,7 @@ proc main() : int {
 
     }
     return 5;
-    proc pluto( x : int) : int {
+    proc pluto(ref x : int) : int {
         if (2 < 1) then {
             return 4;
         }
@@ -18,9 +18,10 @@ proc main() : int {
     proc myvoid(){
 
     };
+    var b = 5;
+    var a = &b;
 
-    pluto(2);
-    var asd = pluto(2);
-    myvoid();
+    pluto(ref b);
+    var asd = pluto(ref b);
 
 }

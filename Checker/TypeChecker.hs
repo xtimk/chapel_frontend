@@ -422,11 +422,20 @@ checkPassedParams funidentifier environment (DataChecker actual errors) (p:passe
 checkCorrectTypeOfParam actual (PIdent (_, identifier)) passedParam (Variable _ tyVar) environment = case passedParam of
   PassedParWMode mode exp -> checkCorrectTypeOfParamAux (convertMode mode) exp
   PassedPar exp -> checkCorrectTypeOfParamAux Utils.Type.Normal exp
-  where 
+  where
     checkCorrectTypeOfParamAux mode exp = 
-      let DataChecker tyExp errorsExp = typeCheckerExpression environment exp
-          DataChecker _ errorsVar = sup SupFun "" (getExpPos exp) tyVar (convertTyMode mode tyExp) in 
-            errorsIncompatibleTypesChangeToFun actual identifier (errorsVar ++ errorsExp)
+      case mode of
+        Utils.Type.Ref -> 
+          case exp of
+            Evar (PIdent (_, identifier)) ->
+              let DataChecker tyExp errorsExp = typeCheckerExpression environment exp
+                  DataChecker _ errorsVar = sup SupFun "" (getExpPos exp) tyVar (convertTyMode mode tyExp) in 
+                    errorsIncompatibleTypesChangeToFun actual identifier (errorsVar ++ errorsExp)
+            _ -> [ErrorChecker (getExpPos exp) ErrorCantUseExprInARefPassedVar]
+        Utils.Type.Normal ->
+          let DataChecker tyExp errorsExp = typeCheckerExpression environment exp
+              DataChecker _ errorsVar = sup SupFun "" (getExpPos exp) tyVar (convertTyMode mode tyExp) in 
+                errorsIncompatibleTypesChangeToFun actual identifier (errorsVar ++ errorsExp)
 
 
 
