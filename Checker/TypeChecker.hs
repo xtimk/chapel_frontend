@@ -474,7 +474,7 @@ getDeclarationDimension environment (array:arrays) = let DataChecker dimension e
 
 -- funzione di typechecking che controlla se ci sono return nelle funzioni, 
 -- e che i return siano in tutti i path del codice
-typeCheckerReturns bp@(Node _ _ _ startnodes) = concatMap typeCheckerReturnPresenceFun startnodes
+typeCheckerReturns (Node _ _ _ startnodes) = concatMap typeCheckerReturnPresenceFun startnodes
 
 typeCheckerReturnPresenceFun :: BPTree BP -> [ErrorChecker]
 typeCheckerReturnPresenceFun ((Node (funname,(locstart,locend)) (BP _ rets _ (ProcedureBlk tyret)) _ children)) = 
@@ -513,9 +513,9 @@ continueCheckerRetPresenceOnSubProcs children xs =
         aheads = concatMap typeCheckerReturnPresenceFun declFunsAhead in
         childrens ++ aheads
 
-typeCheckerReturnPresence [] funname (locstart, locend) = [ErrorChecker locstart $ ErrorFunctionWithNotEnoughReturns funname]
+typeCheckerReturnPresence [] funname (locstart, _locend) = [ErrorChecker locstart $ ErrorFunctionWithNotEnoughReturns funname]
 
-typeCheckerReturnPresence ((Node (_,(act_locstart, act_locend)) (BP _ rets _ blocktype) _ children):xs) funname (locstart, locend) =
+typeCheckerReturnPresence ((Node (_,(act_locstart, act_locend)) (BP _ rets _ blocktype) _ children):xs) funname (locstart, _locend) =
   case blocktype of
     IfSimpleBlk -> 
       if null xs
