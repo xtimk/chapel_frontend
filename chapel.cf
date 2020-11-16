@@ -36,7 +36,7 @@ position token PAssignmEq ('=') ;
 position token PRef ({"ref"});
 
 position token PVar ({"var"});
-position token PConst ({"const"});
+
 
 position token PProc({"proc"});
 
@@ -123,7 +123,7 @@ ArratBoundConst.     ArBound ::= Constant ;
 (:).      [PIdent] ::= PIdent "," [PIdent];
 
 PVarMode.   DecMode ::= PVar ;
-PConstMode.   DecMode ::= PConst ;
+
 
 
 
