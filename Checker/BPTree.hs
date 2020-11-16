@@ -27,7 +27,7 @@ data BP = BP {
 data BlkType = 
   DoWhileBlk |
   WhileBlk |
-  ProcedureBlk |
+  ProcedureBlk Utils.Type.Type|
   ExternalBlk |
   SimpleBlk |
   IfSimpleBlk |
@@ -87,7 +87,7 @@ findParentsBlockType blkType tree currentId = filter (findFirstParentBlockType' 
 findProcedureGetBlkType tree current_id = 
     let node = findNodeById current_id tree in
         case getBlkTypeSimple node of
-            ProcedureBlk -> ProcedureBlk
+            ProcedureBlk tyRet -> ProcedureBlk tyRet
             ExternalBlk -> ExternalBlk
             _otherwhise -> findProcedureGetBlkType tree (getParentID node)
 
@@ -211,13 +211,13 @@ getFunRetType env@(s,tree,current_id) =
     case pId of
       Just parID ->
         case blkTy of
-          ProcedureBlk -> getVarType (PIdent ((0,0), id)) env
+          ProcedureBlk _-> getVarType (PIdent ((0,0), id)) env
           _otherwhise -> getFunRetType (s,tree,parID)
 
 getFunNameFromEnv (_s,tree,current_id) = 
   let (Node (id,_) (BP _ _ _ blkTy) (Just parID) _) = findNodeById current_id tree in
     case blkTy of
-      ProcedureBlk -> id
+      ProcedureBlk _-> id
       _otherwhise -> getFunNameFromEnv (_s,tree,parID)
 
 
@@ -226,7 +226,7 @@ setReturnType ty env@(_,_,actualId) = setReturnType' actualId ty env
         setReturnType' actualId ty (_s,tree,current_id) =
             let (Node (id, _) (BP _ _ _ blkTy) (Just parID) _) = findNodeById current_id tree in
                 case blkTy of
-                ProcedureBlk -> let node = findNodeById parID tree in (_s, updateTree (modFunRetType id ty node) tree , actualId )
+                ProcedureBlk _-> let node = findNodeById parID tree in (_s, updateTree (modFunRetType id ty node) tree , actualId )
                 _otherwhise -> setReturnType' actualId ty (_s,tree,parID)
 
 
