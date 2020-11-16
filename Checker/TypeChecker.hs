@@ -382,12 +382,16 @@ typeCheckerLeftExpression assign enviroment exp = case exp of
   Epreop {} -> typeCheckerExpression enviroment exp
   _ -> DataChecker Error [ErrorChecker (getExpPos exp) $ ErrorNotLeftExpression exp assign]
 
-typeCheckerAddress enviroment exp = case exp of
-  Evar {} -> let DataChecker ty errors = typeCheckerExpression enviroment exp in DataChecker (Pointer ty) errors
+typeCheckerAddress environment exp = case exp of
+  Epreop _ e1 -> typeCheckerIndirection environment e1 
+  InnerExp _ e _ -> typeCheckerAddress environment e
+  Evar {} -> let DataChecker ty errors = typeCheckerExpression environment exp in DataChecker (Pointer ty) errors
   _ -> DataChecker Error [ErrorChecker (getExpPos exp) ErrorCantAddressAnExpression]
 
 typeCheckerIndirection environment e1 = 
   let newLoc = getExpPos e1 in case e1 of
+    InnerExp _ e _ -> typeCheckerIndirection environment e
+    Epreop (Address _) e1 ->  typeCheckerExpression environment e1
     Epreop (Indirection (PEtimes (loc,_))) e1 -> let DataChecker ty errors = typeCheckerIndirection environment e1 in case ty of
       Pointer tyPoint -> DataChecker tyPoint errors
       ty ->  DataChecker ty $  ErrorChecker loc (ErrorNoPointerAddress ty "expression"):errors

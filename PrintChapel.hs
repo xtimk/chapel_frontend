@@ -416,7 +416,7 @@ instance Print AbsChapel.Exp where
     AbsChapel.Etimes exp1 petimes exp2 -> prPrec i 6 (concatD [prt 6 exp1, prt 0 petimes, prt 7 exp2])
     AbsChapel.Ediv exp1 pediv exp2 -> prPrec i 6 (concatD [prt 6 exp1, prt 0 pediv, prt 7 exp2])
     AbsChapel.Emod exp1 pemod exp2 -> prPrec i 6 (concatD [prt 6 exp1, prt 0 pemod, prt 7 exp2])
-    AbsChapel.Epreop unaryoperator exp -> prPrec i 7 (concatD [prt 0 unaryoperator, prt 8 exp])
+    AbsChapel.Epreop unaryoperator exp -> prPrec i 7 (concatD [prt 0 unaryoperator, prt 7 exp])
     AbsChapel.Earray exp arinit -> prPrec i 8 (concatD [prt 9 exp, prt 0 arinit])
     AbsChapel.InnerExp popenparenthesis exp pcloseparenthesis -> prPrec i 9 (concatD [prt 0 popenparenthesis, prt 0 exp, prt 0 pcloseparenthesis])
     AbsChapel.EFun pident popenparenthesis passedparams pcloseparenthesis -> prPrec i 9 (concatD [prt 0 pident, prt 0 popenparenthesis, prt 0 passedparams, prt 0 pcloseparenthesis])
