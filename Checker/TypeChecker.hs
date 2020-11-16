@@ -465,29 +465,34 @@ getDeclarationDimension environment (array:arrays) = let DataChecker dimension e
 
 -- funzione di typechecking che controlla se ci sono return nelle funzioni, 
 -- e che i return siano in tutti i path del codice
-typeCheckerReturns bp@(Node _ _ _ startnodes) = concat (map typeCheckerReturnPresenceFun startnodes)
+typeCheckerReturns bp@(Node _ _ _ startnodes) = concatMap typeCheckerReturnPresenceFun startnodes
 
 typeCheckerReturnPresenceFun :: BPTree BP -> [ErrorChecker]
-typeCheckerReturnPresenceFun (node@(Node (funname,(locstart,locend)) (BP _ rets _ (ProcedureBlk _)) _ (children))) = 
-  if null rets
-    then
-      typeCheckerReturnPresence children funname (locstart,locend)
-    else
-      -- ho quasi finito: 
-      -- devo controllare se ci sono altri blocchi funzione nei children o dopo 
-      -- e verificare anche quelli
-      let declFunsInChildren = filter isNodeAProc children;        
-      in
-        concat (map typeCheckerReturnPresenceFun declFunsInChildren)
+typeCheckerReturnPresenceFun ((Node (funname,(locstart,locend)) (BP _ rets _ (ProcedureBlk tyret)) _ children)) = 
+  case tyret of
+    Utils.Type.Void ->           
+      let declFunsInChildren = filter isNodeAProc children in
+        concatMap typeCheckerReturnPresenceFun declFunsInChildren
+    _ -> 
+      if null rets
+        then
+          typeCheckerReturnPresence children funname (locstart,locend)
+        else
+          -- ho quasi finito: 
+          -- devo controllare se ci sono altri blocchi funzione nei children o dopo 
+          -- e verificare anche quelli
+          let declFunsInChildren = filter isNodeAProc children;        
+          in
+            concatMap typeCheckerReturnPresenceFun declFunsInChildren
 
-typeCheckerReturnPresenceElse node@(Node id (BP _ rets _ IfElseBlk) _ (children)) funname (locstart, locend) =
+typeCheckerReturnPresenceElse (Node _id (BP _ rets _ IfElseBlk) _ children) funname (locstart, locend) =
   if null rets
     then typeCheckerReturnPresence children funname (locstart, locend)
     else []
 
-getblkStartEndPos (Node (_,(act_locstart, act_locend)) (BP _ rets _ blocktype) _ (children)) = (act_locstart, act_locend)
+getblkStartEndPos (Node (_,(act_locstart, act_locend)) (BP _ _rets _ _blocktype) _ _children) = (act_locstart, act_locend)
 
-isNodeAProc node@(Node (_,(act_locstart, act_locend)) (BP _ rets _ blocktype) _ (children)) = case blocktype of
+isNodeAProc (Node (_,(_act_locstart, _act_locend)) (BP _ _rets _ blocktype) _ _children) = case blocktype of
    ProcedureBlk _ -> True
    _ -> False
 
@@ -495,13 +500,13 @@ continueCheckerRetPresenceOnSubProcs children xs =
   let declFunsInChildren = filter isNodeAProc children;
       declFunsAhead = filter isNodeAProc xs
   in
-    let childrens = concat (map typeCheckerReturnPresenceFun declFunsInChildren)
-        aheads = concat (map typeCheckerReturnPresenceFun declFunsAhead) in
+    let childrens = concatMap typeCheckerReturnPresenceFun declFunsInChildren
+        aheads = concatMap typeCheckerReturnPresenceFun declFunsAhead in
         childrens ++ aheads
 
 typeCheckerReturnPresence [] funname (locstart, locend) = [ErrorChecker locstart $ ErrorFunctionWithNotEnoughReturns funname]
 
-typeCheckerReturnPresence (node@(Node (_,(act_locstart, act_locend)) (BP _ rets _ blocktype) _ (children)):xs) funname (locstart, locend) =
+typeCheckerReturnPresence ((Node (_,(act_locstart, act_locend)) (BP _ rets _ blocktype) _ children):xs) funname (locstart, locend) =
   case blocktype of
     IfSimpleBlk -> 
       if null xs
@@ -512,7 +517,7 @@ typeCheckerReturnPresence (node@(Node (_,(act_locstart, act_locend)) (BP _ rets 
         then 
           let errs1 = typeCheckerReturnPresence children funname (act_locstart, act_locend);
               elset = typeCheckerReturnPresenceElse (head xs) funname (getblkStartEndPos (head xs)) in
-                case ((null errs1),(null elset)) of
+                case (null errs1,null elset) of
                   (True,True) ->
                     -- ho quasi finito: ho trovato un return sia nell'if che nell'else, quindi questo blocco è ok
                     -- devo però controllare se ci sono altri blocchi funzione nei children o dopo 
@@ -527,7 +532,7 @@ typeCheckerReturnPresence (node@(Node (_,(act_locstart, act_locend)) (BP _ rets 
                     -- devo andare avanti con la computazione
                     if null (tail xs)
                       then [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
-                      else (typeCheckerReturnPresence (tail xs) funname (getblkStartEndPos (head (tail xs))))
+                      else typeCheckerReturnPresence (tail xs) funname (getblkStartEndPos (head (tail xs)))
         else
           let elset = typeCheckerReturnPresenceElse (head xs) funname (getblkStartEndPos (head xs)) in
             case null elset of
@@ -535,16 +540,19 @@ typeCheckerReturnPresence (node@(Node (_,(act_locstart, act_locend)) (BP _ rets 
               _oth ->
                 if null (tail xs)
                   then [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
-                  else (typeCheckerReturnPresence (tail xs) funname (getblkStartEndPos (head (tail xs))))
+                  else typeCheckerReturnPresence (tail xs) funname (getblkStartEndPos (head (tail xs)))
 
-    ProcedureBlk _ -> 
-        if null rets -- se non ci sono return al blocco base
-          then
-            let c = typeCheckerReturnPresence children funname (act_locstart, act_locend) in
-              case null c of
-                True -> continueCheckerRetPresenceOnSubProcs children xs
-                _oth -> [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
-          else continueCheckerRetPresenceOnSubProcs children xs
+    ProcedureBlk tyret -> 
+      case tyret of
+        Utils.Type.Void -> continueCheckerRetPresenceOnSubProcs children xs
+        _ -> 
+          if null rets -- se non ci sono return al blocco base
+            then
+              let c = typeCheckerReturnPresence children funname (act_locstart, act_locend) in
+                case null c of
+                  True -> continueCheckerRetPresenceOnSubProcs children xs
+                  _oth -> [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
+            else continueCheckerRetPresenceOnSubProcs children xs
     WhileBlk -> 
       if null xs
         then [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
