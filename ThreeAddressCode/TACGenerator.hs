@@ -93,16 +93,8 @@ arrayCalculatePosition ty lengths = sizeof ty * arrayCalculatePosition' (reverse
     arrayCalculatePosition' _ [x] =  x 
     arrayCalculatePosition' (y:ys) (x:xs) = x + y * arrayCalculatePosition' ys xs
 
-getArrayDimensions (Array ty bound) = calculateBound bound:getArrayDimensions ty  
+getArrayDimensions ar@(Array ty _) = getArrayLenght ar:getArrayDimensions ty  
 getArrayDimensions _ = []
-
-calculateBound (boundLeft, boundRight) = do
-  let dimensionLeft = calculateBound' boundLeft
-  let dimensionRight = calculateBound' boundRight
-  dimensionRight - dimensionLeft 
-    where calculateBound' bound = case bound of
-            Utils.Type.Fix lenght -> lenght
-            Utils.Type.Var _ -> 0
 
 tacGeneratorFunction (FunDec _ signature body) = do
   envTac <-get
@@ -677,6 +669,7 @@ tacGenerationArrayPosAdd (Checker.SymbolTable.Variable loc ty) temps = do
     where
       tacGenerationArrayPosAdd' _ [x] = return ([], x)
       tacGenerationArrayPosAdd' (x:xs) (y@(Temp _ _ loc _):ys) = do
+        let offset = getArrayOffset ty
         (tacs, temp) <- tacGenerationArrayPosAdd' xs ys
         idMultTemp <- newtemp
         idAddTemp <- newtemp
@@ -685,4 +678,13 @@ tacGenerationArrayPosAdd (Checker.SymbolTable.Variable loc ty) temps = do
         let tempAdd = Temp ThreeAddressCode.TAC.Temporary idAddTemp loc Int
         let mulEntry = TACEntry Nothing $ Binary tempMult temp Times tempLength
         let addEntry =  TACEntry Nothing $ Binary tempAdd y Plus tempMult
-        return (addEntry:mulEntry:tacs,tempAdd)
+        if offset /= 0
+          then do
+            idOffsetRemove <- newtemp
+            let tempOffset = Temp ThreeAddressCode.TAC.Fixed (show offset) loc Int
+            let tempOffsetRemove = Temp ThreeAddressCode.TAC.Temporary idOffsetRemove loc Int
+            let offsetEntry = TACEntry Nothing $ Binary tempOffsetRemove tempAdd Minus tempOffset
+            let addEntry =  TACEntry Nothing $ Binary tempOffsetRemove y Plus tempMult
+            return (addEntry:offsetEntry:mulEntry:tacs,tempAdd)
+          else return (addEntry:mulEntry:tacs,tempAdd)
+       

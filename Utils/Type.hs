@@ -6,8 +6,7 @@ data Mode = Normal | Ref | Out | Name | In
 data Type = Int | Real | Bool | Void | Char | String | Infered | Array Type (Bound , Bound) | Pointer Type | Reference Type | Error
  deriving (Show)
 
-data Bound = Var String | Fix Int
-  deriving (Show)
+type Bound = Int
 
 instance Eq Type where
     x == y = case (x,y) of
@@ -20,9 +19,9 @@ getSubarrayDimension (Array subtype _) i = getSubarrayDimension subtype (i - 1)
 getArrayDimension (Array subtype _) = 1 + getArrayDimension subtype
 getArrayDimension _ = 0  
 
-getArrayLenght (Array _ (boundLeft, boundRight)) = case (boundLeft,boundRight) of
-  (Fix a, Fix b) -> b - a + 1
-  _ -> 0
+getArrayLenght (Array _ (boundLeft, boundRight)) = boundRight - boundLeft + 1
+
+getArrayOffset (Array _ (boundLeft, _)) = boundLeft
 
 getBasicType ty = case ty of
   Array subType _ -> getBasicType subType
