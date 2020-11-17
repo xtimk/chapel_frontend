@@ -1,6 +1,7 @@
 var a = 4 + 2.3;
 var c : int = 'k';
 
-proc main(){
+proc main() : int {
     a = 'k';
+    return 2 + 3;
 }
