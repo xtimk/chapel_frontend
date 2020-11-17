@@ -18,6 +18,7 @@ Controllare visualizzazione errori
 
 Fatte:
 
+OBBLIGATORIO: fix bug ordine tac nel caso di espressioni dentro i return
 OBBLIGATORIO: Vedere che i return compaiono sempre (do, while, if, altre cagate)
 OBBLIGATORIO aggiungere il tipo di modo nel passaggio di parametri.
 SEMI-OBBLIGATORIO: Controllare &* o *& o &(*) (avere *&*&*&*& in successione)
