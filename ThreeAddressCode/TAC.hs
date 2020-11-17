@@ -39,8 +39,12 @@ data TACOperation =
     CallFun Temp Temp Int |
     ReturnVoid |
     ReturnValue Temp |
-    VoidOp 
+    VoidOp |
+    Cast Temp CastOp Temp
     deriving (Show)
+
+data CastOp = CastIntToFloat
+    deriving(Show)
 
 data Temp = Temp TempMode String Loc Type
     deriving (Show)
