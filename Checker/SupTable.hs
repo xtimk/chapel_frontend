@@ -36,8 +36,10 @@ sup mode id loc ty1 ty2@(Reference ty2Ref) = case mode of
   SupFun -> createIncompatible id loc ty1 ty2
   _ -> sup mode id loc ty1 ty2Ref
 --Pointer
-sup mode id loc (Pointer _p1) (Pointer _p2) = let DataChecker ty errors = sup mode id loc _p1 _p2 in
-  DataChecker (Pointer ty) errors
+sup mode id loc point@(Pointer _p1) (Pointer _p2) = let DataChecker ty errors = sup mode id loc _p1 _p2 in case mode of
+  SupPlus -> DataChecker (Pointer ty) errors
+  SupMinus -> DataChecker (Pointer ty) errors
+  _ -> DataChecker point [ErrorChecker loc ErrorWrongOperationAddress]
 sup mode _ loc point@(Pointer _p) Int = case mode of 
   SupPlus -> DataChecker (Pointer _p) []
   SupMinus -> DataChecker (Pointer _p) []
@@ -101,6 +103,7 @@ sup _ id loc ty1@String ty2@Real =createIncompatible id loc ty1 ty2
 sup _ id loc ty1@String ty2@Char = createIncompatibleRet id loc ty1 ty2
 sup mode id loc ty1@String ty2@String = case mode of
   SupFun ->  DataChecker String []
+  SupRet ->  DataChecker String []
   SupDecl ->  DataChecker String []
   _ ->  createIncompatible id loc ty1 ty2
 sup _ id loc ty1@String ty2@Bool = createIncompatible id loc ty1 ty2

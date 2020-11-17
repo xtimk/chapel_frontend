@@ -337,9 +337,9 @@ typeCheckerBuildArrayBound enviroment lBound rBound =
 
 typeCheckerExpression environment exp = case exp of
     EAss e1 assign e2 -> typeCheckerAssignment environment e1 assign e2
-    Eplus e1 (PEplus (loc,_)) e2 -> typeCheckerExpression' environment SupMinus loc e1 e2
+    Eplus e1 (PEplus (loc,_)) e2 -> typeCheckerExpression' environment SupPlus loc e1 e2
     Emod e1 (PEmod (loc,_)) e2 -> typeCheckerExpression' environment SupMod loc e1 e2
-    Eminus e1 (PEminus (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
+    Eminus e1 (PEminus (loc,_)) e2 -> typeCheckerExpression' environment SupMinus loc e1 e2
     Ediv e1 (PEdiv (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
     Etimes e1 (PEtimes (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
     InnerExp _ e _ -> typeCheckerExpression environment e
@@ -383,7 +383,8 @@ typeCheckerLeftExpression assign enviroment exp = case exp of
   _ -> DataChecker Error [ErrorChecker (getExpPos exp) $ ErrorNotLeftExpression exp assign]
 
 typeCheckerAddress environment exp = case exp of
-  Epreop _ e1 -> typeCheckerIndirection environment e1 
+  Epreop _ e1 -> let DataChecker ty errors =  typeCheckerIndirection environment e1 in
+     DataChecker (Pointer ty) errors
   InnerExp _ e _ -> typeCheckerAddress environment e
   Evar {} -> let DataChecker ty errors = typeCheckerExpression environment exp in DataChecker (Pointer ty) errors
   _ -> DataChecker Error [ErrorChecker (getExpPos exp) ErrorCantAddressAnExpression]
@@ -391,7 +392,9 @@ typeCheckerAddress environment exp = case exp of
 typeCheckerIndirection environment e1 = 
   let newLoc = getExpPos e1 in case e1 of
     InnerExp _ e _ -> typeCheckerIndirection environment e
-    Epreop (Address _) e1 ->  typeCheckerExpression environment e1
+    Epreop (Address _) e1 -> let DataChecker ty errors = typeCheckerAddress environment e1 in case ty of
+      Pointer tyPoint -> DataChecker tyPoint errors
+      ty ->  DataChecker ty $  ErrorChecker newLoc (ErrorNoPointerAddress ty "expression"):errors
     Epreop (Indirection (PEtimes (loc,_))) e1 -> let DataChecker ty errors = typeCheckerIndirection environment e1 in case ty of
       Pointer tyPoint -> DataChecker tyPoint errors
       ty ->  DataChecker ty $  ErrorChecker loc (ErrorNoPointerAddress ty "expression"):errors

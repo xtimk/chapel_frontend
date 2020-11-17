@@ -4,6 +4,13 @@ var l :[10,20] int;
 
 
 proc main(kk:int) : string
-{  var l = *a;
-   var z = *&*&*&*&*l;
+{
+   var z = &*&a;
+   var ddd = *&a;
+   var m = **&z;
+   var h = &*&z;
+   var kkkkk = ***&h;
+   var dksfk = &a && &a;
+
+   return "ciao";
 }

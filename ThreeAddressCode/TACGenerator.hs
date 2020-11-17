@@ -256,8 +256,7 @@ tacGeneratorExpression expType exp = case exp of
     Epreop (Indirection (PEtimes (loc,_))) e1 -> tacGeneratorPointer expType loc e1 
     Epreop (Address (PDef (loc,_) )) e1 -> tacGeneratorAddress expType loc e1
     Earray expIdentifier arDeclaration -> tacGeneratorArrayIndexing expIdentifier arDeclaration
-    EFun funidentifier _ passedparams _ -> 
-      do
+    EFun funidentifier _ passedparams _ -> do
         (tacs, temp) <- tacGeneratorFunctionCall expType funidentifier passedparams
         return (reverse tacs, temp)
     Evar identifier -> tacGeneratorVariable expType identifier
@@ -328,25 +327,31 @@ tacGeneratorVariable expType identifier@(PIdent (_, id)) = do
         return ([entryRef], valTemp)
 
 
-tacGeneratorAddress _expType loc e1 = do
-  (tacs, temp@(Temp mod id l ty)) <- tacGeneratorExpression LeftExp e1
-  case ty of 
-    Reference ty -> return (tacs, Temp mod id l ty)
+tacGeneratorAddress expType loc e = case e of
+    InnerExp _ e _ -> tacGeneratorExpression expType e
+    Epreop (Indirection _) e1 -> tacGeneratorExpression expType e1 
     _ -> do
-      defId <- newtemp
-      let defTemp = Temp ThreeAddressCode.TAC.Temporary defId loc ty
-      let defTac = TACEntry Nothing $  DeferenceRight defTemp temp
-      return (defTac:tacs,defTemp)
+      (tacs, temp@(Temp mod id l ty)) <- tacGeneratorExpression LeftExp e
+      case ty of 
+        Reference ty -> return (tacs, Temp mod id l ty)
+        _ -> do
+          defId <- newtemp
+          let defTemp = Temp ThreeAddressCode.TAC.Temporary defId loc (Pointer ty)
+          let defTac = TACEntry Nothing $  DeferenceRight defTemp temp
+          return (defTac:tacs,defTemp)
 
-tacGeneratorPointer expType loc e1 = do
-  (tacs, temp@(Temp mod id l ty)) <- tacGeneratorExpression expType e1
-  case ty of 
-    Reference ty -> return (tacs, Temp mod id l ty)
-    _ -> do
-      refId <- newtemp
-      let refTemp = Temp ThreeAddressCode.TAC.Temporary refId loc ty
-      let refTac = TACEntry Nothing $  ReferenceRight refTemp temp
-      return (refTac:tacs,refTemp)
+tacGeneratorPointer expType loc e = case e of
+  InnerExp _ e _ -> tacGeneratorExpression expType e
+  Epreop (Address _ ) e1 -> tacGeneratorExpression expType e1
+  _ -> do
+    (tacs, temp@(Temp mod id l ty)) <- tacGeneratorExpression expType e
+    case ty of 
+      Reference ty -> return (tacs, Temp mod id l ty)
+      _ -> do
+        refId <- newtemp
+        let refTemp = Temp ThreeAddressCode.TAC.Temporary refId loc ty
+        let refTac = TACEntry Nothing $  ReferenceRight refTemp temp
+        return (refTac:tacs,refTemp)
 
 tacGeneratorExpression' exptype e1 op e2 loc = do
   (tac1,temp1@(Temp _ _ _ ty1)) <- tacGeneratorExpression exptype e1
