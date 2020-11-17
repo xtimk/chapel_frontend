@@ -726,9 +726,9 @@ tacCastGeneratorAux ent@(TACEntry label optype) = -- tac
         then 
           return [ent]
         else
-          let suptype01 = tacsup ty0 ty1
-              suptype02 = tacsup ty0 ty2
-              suptype = tacsup suptype01 suptype02 in do
+          let suptype01 = supTac ty0 ty1
+              suptype02 = supTac ty0 ty2
+              suptype = supTac suptype01 suptype02 in do
                 (tac1,newtemp1) <- genCast temp1 suptype 
                 (tac2,newtemp2) <- genCast temp2 suptype
                 return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2
@@ -738,7 +738,7 @@ tacCastGeneratorAux ent@(TACEntry label optype) = -- tac
       if ty1 == ty2
         then return [ent]
         else 
-          let suptype = tacsup ty1 ty2 in do
+          let suptype = supTac ty1 ty2 in do
             (tac1,newtemp1) <- genCast temp1 suptype 
             (tac2,newtemp2) <- genCast temp2 suptype
             return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2
@@ -748,7 +748,7 @@ tacCastGeneratorAux ent@(TACEntry label optype) = -- tac
       if ty1 == ty2
         then return [ent]
         else 
-          let suptype = tacsup ty1 ty2 in do
+          let suptype = supTac ty1 ty2 in do
             (tac1,newtemp1) <- genCast temp1 suptype 
             (tac2,newtemp2) <- genCast temp2 suptype
             return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2
