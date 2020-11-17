@@ -732,6 +732,16 @@ tacCastGeneratorAux ent@(TACEntry label optype) = -- tac
                 (tac1,newtemp1) <- genCast temp1 suptype 
                 (tac2,newtemp2) <- genCast temp2 suptype
                 return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2
+    Nullary temp1 temp2 -> 
+      let ty1 = getTacTempTye temp1
+          ty2 = getTacTempTye temp2 in
+      if ty1 == ty2
+        then return [ent]
+        else 
+          let suptype = tacsup ty1 ty2 in do
+            (tac1,newtemp1) <- genCast temp1 suptype 
+            (tac2,newtemp2) <- genCast temp2 suptype
+            return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2
     RelCondJump temp1 relop temp2 label -> 
       let ty1 = getTacTempTye temp1
           ty2 = getTacTempTye temp2 in
@@ -756,7 +766,16 @@ genCast t@(Temp _ _ loc origtye) destCastType =
         return ([], t)
       (Real, Real) ->
         return ([], t)
-
+      (Char, Char) ->
+        return ([], t)
+      (Char, Int) ->
+        return ([TACEntry Nothing (Cast newtemp1 CastCharToInt t)], newtemp1)
+      (Char, Real) ->
+        return ([TACEntry Nothing (Cast newtemp1 CastCharToReal t)], newtemp1)
+      (String, String) ->
+        return ([], t)
+      (Array t1 b1, Array t2 b2) ->
+        return ([], t)
 -- printCast Int Real = "cast_int_to_real"
 
 
@@ -764,3 +783,4 @@ substituteVarNames ent@(TACEntry label optype) newtemp1 newtemp2 =
   case optype of
     Binary temp0 temp1 op temp2 -> [TACEntry label $ Binary temp0 newtemp1 op newtemp2]
     RelCondJump temp1 relop temp2 labelg -> [TACEntry label $ RelCondJump newtemp1 relop newtemp2 labelg]
+    Nullary temp1 temp2 -> [TACEntry label $ Nullary newtemp1 newtemp2]
