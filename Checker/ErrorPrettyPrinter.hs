@@ -18,10 +18,12 @@ data DefinedError =
   ErrorVarAlreadyDeclared Loc String |
   ErrorSignatureAlreadyDeclared Loc String |
   ErrorGuardNotBoolean |
+  ErrorDeclarationBoundOnlyConst String |
   ErrorDeclarationBoundNotCorrectType Type String |
   ErrorArrayCallExpression |
   ErrorArrayIdentifierType Type String |
   ErrorDeclarationBoundArray Type String |
+  ErrorBoundsArray Int Int |
   ErrorDimensionArray Int Loc Int | 
   ErrorWrongDimensionArray Int Int String |
   ErrorArrayExpressionRequest |
@@ -64,8 +66,10 @@ printDefinedError tokens error = case error of
   ErrorVarAlreadyDeclared (l,c) id -> "Variable " ++ id ++" already declared in line " ++ show l ++ " and column " ++ show c ++ "."
   ErrorGuardNotBoolean -> "Guard must be boolean."
   ErrorDeclarationBoundNotCorrectType ty id -> "Variable " ++ id ++ " is of type " ++ show ty ++ " instead of type array."
+  ErrorDeclarationBoundOnlyConst id -> "Bound can be only a constant but variable " ++ id ++ " was found."
   ErrorArrayCallExpression -> "Must be call array reference []."
-  ErrorDeclarationBoundArray ty const -> "Bound of array must be an Int but was found " ++ show  const ++ " of type " ++ show ty ++ "."
+  ErrorDeclarationBoundArray ty const -> "Bound of array must be an Int but was found " ++ show const ++ " of type " ++ show ty ++ "."
+  ErrorBoundsArray boundLeft boundRight -> "In arrays bound right must be greater than bound left but was found " ++ show boundLeft ++ " in bound left and " ++ show boundRight ++ " in bound right."
   ErrorWrongDimensionArray arDim callDim id -> "Array variable " ++ id ++ " is declared of " ++ show arDim ++ " dimensions but is called to keep " ++ show callDim ++ " dimensions."
   ErrorArrayExpressionRequest -> "Must be call array reference []."
   ErrorCantOpToAddress ty -> "Operation with pointer must be with Int or Pointer but was found type "++ show ty ++ "."

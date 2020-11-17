@@ -40,8 +40,6 @@ typeCheckerExt (x:xs) = case x of
         typeCheckerFunction fun
         typeCheckerExt xs
 
-
-
 typeCheckerDeclaration x = do
   environment <- get
   case x of
@@ -276,7 +274,7 @@ typeCheckerBuildArrayType environment (ArrayDeclIndex _ array _) = typeCheckerBu
   where
     typeCheckerBuildArrayType' _ [] types = DataChecker types []
     typeCheckerBuildArrayType' enviroment (array:arrays) types = 
-      let DataChecker bounds errors = typeCheckerBuildArrayParameter enviroment array; DataChecker typesFound othersErrors = typeCheckerBuildArrayType' enviroment arrays types in 
+      let DataChecker bounds errors = typeCheckerBuildArrayParameter array; DataChecker typesFound othersErrors = typeCheckerBuildArrayType' enviroment arrays types in 
         DataChecker (Array typesFound bounds) (errors ++ othersErrors)
 
 
@@ -304,36 +302,38 @@ typeCheckerVariable (PIdent ((l,c), identifier)) tree types currentIdNode =
               Nothing -> updateTree (addEntryNode identifier (Variable (l,c) types) node) tree
 
 typeCheckerDeclExpression environment decExp = case decExp of
-  ExprDecArray (ArrayInit _ expression _) -> foldl (typeCheckerDeclArrayExp environment) (DataChecker (Array Infered (Fix 0, Fix 0)) []) expression
+  ExprDecArray (ArrayInit _ expression _) -> foldl (typeCheckerDeclArrayExp environment) (DataChecker (Array Infered (0, -1)) []) expression
   ExprDec exp -> typeCheckerExpression environment exp
 
 typeCheckerDeclArrayExp environment types expression = case (typeCheckerDeclExpression environment expression, types) of
-  (DataChecker typesFound errorsExp, DataChecker (Array typesInfered (first, Fix n)) errorsTy) -> case sup SupDecl "array" (getExprDeclPos expression) typesInfered typesFound of
-    DataChecker Error e -> DataChecker (Array typesInfered (first, Fix $ n + 1)) $ modErrorsPos (getExprDeclPos expression) e ++ errorsExp ++ errorsTy
-    DataChecker typesChecked e -> DataChecker (Array typesChecked (first, Fix $ n + 1)) (e ++ errorsExp ++ errorsTy)  
+  (DataChecker typesFound errorsExp, DataChecker (Array typesInfered (first, n)) errorsTy) -> case sup SupDecl "array" (getExprDeclPos expression) typesInfered typesFound of
+    DataChecker Error e -> DataChecker (Array typesInfered (first, n + 1)) $ modErrorsPos (getExprDeclPos expression) e ++ errorsExp ++ errorsTy
+    DataChecker typesChecked e -> DataChecker (Array typesChecked (first, n + 1)) (e ++ errorsExp ++ errorsTy)  
   (DataChecker _ err1, DataChecker ty err2 ) -> DataChecker ty (err1 ++ err2)
 
-typeCheckerBuildArrayParameter enviroment array = case array of
-  ArrayDimSingle leftBound _ _ rightBound -> typeCheckerBuildArrayBound enviroment leftBound rightBound
-  ArrayDimBound elements -> typeCheckerBuildArrayBound enviroment (ArratBoundConst $ Eint $ PInteger ((-1,-1), "0") ) elements 
+typeCheckerBuildArrayParameter array = case array of
+  ArrayDimSingle leftBound _ _ rightBound -> typeCheckerBuildArrayBound False leftBound rightBound
+  ArrayDimBound elements -> typeCheckerBuildArrayBound True (ArratBoundConst $ Eint $ PInteger ((-1,-1), "0") ) elements 
 
-typeCheckerBuildArrayBound enviroment lBound rBound = 
-  let DataChecker leftBound leftErrors = typeCheckerBuildArrayBound' lBound; 
-      DataChecker rightBound rightErrors = typeCheckerBuildArrayBound' rBound in  
-         DataChecker (leftBound, rightBound) (leftErrors ++ rightErrors)
+typeCheckerBuildArrayBound isNotBounded  lBound rBound = 
+  let DataChecker (leftBound,loc1) leftErrors = typeCheckerBuildArrayBound' False lBound; 
+      DataChecker (rightBound,_) rightErrors = typeCheckerBuildArrayBound' True rBound in  
+        if leftBound > rightBound
+          then DataChecker (leftBound, rightBound) (ErrorChecker loc1 (ErrorBoundsArray leftBound rightBound) :leftErrors ++ rightErrors)
+          else DataChecker (leftBound, rightBound) (leftErrors ++ rightErrors)
             where
-              typeCheckerBuildArrayBound' bound = case bound of 
-                ArrayBoundIdent id@(PIdent (loc,name)) -> case getVarType id enviroment of 
-                  DataChecker Error err -> DataChecker (Fix $ -1) (modErrorsPos loc err)
-                  DataChecker Int _-> DataChecker (Var name) []
-                  DataChecker types _-> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundNotCorrectType types name]
+              typeCheckerBuildArrayBound' isEnd bound = case bound of 
+                ArrayBoundIdent (PIdent (loc,name)) -> DataChecker (-1,loc) [ErrorChecker loc $ ErrorDeclarationBoundOnlyConst name]
                 ArratBoundConst constant -> case constant of
-                  Efloat (PDouble (loc, id)) -> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundArray Real id]
-                  Echar (PChar (loc,id)) -> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundArray  Char id]
-                  ETrue (PTrue (loc,id)) -> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundArray  Bool id]
-                  EFalse (PFalse (loc,id)) -> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundArray  Bool id]
-                  Estring (PString (loc,id)) -> DataChecker (Fix $ -1) [ErrorChecker loc $ ErrorDeclarationBoundArray  String id]
-                  Eint (PInteger (_,dimension)) -> DataChecker (Fix $ read dimension) []
+                  Efloat (PDouble (loc, id)) -> DataChecker (-1,loc) [ErrorChecker loc $ ErrorDeclarationBoundArray Real id]
+                  Echar (PChar (loc,id)) -> DataChecker  (-1,loc) [ErrorChecker loc $ ErrorDeclarationBoundArray  Char id]
+                  ETrue (PTrue (loc,id)) -> DataChecker (-1,loc) [ErrorChecker loc $ ErrorDeclarationBoundArray  Bool id]
+                  EFalse (PFalse (loc,id)) -> DataChecker (-1,loc) [ErrorChecker loc $ ErrorDeclarationBoundArray  Bool id]
+                  Estring (PString (loc,id)) -> DataChecker (-1,loc) [ErrorChecker loc $ ErrorDeclarationBoundArray  String id]
+                  Eint (PInteger (loc,dimension)) -> 
+                    if isEnd && isNotBounded 
+                    then DataChecker (read dimension - 1,loc) [] 
+                    else DataChecker (read dimension,loc) []
 
 typeCheckerExpression environment exp = case exp of
     EAss e1 assign e2 -> typeCheckerAssignment environment e1 assign e2
@@ -473,9 +473,9 @@ typeCheckerDeclarationArray environment exp (ArrayInit _ arrays _ ) = case exp o
 getDeclarationDimension _ [] = DataChecker 0 [] 
 getDeclarationDimension environment (array:arrays) = let DataChecker dimension errors = getDeclarationDimension environment arrays in 
   case array of
-    ExprDec exp -> let DataChecker ty expErrors = typeCheckerExpression environment exp in case sup Sup "" (getExpPos exp) Int ty of
-      DataChecker Error errorsFound -> DataChecker (dimension + 1) (errors ++ errorsFound ++ expErrors)
-      _ -> DataChecker (dimension + 1) (errors ++ expErrors)
+    ExprDec exp -> let DataChecker ty expErrors = typeCheckerExpression environment exp 
+                       DataChecker _ errorsFound = sup SupDecl "" (getExpPos exp) Int ty in
+                         DataChecker (dimension + 1) (errors ++ errorsFound ++ expErrors)
     expDecl -> DataChecker (dimension + 1) $ ErrorChecker (getExprDeclPos expDecl) ErrorArrayExpressionRequest : errors
 
 
