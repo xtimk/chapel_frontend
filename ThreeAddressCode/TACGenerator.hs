@@ -687,4 +687,71 @@ tacGenerationArrayPosAdd (Checker.SymbolTable.Variable loc ty) temps = do
             let addEntry =  TACEntry Nothing $ Binary tempOffsetRemove y Plus tempMult
             return (addEntry:offsetEntry:mulEntry:tacs,tempAdd)
           else return (addEntry:mulEntry:tacs,tempAdd)
-       
+
+
+-- Functions used to enrich TAC adding necessary casts
+
+startCastTacState = 0
+
+type TacCastState = State Int 
+
+newcasttemp :: TacCastState String
+newcasttemp = do
+  k <- get
+  put (k + 1)
+  return $ int2AddrCastTempName k
+
+int2AddrCastTempName k = "cast" ++ show k
+
+-- tacCastGenerator :: Traversable t => t TACEntry -> t [TACEntry]
+tacCastGenerator tac = concat $ evalState (mapM tacCastGeneratorAux tac) startCastTacState
+
+--tacCastGeneratorAux :: TACEntry -> [TACEntry]
+tacCastGeneratorAux ent@(TACEntry label optype) = -- tac
+  case optype of
+    Binary temp0 temp1 op temp2 -> 
+      let ty0 = getTacTempTye temp0
+          ty1 = getTacTempTye temp1
+          ty2 = getTacTempTye temp2 in
+      if ty0 == ty1 && ty1 == ty2
+        then 
+          return [ent]
+        else
+          let suptype01 = tacsup ty0 ty1
+              suptype02 = tacsup ty0 ty2
+              suptype = tacsup suptype01 suptype02 in do
+                (tac1,newtemp1) <- genCast temp1 suptype 
+                (tac2,newtemp2) <- genCast temp2 suptype
+                return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2
+    RelCondJump temp1 relop temp2 label -> 
+      let ty1 = getTacTempTye temp1
+          ty2 = getTacTempTye temp2 in
+      if ty1 == ty2
+        then return [ent]
+        else 
+          let suptype = tacsup ty1 ty2 in do
+            (tac1,newtemp1) <- genCast temp1 suptype 
+            (tac2,newtemp2) <- genCast temp2 suptype
+            return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2
+
+    _ -> return [ent]
+
+genCast t@(Temp _ _ loc origtye) destCastType = 
+  do
+    newt <- newcasttemp
+    let newtemp1 = Temp ThreeAddressCode.TAC.Temporary newt loc destCastType
+    case (origtye,destCastType) of
+      (Int, Real) ->
+        return ([TACEntry Nothing (Cast newtemp1 CastIntToFloat t)], newtemp1)
+      (Int, Int) ->
+        return ([], t)
+      (Real, Real) ->
+        return ([], t)
+
+-- printCast Int Real = "cast_int_to_real"
+
+
+substituteVarNames ent@(TACEntry label optype) newtemp1 newtemp2 = 
+  case optype of
+    Binary temp0 temp1 op temp2 -> [TACEntry label $ Binary temp0 newtemp1 op newtemp2]
+    RelCondJump temp1 relop temp2 labelg -> [TACEntry label $ RelCondJump newtemp1 relop newtemp2 labelg]
