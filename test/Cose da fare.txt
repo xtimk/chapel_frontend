@@ -5,7 +5,9 @@ Facoltativa: Vedere se mettere ++ o --
 
 OBBLIGATORIO: Controllare dimensioni in lunghezza degli array
 OBBLIGATORIO: Controllare suptable che sia conforme a quanto scritto nella relazione.
-OBBLIGATORIO: Print del TAC con i cast.
+OBBLIGATORIO: Print del TAC con i cast. Quasi finito, cosa rimane:
+ - vedere cosa non funziona con il +=
+ - testare: controllare tutti i possibili casi di cast
 OBBLIGATORIO: Controllare il ! nella valutazione lazy delle variabili booleane
 
 SEMI-OBBLIGATORIO: Introdurre il - unario.
