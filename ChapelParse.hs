@@ -102,12 +102,18 @@ parseTest filepath = do
                     printErrors (tokens s) (errors ++ bp2)
 
                     if null (errors ++ bp2)
-                    then let tac = evalState (tacGenerator tree) (startTacState (getTree bpTree)) in do
-
+                    then let tac = evalState (tacGenerator tree) (startTacState (getTree bpTree))
+                             enrichedcasttac = tacCastGenerator (getTac tac) in do
                      -- putStrLn "\n\n ** TAC **"
                       --putStrLn $ show tac
+                      putStrLn "\n\n ** Show TAC **"
+                      print (getTac tac)
                       putStrLn "\n\n ** Pretty TAC **"
                       printTacEntries (getTac tac)
+                      putStrLn "\n\n ** ENRICHED TAC **"
+                      print enrichedcasttac
+                      putStrLn "\n\n ** Pretty TAC With CASTS **"
+                      printTacEntries enrichedcasttac
                       exitSuccess
                     else 
                       exitSuccess

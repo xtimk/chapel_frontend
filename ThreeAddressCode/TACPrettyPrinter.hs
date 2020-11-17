@@ -40,12 +40,15 @@ printTacEntry' operation = case operation of
     ReturnVoid -> "return"
     ReturnValue temp -> "return " ++ printTacTemp temp
     VoidOp -> ""
+    Cast temp1 CastIntToFloat temp2 -> printTacTemp temp1 ++ " = " ++ "cast_int_to_float " ++ printTacTemp temp2
 
 
 auxPrintTacTemp temp tye = 
     case getTacTempTye temp == tye of
         True -> printTacTemp temp
         False -> (printCast (getTacTempTye temp) tye) ++ "(" ++ printTacTemp temp ++ ")"
+tacsup Int Int = Int
+tacsup Real Real = Real
 tacsup Int Real = Real
 tacsup Real Int = Real
 
@@ -65,9 +68,8 @@ printLabelGoto (lab,(l,c),ty) = lab ++ printLabelType ty ++ "@" ++ show l ++ ","
 
 printTacTemp (Temp mode id (l,c) _) = case mode of
     Fixed -> id
+    Temporary -> id ++ "@@" ++ show l ++ "," ++ show c
     _ -> id ++ "@" ++ show l ++ "," ++ show c
-
-getTacTempTye (Temp _ _ _ tye) = tye
 
 printTacBop bop ty = case bop of
     Plus -> " plus_" ++ (map toLower (show ty)) ++ " "
@@ -75,6 +77,8 @@ printTacBop bop ty = case bop of
     Times -> " mul_" ++ (map toLower (show ty)) ++ " "
     Div -> " div_" ++ (map toLower (show ty)) ++ " "
     Modul -> " mod_" ++ (map toLower (show ty)) ++ " "
+
+getTacTempTye (Temp _ _ _ tye) = tye
 
 printTacUop uop = case uop of
     Neg -> " not "
