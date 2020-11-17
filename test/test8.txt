@@ -1,10 +1,19 @@
+var f: [2,5,10] int;
+var pippo : [0..1, 1..2] int;
+var a:int = 10;
+var d :int;
+var b :[2..3,2..3,2..3] int= [[[1,2],[3,4]],[[5,6],[7,8]]];
+var scemoChiLegge: int;
+var c = f[1,4,3];
 
-
-proc lol(x : int, j : string) : *int
+proc lol(x : int, j : string)
 {
-    var b = 5;
-     var a:*int = &b;
 
-    return &b;
+      var jj:[2] int= b[2,3];
+    a = 10;
+    var k5_k'k' = 0.8e10;
+   { 
+        f[a+d,3,4] = f[a+d,3,4] + scemoChiLegge;
+    }
+
 }
-
