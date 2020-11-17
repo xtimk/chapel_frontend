@@ -26,6 +26,7 @@ data DefinedError =
   ErrorWrongDimensionArray Int Int String |
   ErrorArrayExpressionRequest |
   ErrorCantOpToAddress Type|
+  ErrorWrongOperationAddress |
   ErrorCantAddressAnExpression |
   ErrorReturnNotInsideAProcedure |
   ErrorBreakNotInsideAProcedure |
@@ -89,6 +90,7 @@ printDefinedError tokens error = case error of
   ErrorFunctionWithNotEnoughReturns funname -> "In function " ++ show funname ++ ": there is a possible path in the code with no returns."
   IncompatibleArrayDimension dim1 dim2 -> "Incompatible array dimension. First is "++ show dim1 ++ " and second is " ++  show dim2 ++"."
   ErrorCantUseExprInARefPassedVar -> "You can't pass an expr by ref, but only a variable."
+  ErrorWrongOperationAddress -> "Only permitted operation with pointer are plus or minus"
 
 getTokens [] _ _ = []
 getTokens (x@(PT (Pn _ l c ) _ ):xs) start@(lstart, cstart) end@(lend, cend) 
