@@ -37,28 +37,28 @@ printTacEntry' operation = case operation of
     Cast temp1 CastCharToInt temp2 -> printTacTemp temp1 ++ " = " ++ "cast_char_to_int " ++ printTacTemp temp2
     Cast temp1 CastCharToReal temp2 -> printTacTemp temp1 ++ " = " ++ "cast_char_to_real " ++ printTacTemp temp2
 
-tacsup Int Int = Int
-tacsup Real Real = Real
-tacsup Int Real = Real
-tacsup Real Int = Real
+-- tacsup Int Int = Int
+-- tacsup Real Real = Real
+-- tacsup Int Real = Real
+-- tacsup Real Int = Real
 
-tacsup Char Int = Int
-tacsup Int Char = Int
-tacsup Char Char = Char
+-- tacsup Char Int = Int
+-- tacsup Int Char = Int
+-- tacsup Char Char = Char
 
-tacsup (Pointer t) Int = Int
-tacsup Int (Pointer t) = Int
-tacsup (Pointer t1) (Pointer t2) = Int
+-- tacsup (Pointer t) Int = Int
+-- tacsup Int (Pointer t) = Int
+-- tacsup (Pointer t1) (Pointer t2) = Int
 
-tacsup (Pointer t) Real = Int
-tacsup Real (Pointer t) = Int
+-- tacsup (Pointer t) Real = Int
+-- tacsup Real (Pointer t) = Int
 
-tacsup (Array Int bounds) (Array Real bounds2) = (Array Real bounds2)
-tacsup (Array Real bounds) (Array Int bounds2) = (Array Int bounds2)
-tacsup (Array Int bounds) (Array Int bounds2) = (Array Int bounds2)
-tacsup (Array Real bounds) (Array Real bounds2) = (Array Real bounds2)
+-- tacsup (Array Int bounds) (Array Real bounds2) = (Array Real bounds2)
+-- tacsup (Array Real bounds) (Array Int bounds2) = (Array Int bounds2)
+-- tacsup (Array Int bounds) (Array Int bounds2) = (Array Int bounds2)
+-- tacsup (Array Real bounds) (Array Real bounds2) = (Array Real bounds2)
 
-tacsup (Array complex1 bounds) (Array complex2 bounds2) = (Array Int bounds2)
+-- tacsup (Array complex1 bounds) (Array complex2 bounds2) = (Array Int bounds2)
 
 
 printCast Int Real = "cast_int_to_real"

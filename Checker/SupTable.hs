@@ -14,11 +14,31 @@ supTac Int Char = Int
 supTac String String = String
 supTac Char Char = Char
 supTac Real Real = Real
+
+supTac Char Real = Real
+supTac Real Char = Real
+
 supTac Bool Bool = Bool
 supTac (Reference ty1) ty2 = supTac ty1 ty2
 supTac ty1 (Reference ty2) = supTac ty1 ty2
 supTac (Pointer ty1) ty2 = supTac ty1 ty2
 supTac ty1 (Pointer ty2) = supTac ty1 ty2
+
+
+-- supTac (Pointer t) Int = Int
+-- supTac Int (Pointer t) = Int
+-- supTac (Pointer t1) (Pointer t2) = Int
+
+-- supTac (Pointer t) Real = Int
+-- supTac Real (Pointer t) = Int
+
+supTac (Array Int bounds) (Array Real bounds2) = (Array Real bounds2)
+supTac (Array Real bounds) (Array Int bounds2) = (Array Int bounds2)
+supTac (Array Int bounds) (Array Int bounds2) = (Array Int bounds2)
+supTac (Array Real bounds) (Array Real bounds2) = (Array Real bounds2)
+
+supTac (Array complex1 bounds) (Array complex2 bounds2) = (Array Int bounds2)
+
 
 --Void 
 sup _ _ _ Void Void =  DataChecker Void []
