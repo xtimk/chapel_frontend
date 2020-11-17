@@ -22,7 +22,13 @@ printTacEntry' operation = case operation of
     UnconJump label -> "goto " ++ printLabelGoto label
     BoolTrueCondJump temp label -> "if " ++ printTacTemp temp ++ " goto " ++ printLabelGoto label
     BoolFalseCondJump temp label -> "ifFalse " ++ printTacTemp temp ++ " goto " ++ printLabelGoto label
-    RelCondJump temp1 rel temp2 label -> "if " ++ printTacTemp temp1 ++ printTacRel rel ++ printTacTemp temp2 ++ " goto " ++ printLabelGoto label
+    RelCondJump temp1 rel temp2 label -> 
+        let tye1 = getTacTempTye temp1
+            tye2 = getTacTempTye temp2 in
+        case tye1 == tye2 of
+            True -> "if " ++ printTacTemp temp1 ++ printTacRel rel tye1 ++ printTacTemp temp2 ++ " goto " ++ printLabelGoto label
+            False -> let suptype = tacsup tye1 tye2 in
+                "if " ++ auxPrintTacTemp temp1 suptype ++ printTacRel rel suptype ++ auxPrintTacTemp temp2 suptype ++ " goto " ++ printLabelGoto label
     IndexLeft temp1 temp2 temp3 ->  printTacTemp temp1 ++ "[" ++ printTacTemp temp2 ++ "]" ++ " = " ++ printTacTemp temp3
     IndexRight temp1 temp2 temp3 -> printTacTemp temp1 ++ " = " ++  printTacTemp temp2 ++  "[" ++ printTacTemp temp3 ++ "]"
     DeferenceRight temp1 temp2 -> printTacTemp temp1 ++ " = &" ++  printTacTemp temp2
@@ -73,10 +79,10 @@ printTacBop bop ty = case bop of
 printTacUop uop = case uop of
     Neg -> " not "
     
-printTacRel rel = case rel of
-    ThreeAddressCode.TAC.LT -> " < "
-    ThreeAddressCode.TAC.GT -> " > "
-    ThreeAddressCode.TAC.LTE -> " <= "
-    ThreeAddressCode.TAC.GTE -> " >= "
-    ThreeAddressCode.TAC.EQ -> " = "
-    ThreeAddressCode.TAC.NEQ -> " != "
+printTacRel rel ty = case rel of
+    ThreeAddressCode.TAC.LT -> " lt_" ++ (map toLower (show ty)) ++ " "
+    ThreeAddressCode.TAC.GT -> " gt_" ++ (map toLower (show ty)) ++ " "
+    ThreeAddressCode.TAC.LTE -> " lte_" ++ (map toLower (show ty)) ++ " "
+    ThreeAddressCode.TAC.GTE -> " gte_" ++ (map toLower (show ty)) ++ " "
+    ThreeAddressCode.TAC.EQ -> " eq_" ++ (map toLower (show ty)) ++ " "
+    ThreeAddressCode.TAC.NEQ -> " neq_" ++ (map toLower (show ty)) ++ " "

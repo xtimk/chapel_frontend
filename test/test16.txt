@@ -7,4 +7,7 @@ proc main(kk:real)
    var c = a + b;
    var d = b + a;
    main(a + b);
+   if (a < b) then {
+      return;
+   }
 }
