@@ -39,10 +39,14 @@ sup mode id loc ty1 ty2@(Reference ty2Ref) = case mode of
 sup mode id loc point@(Pointer _p1) (Pointer _p2) = let DataChecker ty errors = sup mode id loc _p1 _p2 in case mode of
   SupPlus -> DataChecker (Pointer ty) errors
   SupMinus -> DataChecker (Pointer ty) errors
+  SupRet -> DataChecker (Pointer ty) errors
+  SupDecl -> DataChecker (Pointer ty) errors
   _ -> DataChecker point [ErrorChecker loc ErrorWrongOperationAddress]
 sup mode _ loc point@(Pointer _p) Int = case mode of 
   SupPlus -> DataChecker (Pointer _p) []
   SupMinus -> DataChecker (Pointer _p) []
+  SupRet -> DataChecker (Pointer _p) []
+  SupDecl -> DataChecker (Pointer _p) []
   _ -> DataChecker point [ErrorChecker loc $ ErrorCantOpToAddress Int]
 sup _ _ loc (Pointer _p) ty = DataChecker _p [ErrorChecker loc $ ErrorCantOpToAddress ty]
 sup mode _ loc Int point@(Pointer _p) = case mode of 
