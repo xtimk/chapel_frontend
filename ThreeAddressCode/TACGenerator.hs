@@ -667,9 +667,18 @@ tacGenerationArrayPosAdd (Checker.SymbolTable.Variable loc ty) temps = do
   let sizeEntry =  TACEntry Nothing $ Binary tempResult temp Times tempSize
   return (sizeEntry:tacs,tempResult)
     where
-      tacGenerationArrayPosAdd' _ [x] = return ([], x)
-      tacGenerationArrayPosAdd' (x:xs) (y@(Temp _ _ loc _):ys) = do
-        let offset = getArrayOffset ty
+      tacGenerationArrayPosAdd' pos [y] = do
+        let offset = getArrayOffset (getSubarrayDimension ty (length pos))
+        if offset /= 0
+          then do
+            idOffsetRemove <- newtemp
+            let tempOffset = Temp ThreeAddressCode.TAC.Fixed (show offset) loc Int
+            let tempOffsetRemove = Temp ThreeAddressCode.TAC.Temporary idOffsetRemove loc Int
+            let offsetEntry = TACEntry Nothing $ Binary tempOffsetRemove y Minus tempOffset
+            return ([offsetEntry], tempOffsetRemove)
+          else return ([], y)
+      tacGenerationArrayPosAdd' pos@(x:xs) (y@(Temp _ _ loc _):ys) = do
+        let offset = getArrayOffset (getSubarrayDimension ty (length pos))
         (tacs, temp) <- tacGenerationArrayPosAdd' xs ys
         idMultTemp <- newtemp
         idAddTemp <- newtemp
@@ -683,8 +692,8 @@ tacGenerationArrayPosAdd (Checker.SymbolTable.Variable loc ty) temps = do
             idOffsetRemove <- newtemp
             let tempOffset = Temp ThreeAddressCode.TAC.Fixed (show offset) loc Int
             let tempOffsetRemove = Temp ThreeAddressCode.TAC.Temporary idOffsetRemove loc Int
-            let offsetEntry = TACEntry Nothing $ Binary tempOffsetRemove tempAdd Minus tempOffset
-            let addEntry =  TACEntry Nothing $ Binary tempOffsetRemove y Plus tempMult
+            let offsetEntry = TACEntry Nothing $ Binary tempOffsetRemove y Minus tempOffset
+            let addEntry =  TACEntry Nothing $ Binary tempAdd tempOffsetRemove Plus tempMult
             return (addEntry:offsetEntry:mulEntry:tacs,tempAdd)
           else return (addEntry:mulEntry:tacs,tempAdd)
 
