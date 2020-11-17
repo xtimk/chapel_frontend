@@ -1,5 +1,7 @@
 module ThreeAddressCode.TACPrettyPrinter where
 import ThreeAddressCode.TAC
+import Utils.Type
+import Data.Char
 
 printTacEntries ::(Foldable t0) => t0 TACEntry -> IO ()
 printTacEntries = mapM_ printTacEntry
@@ -7,7 +9,14 @@ printTacEntries = mapM_ printTacEntry
 printTacEntry (TACEntry label operation) = putStrLn $ printLabel label ++ printTacEntry' operation
 
 printTacEntry' operation = case operation of
-    Binary temp1 temp2 bop temp3 -> printTacTemp temp1 ++ " = " ++ printTacTemp temp2 ++  printTacBop bop ++ printTacTemp temp3
+    Binary temp1 temp2 bop temp3 -> 
+        let tye1 = getTacTempTye temp2
+            tye2 = getTacTempTye temp3 in
+        case tye1 == tye2 of
+        True -> printTacTemp temp1 ++ " = " ++ printTacTemp temp2 ++  printTacBop bop tye1 ++ printTacTemp temp3
+        False -> 
+            let suptype = tacsup tye1 tye2 in
+            printTacTemp temp1 ++ " = " ++ auxPrintTacTemp temp2 suptype ++  printTacBop bop suptype ++ auxPrintTacTemp temp3 suptype
     Unary temp1 uop  temp2 -> printTacTemp temp1 ++ " = " ++ printTacUop uop ++ printTacTemp temp2
     Nullary temp1 temp2 ->  printTacTemp temp1 ++ " = " ++ printTacTemp temp2
     UnconJump label -> "goto " ++ printLabelGoto label
@@ -27,6 +36,15 @@ printTacEntry' operation = case operation of
     VoidOp -> ""
 
 
+auxPrintTacTemp temp tye = 
+    case getTacTempTye temp == tye of
+        True -> printTacTemp temp
+        False -> (printCast (getTacTempTye temp) tye) ++ "(" ++ printTacTemp temp ++ ")"
+tacsup Int Real = Real
+tacsup Real Int = Real
+
+printCast Int Real = "cast_int_to_real"
+
 printLabel (Just ("FALL",_, _)) = "         "
 printLabel (Just (lab,(l,c),ty)) = lab ++ printLabelType ty ++ "@" ++ show l ++ "," ++ show c ++ ": "
 printLabel Nothing = "         "
@@ -43,12 +61,14 @@ printTacTemp (Temp mode id (l,c) _) = case mode of
     Fixed -> id
     _ -> id ++ "@" ++ show l ++ "," ++ show c
 
-printTacBop bop = case bop of
-    Plus -> " + "
-    Minus -> " - "
-    Times -> " * "
-    Div -> " / "
-    Modul -> " % "
+getTacTempTye (Temp _ _ _ tye) = tye
+
+printTacBop bop ty = case bop of
+    Plus -> " plus_" ++ (map toLower (show ty)) ++ " "
+    Minus -> " minus_" ++ (map toLower (show ty)) ++ " "
+    Times -> " mul_" ++ (map toLower (show ty)) ++ " "
+    Div -> " div_" ++ (map toLower (show ty)) ++ " "
+    Modul -> " mod_" ++ (map toLower (show ty)) ++ " "
 
 printTacUop uop = case uop of
     Neg -> " not "
