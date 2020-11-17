@@ -43,7 +43,7 @@ data TACOperation =
     Cast Temp CastOp Temp
     deriving (Show)
 
-data CastOp = CastIntToFloat
+data CastOp = CastIntToFloat | CastCharToInt | CastCharToReal
     deriving(Show)
 
 data Temp = Temp TempMode String Loc Type
