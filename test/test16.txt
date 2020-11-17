@@ -1,0 +1,13 @@
+var a : real = 20 ;
+var b : int = 42;
+
+
+proc main(kk:real)
+{
+   var c = a + b;
+   var d = b + a;
+   main(a + b);
+   if (a < b) then {
+      return;
+   }
+}
