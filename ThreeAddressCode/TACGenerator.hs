@@ -309,7 +309,9 @@ tacGeneratorVariable expType identifier@(PIdent (_, id)) = do
           (tacsBool, temp) <- tacGeneratorBooleanVariable  tempRef
           return (tacs ++ tacsBool, temp)
         _-> createReferenceEntry loc tyRef varTemp
-    Bool -> tacGeneratorBooleanVariable varTemp
+    Bool -> case expType of 
+      LeftExp ->  return ([], varTemp) 
+      _ -> tacGeneratorBooleanVariable varTemp
     _ -> return ([], varTemp)
     where 
       createReferenceEntry loc tyRef varTemp = do

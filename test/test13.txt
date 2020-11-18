@@ -1,11 +1,9 @@
 var a = 1;
 var b = 2;
 var c : bool;
+var u : bool;
 
-proc main(l: int,ref z:int, kk: int)
+proc main()
 {
-    
-
-
-    a + 5;
+    c = !c;
 }
