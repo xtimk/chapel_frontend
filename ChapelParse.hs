@@ -120,4 +120,4 @@ parseTest filepath = do
 
 getSymTable (x,_,_) = x
 getTree (_,x,_) = x
-getTac (x,_,_,_,_,_,_) = x
+getTac (x,_,_,_,_,_) = x
