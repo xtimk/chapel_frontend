@@ -48,7 +48,8 @@ printTacEntry' operation = case operation of
     VoidOp -> ""
     Cast temp1 CastIntToFloat temp2 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ "cast_int_to_float " ++ printTacTemp temp2
     Cast temp1 CastCharToInt temp2 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ "cast_char_to_int " ++ printTacTemp temp2
-    Cast temp1 CastCharToReal temp2 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ "cast_char_to_real " ++ printTacTemp temp2
+    Cast temp1 CastIntToChar temp2 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ "cast_int_to_char " ++ printTacTemp temp2
+    Cast temp1 CastCharToFloat temp2 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ "cast_char_to_float " ++ printTacTemp temp2
 
 -- tacsup Int Int = Int
 -- tacsup Real Real = Real
