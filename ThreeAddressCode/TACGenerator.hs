@@ -793,6 +793,8 @@ genCast t@(Temp _ _ loc origtye) destCastType =
         return ([], t)
       (Array t1 b1, Int) ->
         return ([], t)
+      (_,_) -> 
+        return ([], t)
 -- printCast Int Real = "cast_int_to_real"
 
 

@@ -6,15 +6,39 @@ proc main() : int {
     a = 'k';
 
     var d : real = main();
-    while (d < a)
+    do while 
     {
         a += 1;
         d += 'p';
+    } (d < a)
+    if (d < a) then{
+        do while 
+        {
+            a += 1;
+            d += 'p';
+            return 1;
+        } (d < a)
+    }
+    else{
+        do while 
+        {
+            a += 1;
+            d += 'p';
+            if(true) then{
+                return 2;
+            }
+            else {
+                
+            }
+            if(true) then{
+                return 2;
+            }
+            else {
+                return 5;
+            }
+        } (d < a)
     }
     var poi = &a;
     poi = poi + 15;
     f[12] += 5;
-
-
-    return 11;
 }
