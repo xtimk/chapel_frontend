@@ -24,13 +24,8 @@ supTac ty1 (Reference ty2) = supTac ty1 ty2
 supTac (Pointer ty1) ty2 = supTac ty1 ty2
 supTac ty1 (Pointer ty2) = supTac ty1 ty2
 
+supTac (Array ty bounds) Int = Int
 
--- supTac (Pointer t) Int = Int
--- supTac Int (Pointer t) = Int
--- supTac (Pointer t1) (Pointer t2) = Int
-
--- supTac (Pointer t) Real = Int
--- supTac Real (Pointer t) = Int
 
 supTac (Array Int bounds) (Array Real bounds2) = (Array Real bounds2)
 supTac (Array Real bounds) (Array Int bounds2) = (Array Int bounds2)

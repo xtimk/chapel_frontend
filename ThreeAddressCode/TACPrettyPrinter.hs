@@ -85,6 +85,9 @@ printTacBop bop ty =
     (Pointer p) -> case bop of
             Plus -> " plus_int "
             Minus -> " minus_int "
+    (Array t b) -> case bop of
+        Plus -> " plus_int "
+        Minus -> " minus_int "
     _ -> case bop of
             Plus -> " plus_" ++ map toLower (show ty) ++ " "
             Minus -> " minus_" ++ map toLower (show ty) ++ " "
