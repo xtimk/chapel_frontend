@@ -4,4 +4,6 @@ proc main() {
     var d = 1 + 1.1;
 
     var c = &d + 4;
+    var ch: char = 86 + 'c';
+    f[2] = 'k' + 3;
 }
