@@ -133,13 +133,13 @@ tacGeneratorBody'' x = case x of
 
 tacGeneratorStatement statement = case statement of
   Break (PBreak (pos, _)) _semicolon -> do
-    (_,_,_,tree,_,_,_) <- get
+    (_,_,tree,_,_,_) <- get
     let Just node = findFirstParentsBlockTypeFromPos SequenceBlk tree pos
     label <- newlabel (getBpEndPos node) BreakLb
     let breakEntry = TACEntry Nothing $ UnconJump label
     return [breakEntry]
   Continue (PContinue (pos,_)) _semicolon -> do
-    (_,_,_,tree,_,_,_) <- get
+    (_,_,tree,_,_,_) <- get
     let Just node = findFirstParentsBlockTypeFromPos SequenceBlk tree pos
     label <- newlabel (getBpStartPos node) ContinueLb
     let continueEntry = TACEntry Nothing $ UnconJump label
@@ -512,18 +512,6 @@ tacCheckerUnaryBoolean expType loc e1 = case e1 of
     let tempVar = Temp Temporary id loc Bool
     (tacs, Temp _ loc id ty) <- tacGeneratorBooleanVariable tempVar
     return (tacs, Temp Temporary loc id ty)
-    --labelFalse <- newlabel loc FalseBoolStmLb
-    --labelExit <- newlabel loc ExitBoolStmLb
-    --idTempRight <- newtemp
-    --let tempTrue = Temp Fixed "true" (-1,-1) Bool
-    --let tempFalse = Temp Fixed "false" (-1,-1) Bool
-    --let tempVar = Temp Temporary id loc Bool
-    --let tempRight = Temp Temporary idTempRight loc Bool
-    --let tacIfFalse = TACEntry Nothing $ BoolTrueCondJump tempVar labelFalse
-    --let tacTrue = TACEntry Nothing $ Nullary tempRight tempTrue
-    --let tacGoToExit = TACEntry Nothing $ UnconJump labelExit
-    --let tacFalse = TACEntry (Just labelFalse) $ Nullary tempRight tempFalse
-    --return ([tacIfFalse, tacTrue,tacGoToExit,tacFalse],tempRight)
   Econst constant -> case constant of
     ETrue (PTrue (loc,_)) -> return ([], Temp ThreeAddressCode.TAC.Fixed "false" loc Bool)
     EFalse (PFalse (loc,_)) -> return ([], Temp ThreeAddressCode.TAC.Fixed "true" loc Bool)

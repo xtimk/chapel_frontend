@@ -3,27 +3,24 @@ var b = 2;
 var c : bool;
 var u : bool;
 
-proc main()
+proc main(b:int)
 {
-   
-    while(true)
-    {
-        {
-        {
-            {
-                {
-                    break;
-                }
-            }
-        }
-    }
+  proc pippo()
+  {
+      a = 5;
+      b = 9;
 
-        proc pippo()
+      proc pippone()
         {
-               
+            a = 9;
+            b = 78;
         };
-    }
+  };
 
-    break;
-   
+  proc pippone()
+        {
+            a = 9;
+            b = 78;
+        };
+  
 }
