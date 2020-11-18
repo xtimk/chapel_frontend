@@ -1,0 +1,7 @@
+var f : [10] int;
+
+proc main() : int {
+
+    f[12] += 5;
+    return 11;
+}
