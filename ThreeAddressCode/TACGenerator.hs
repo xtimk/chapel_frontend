@@ -776,6 +776,10 @@ genCast t@(Temp _ _ loc origtye) destCastType =
         return ([TACEntry Nothing (Cast newtemp1 CastCharToReal t)], newtemp1)
       (String, String) ->
         return ([], t)
+      (Pointer p, Int) ->
+        return ([], t)
+      (Pointer p, Real) ->
+        return ([], t)
       (Array t1 b1, Array t2 b2) ->
         return ([], t)
 -- printCast Int Real = "cast_int_to_real"
