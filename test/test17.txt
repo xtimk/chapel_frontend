@@ -3,6 +3,16 @@ var c : int = 'k';
 
 proc main() : int {
     a = 'k';
-    return a + 'j';
 
+    var d : real = main();
+    while (d < a)
+    {
+        a += 1;
+        d += 'p';
+    }
+    var poi = &a;
+    poi = poi + 15;
+
+
+    return 11;
 }
