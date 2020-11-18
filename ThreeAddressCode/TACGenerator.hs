@@ -711,21 +711,77 @@ tacGenerationArrayPosAdd (Checker.SymbolTable.Variable loc ty) temps = do
 
 -- Functions used to enrich TAC adding necessary casts
 
-startCastTacState = 0
+startCastTacState = (0, 0, [])
 
-type TacCastState = State Int 
+type TacCastState = State (Int,Int,[TACEntry])
 
 newcasttemp :: TacCastState String
 newcasttemp = do
-  k <- get
-  put (k + 1)
+  (k, _w, _t) <- get
+  put (k + 1, _w, _t)
   return $ int2AddrCastTempName k
 
 int2AddrCastTempName k = "cast" ++ show k
 
--- tacCastGenerator :: Traversable t => t TACEntry -> t [TACEntry]
-tacCastGenerator tac = concat $ evalState (mapM tacCastGeneratorAux tac) startCastTacState
+newStringtemp :: TacCastState String
+newStringtemp = do
+  (_k, w, _t) <- get
+  put (_k, w + 1, _t)
+  return $ int2AddrStringTempName w
+  
+int2AddrStringTempName w = "ptr$str$" ++ show w
 
+addTacStringEntry id const loc = do
+  let tacString = TACEntry (Just (id,loc,StringLb)) $ StringOp const
+  (_k, _w, tacs) <- get
+  put (_k, _w, tacString:tacs)
+  get
+  
+-- tacCastGenerator :: Traversable t => t TACEntry -> t [TACEntry]
+tacCastGenerator tac = evalState (tacCastGeneratorModified tac) startCastTacState
+
+tacCastGeneratorModified tac = do
+  tacs' <- mapM tacCastGenerator' tac
+  let tacs = concat tacs'
+  (_, _, tacsString) <- get
+  if null tacsString
+  then return tacs
+  else do
+    let tacSpace = TACEntry Nothing VoidOp
+    let tacComment = TACEntry Nothing $ CommentOp "static data"
+    return $ tacs ++ tacSpace:tacComment:tacSpace:reverse tacsString
+
+
+tacCastGenerator' ent = do
+  ent' <- tacCastStringGenerator ent
+  tacCastGeneratorAux ent'
+
+tacCastStringGenerator (TACEntry label optype) = do
+  operation <- tacCastStringGenerator' optype
+  return $ TACEntry label operation
+  where
+    tacCastStringGenerator' optype = case optype of
+      Nullary temp1 temp2 -> do
+        temp <- tacCastStringGenerator'' temp2
+        return $ Nullary temp1 temp
+      IndexLeft temp1 temp2 temp3 -> do
+        temp <- tacCastStringGenerator'' temp3
+        return $ IndexLeft temp1 temp2 temp
+      SetParam temp1 -> do
+        temp <- tacCastStringGenerator'' temp1
+        return $ SetParam temp
+      ReturnValue temp1 -> do
+        temp <- tacCastStringGenerator'' temp1
+        return $ ReturnValue temp
+      _ -> return optype
+    tacCastStringGenerator'' temp@(Temp mode id loc ty) = case (mode,ty) of
+      (Fixed,Utils.Type.String) -> do
+        idString <- newStringtemp
+        addTacStringEntry idString id loc
+        return $ Temp Temporary idString loc ty
+      _ -> return temp
+
+    
 --tacCastGeneratorAux :: TACEntry -> [TACEntry]
 tacCastGeneratorAux ent@(TACEntry label optype) = -- tac
   case optype of
@@ -763,7 +819,7 @@ tacCastGeneratorAux ent@(TACEntry label optype) = -- tac
             (tac1,newtemp1) <- genCast temp1 suptype 
             (tac2,newtemp2) <- genCast temp2 suptype
             return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2
-
+    
     _ -> return [ent]
 
 genCast t@(Temp _ _ loc origtye) destCastType = 
