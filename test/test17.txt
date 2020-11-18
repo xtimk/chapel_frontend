@@ -40,5 +40,5 @@ proc main() : int {
     }
     var poi = &a;
     poi = poi + 15;
-    f[12] += 5;
+    f[12] =  f[12] + 5;
 }

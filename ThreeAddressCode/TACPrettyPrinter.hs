@@ -8,12 +8,13 @@ printTacEntries = mapM_ printTacEntry
 
 printTacEntry (TACEntry label operation) = putStrLn $ printLabel label ++ printTacEntry' operation
 
-printTacEq tye = " =_" ++ printTacEqAux tye ++ " "
+printTacEq tye = " =" ++ printTacEqAux tye ++ " "
 
 printTacEqAux tye = 
     case tye of
-        (Pointer p) -> "addr"
-        _ -> map toLower $ show tye
+        (Pointer _) -> "_addr"
+        (Array t _) -> map toLower $ '_' : show (getBasicType t)
+        _ -> map toLower $ '_' : show tye
 
 printTacEntry' operation = case operation of
     Binary temp1 temp2 bop temp3 -> -- printTacTemp temp1 ++ " = " ++ printTacTemp temp2 ++  printTacBop bop tye1 ++ printTacTemp temp3
@@ -33,7 +34,7 @@ printTacEntry' operation = case operation of
         let tye1 = getTacTempTye temp1
             tye2 = getTacTempTye temp2 in
         "if " ++ printTacTemp temp1 ++ printTacRel rel tye1 ++ printTacTemp temp2 ++ " goto " ++ printLabelGoto label
-    IndexLeft temp1 temp2 temp3 ->  printTacTemp temp1 ++ "[" ++ printTacTemp temp2 ++ "]" ++ " = " ++ printTacTemp temp3
+    IndexLeft temp1 temp2 temp3 ->  printTacTemp temp1 ++ "[" ++ printTacTemp temp2 ++ "]" ++ printTacEq (getTacTempTye temp1) ++ printTacTemp temp3
     IndexRight temp1 temp2 temp3 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++  printTacTemp temp2 ++  "[" ++ printTacTemp temp3 ++ "]"
     DeferenceRight temp1 temp2 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ "&" ++  printTacTemp temp2
     ReferenceLeft temp1 temp2 -> "*" ++ printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++  printTacTemp temp2
