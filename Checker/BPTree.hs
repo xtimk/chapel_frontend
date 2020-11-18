@@ -97,6 +97,7 @@ findSequenceControlGetBlkType tree current_id =
         case getBlkTypeSimple node of
             WhileBlk -> WhileBlk
             DoWhileBlk -> DoWhileBlk
+            ProcedureBlk ty -> ProcedureBlk ty
             ExternalBlk -> ExternalBlk -- sono arrivato ricorsivamente fino al blocco esterno, lo restituisco, non vado in ricorsione
             _otherwhise -> findSequenceControlGetBlkType tree (getParentID node)
 
