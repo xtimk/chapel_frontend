@@ -24,7 +24,7 @@ printTacEntry' operation = case operation of
         "if " ++ printTacTemp temp1 ++ printTacRel rel tye1 ++ printTacTemp temp2 ++ " goto " ++ printLabelGoto label
     IndexLeft temp1 temp2 temp3 ->  printTacTemp temp1 ++ "[" ++ printTacTemp temp2 ++ "]" ++ " = " ++ printTacTemp temp3
     IndexRight temp1 temp2 temp3 -> printTacTemp temp1 ++ " = " ++  printTacTemp temp2 ++  "[" ++ printTacTemp temp3 ++ "]"
-    DeferenceRight temp1 temp2 -> printTacTemp temp1 ++ " = &" ++  printTacTemp temp2
+    DeferenceRight temp1 temp2 -> printTacTemp temp1 ++ " = get_address " ++  printTacTemp temp2
     ReferenceLeft temp1 temp2 -> "*" ++ printTacTemp temp1 ++ " = " ++  printTacTemp temp2
     ReferenceRight temp1 temp2 -> printTacTemp temp1 ++ " = *" ++  printTacTemp temp2
     SetParam temp -> "param " ++ printTacTemp temp 
@@ -80,22 +80,40 @@ printTacTemp (Temp mode id (l,c) _) = case mode of
     Temporary -> id ++ "@@" ++ show l ++ "," ++ show c
     _ -> id ++ "@" ++ show l ++ "," ++ show c
 
-printTacBop bop ty = case bop of
-    Plus -> " plus_" ++ (map toLower (show ty)) ++ " "
-    Minus -> " minus_" ++ (map toLower (show ty)) ++ " "
-    Times -> " mul_" ++ (map toLower (show ty)) ++ " "
-    Div -> " div_" ++ (map toLower (show ty)) ++ " "
-    Modul -> " mod_" ++ (map toLower (show ty)) ++ " "
-
+printTacBop bop ty = 
+    case ty of
+    (Pointer p) -> case bop of
+            Plus -> " plus_int "
+            Minus -> " minus_int "
+    (Array t b) -> case bop of
+        Plus -> " plus_int "
+        Minus -> " minus_int "
+    _ -> case bop of
+            Plus -> " plus_" ++ map toLower (show ty) ++ " "
+            Minus -> " minus_" ++ map toLower (show ty) ++ " "
+            Times -> " mul_" ++ map toLower (show ty) ++ " "
+            Div -> " div_" ++ map toLower (show ty) ++ " "
+            Modul -> " mod_" ++ map toLower (show ty) ++ " "
 getTacTempTye (Temp _ _ _ tye) = tye
 
 printTacUop uop = case uop of
     Neg -> " not "
     
-printTacRel rel ty = case rel of
-    ThreeAddressCode.TAC.LT -> " lt_" ++ (map toLower (show ty)) ++ " "
-    ThreeAddressCode.TAC.GT -> " gt_" ++ (map toLower (show ty)) ++ " "
-    ThreeAddressCode.TAC.LTE -> " lte_" ++ (map toLower (show ty)) ++ " "
-    ThreeAddressCode.TAC.GTE -> " gte_" ++ (map toLower (show ty)) ++ " "
-    ThreeAddressCode.TAC.EQ -> " eq_" ++ (map toLower (show ty)) ++ " "
-    ThreeAddressCode.TAC.NEQ -> " neq_" ++ (map toLower (show ty)) ++ " "
+printTacRel rel ty = 
+    case ty of
+    (Pointer p) -> 
+        case rel of
+            ThreeAddressCode.TAC.LT -> " lt_int "
+            ThreeAddressCode.TAC.GT -> " gt_int "
+            ThreeAddressCode.TAC.LTE -> " lte_int "
+            ThreeAddressCode.TAC.GTE -> " gte_int "
+            ThreeAddressCode.TAC.EQ -> " eq_int "
+            ThreeAddressCode.TAC.NEQ -> " neq_int "
+    _ ->
+        case rel of
+            ThreeAddressCode.TAC.LT -> " lt_" ++ map toLower (show ty) ++ " "
+            ThreeAddressCode.TAC.GT -> " gt_" ++ map toLower (show ty) ++ " "
+            ThreeAddressCode.TAC.LTE -> " lte_" ++ map toLower (show ty) ++ " "
+            ThreeAddressCode.TAC.GTE -> " gte_" ++ map toLower (show ty) ++ " "
+            ThreeAddressCode.TAC.EQ -> " eq_" ++ map toLower (show ty) ++ " "
+            ThreeAddressCode.TAC.NEQ -> " neq_" ++ map toLower (show ty) ++ " "

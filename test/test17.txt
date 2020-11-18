@@ -1,8 +1,20 @@
 var a = 4 + 3;
 var c : int = 'k';
+var f : [10] int;
 
 proc main() : int {
     a = 'k';
-    return a + 'j';
 
+    var d : real = main();
+    while (d < a)
+    {
+        a += 1;
+        d += 'p';
+    }
+    var poi = &a;
+    poi = poi + 15;
+    f[12] += 5;
+
+
+    return 11;
 }
