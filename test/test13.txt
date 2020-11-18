@@ -5,5 +5,25 @@ var u : bool;
 
 proc main()
 {
-    c = !c == !!c;
+   
+    while(true)
+    {
+        {
+        {
+            {
+                {
+                    break;
+                }
+            }
+        }
+    }
+
+        proc pippo()
+        {
+               
+        };
+    }
+
+    break;
+   
 }
