@@ -2,10 +2,10 @@ var a = 4 + 3;
 var c : int = 'k';
 var f : [10] int;
 
-proc main() : int {
+proc main(asdasd : int) : int {
     a = 'k';
 
-    var d : real = main();
+    var d : real = main(3);
     do while 
     {
         a += 1;
@@ -40,5 +40,5 @@ proc main() : int {
     }
     var poi = &a;
     poi = poi + 15;
-    f[12] += 5;
+    f[12] =  f[12] + 5;
 }

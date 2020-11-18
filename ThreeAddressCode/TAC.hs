@@ -46,7 +46,7 @@ data TACOperation =
     CommentOp String
     deriving (Show)
 
-data CastOp = CastIntToFloat | CastCharToInt | CastCharToReal
+data CastOp = CastIntToFloat | CastCharToInt | CastCharToFloat | CastIntToChar
     deriving(Show)
 
 data Temp = Temp TempMode String Loc Type

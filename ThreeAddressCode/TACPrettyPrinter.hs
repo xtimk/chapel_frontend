@@ -10,18 +10,20 @@ printTacEntry (TACEntry label operation) = case operation of
     CommentOp _-> putStrLn $ printTacEntry' operation
     _ -> putStrLn $ printLabel label ++ printTacEntry' operation
 
-printTacEq tye = " =_" ++ printTacEqAux tye ++ " "
+printTacEq tye = " =" ++ printTacEqAux tye ++ " "
 
 printTacEqAux tye = 
     case tye of
-        (Pointer p) -> "addr"
-        _ -> map toLower $ show tye
+        (Pointer _) -> "_addr"
+        (Array t _) -> map toLower $ '_' : show (getBasicType t)
+        Real -> "_float"
+        _ -> map toLower $ '_' : show tye
 
 printTacEntry' operation = case operation of
     Binary temp1 temp2 bop temp3 -> -- printTacTemp temp1 ++ " = " ++ printTacTemp temp2 ++  printTacBop bop tye1 ++ printTacTemp temp3
         let tye0 = getTacTempTye temp1
             tye1 = getTacTempTye temp2
-            tye2 = getTacTempTye temp3 in
+            _tye2 = getTacTempTye temp3 in
         printTacTemp temp1 ++ printTacEq tye0 ++ printTacTemp temp2 ++  printTacBop bop tye1 ++ printTacTemp temp3
     Unary temp1 uop  temp2 -> 
         let tye0 = getTacTempTye temp1 in
@@ -33,26 +35,30 @@ printTacEntry' operation = case operation of
     BoolFalseCondJump temp label -> "ifFalse " ++ printTacTemp temp ++ " goto " ++ printLabelGoto label
     RelCondJump temp1 rel temp2 label -> -- "if " ++ printTacTemp temp1 ++ printTacRel rel tye1 ++ printTacTemp temp2 ++ " goto " ++ printLabelGoto label
         let tye1 = getTacTempTye temp1
-            tye2 = getTacTempTye temp2 in
+            _tye2 = getTacTempTye temp2 in
         "if " ++ printTacTemp temp1 ++ printTacRel rel tye1 ++ printTacTemp temp2 ++ " goto " ++ printLabelGoto label
-    IndexLeft temp1 temp2 temp3 ->  printTacTemp temp1 ++ "[" ++ printTacTemp temp2 ++ "]" ++ " = " ++ printTacTemp temp3
+    IndexLeft temp1 temp2 temp3 ->  printTacTemp temp1 ++ "[" ++ printTacTemp temp2 ++ "]" ++ printTacEq (getTacTempTye temp1) ++ printTacTemp temp3
     IndexRight temp1 temp2 temp3 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++  printTacTemp temp2 ++  "[" ++ printTacTemp temp3 ++ "]"
-    DeferenceRight temp1 temp2 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ "get_address " ++  printTacTemp temp2
+    DeferenceRight temp1 temp2 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ "&" ++  printTacTemp temp2
     ReferenceLeft temp1 temp2 -> "*" ++ printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++  printTacTemp temp2
     ReferenceRight temp1 temp2 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ "*" ++  printTacTemp temp2
     SetParam temp -> "param " ++ printTacTemp temp 
     CallProc temp1 arity -> "call " ++ printTacTemp temp1 ++ ", " ++ show arity 
-    CallFun temp1 temp2 arity -> printTacTemp temp1 ++ " = fcall " ++ printTacTemp temp2 ++ ", " ++ show arity 
+    CallFun temp1 temp2 arity -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ " fcall " ++ printTacTemp temp2 ++ ", " ++ show arity 
     ReturnVoid -> "return"
     ReturnValue temp -> "return " ++ printTacTemp temp
     VoidOp -> ""
     Cast temp1 CastIntToFloat temp2 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ "cast_int_to_float " ++ printTacTemp temp2
     Cast temp1 CastCharToInt temp2 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ "cast_char_to_int " ++ printTacTemp temp2
+<<<<<<< HEAD
     Cast temp1 CastCharToReal temp2 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ "cast_char_to_real " ++ printTacTemp temp2
+=======
+    Cast temp1 CastIntToChar temp2 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ "cast_int_to_char " ++ printTacTemp temp2
+    Cast temp1 CastCharToFloat temp2 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ "cast_char_to_float " ++ printTacTemp temp2
     StringOp id -> id
     CommentOp id -> "## " ++ id
+>>>>>>> 6ab861b7b9544eb60d8f347d22c60f8531074054
 
-printCast Int Real = "cast_int_to_real"
 
 printLabel (Just ("FALL",_, _)) = "         "
 printLabel (Just (lab,(l,c),ty)) = lab ++ printLabelType ty ++ "@" ++ show l ++ "," ++ show c ++ ": "
@@ -73,18 +79,28 @@ printTacTemp (Temp mode id (l,c) _) = case mode of
 
 printTacBop bop ty = 
     case ty of
-    (Pointer p) -> case bop of
+    (Pointer _) -> case bop of
             Plus -> " plus_int "
             Minus -> " minus_int "
-    (Array t b) -> case bop of
-        Plus -> " plus_int "
-        Minus -> " minus_int "
+    (Array t _) -> case bop of
+        Plus -> " plus_" ++ map toLower (printTyAux (getBasicType t)) ++ " "
+        Minus -> " minus_" ++ map toLower (printTyAux (getBasicType t)) ++ " "
+        Times -> " mul_" ++ map toLower (printTyAux (getBasicType t)) ++ " "
+        Div -> " div_" ++ map toLower (printTyAux (getBasicType t)) ++ " "
+        Modul -> " mod_" ++ map toLower (printTyAux (getBasicType t)) ++ " "
+
     _ -> case bop of
-            Plus -> " plus_" ++ map toLower (show ty) ++ " "
-            Minus -> " minus_" ++ map toLower (show ty) ++ " "
-            Times -> " mul_" ++ map toLower (show ty) ++ " "
-            Div -> " div_" ++ map toLower (show ty) ++ " "
-            Modul -> " mod_" ++ map toLower (show ty) ++ " "
+            Plus -> " plus_" ++ map toLower (printTyAux ty) ++ " "
+            Minus -> " minus_" ++ map toLower (printTyAux ty) ++ " "
+            Times -> " mul_" ++ map toLower (printTyAux ty) ++ " "
+            Div -> " div_" ++ map toLower (printTyAux ty) ++ " "
+            Modul -> " mod_" ++ map toLower (printTyAux ty) ++ " "
+
+-- la uso per stampare float invece che real nel TAC
+printTyAux ty = case ty of
+    Real -> "Float"
+    _ -> show ty
+
 getTacTempTye (Temp _ _ _ tye) = tye
 
 printTacUop uop = case uop of
