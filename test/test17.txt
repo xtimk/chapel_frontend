@@ -1,5 +1,6 @@
 var a = 4 + 3;
 var c : int = 'k';
+var f : [10] int;
 
 proc main() : int {
     a = 'k';
@@ -12,6 +13,7 @@ proc main() : int {
     }
     var poi = &a;
     poi = poi + 15;
+    f[12] += 5;
 
 
     return 11;
