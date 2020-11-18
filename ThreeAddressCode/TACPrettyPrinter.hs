@@ -6,7 +6,9 @@ import Data.Char
 printTacEntries ::(Foldable t0) => t0 TACEntry -> IO ()
 printTacEntries = mapM_ printTacEntry
 
-printTacEntry (TACEntry label operation) = putStrLn $ printLabel label ++ printTacEntry' operation
+printTacEntry (TACEntry label operation) = case operation of
+    CommentOp _-> putStrLn $ printTacEntry' operation
+    _ -> putStrLn $ printLabel label ++ printTacEntry' operation
 
 printTacEq tye = " =_" ++ printTacEqAux tye ++ " "
 
@@ -47,30 +49,8 @@ printTacEntry' operation = case operation of
     Cast temp1 CastIntToFloat temp2 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ "cast_int_to_float " ++ printTacTemp temp2
     Cast temp1 CastCharToInt temp2 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ "cast_char_to_int " ++ printTacTemp temp2
     Cast temp1 CastCharToReal temp2 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ "cast_char_to_real " ++ printTacTemp temp2
-
--- tacsup Int Int = Int
--- tacsup Real Real = Real
--- tacsup Int Real = Real
--- tacsup Real Int = Real
-
--- tacsup Char Int = Int
--- tacsup Int Char = Int
--- tacsup Char Char = Char
-
--- tacsup (Pointer t) Int = Int
--- tacsup Int (Pointer t) = Int
--- tacsup (Pointer t1) (Pointer t2) = Int
-
--- tacsup (Pointer t) Real = Int
--- tacsup Real (Pointer t) = Int
-
--- tacsup (Array Int bounds) (Array Real bounds2) = (Array Real bounds2)
--- tacsup (Array Real bounds) (Array Int bounds2) = (Array Int bounds2)
--- tacsup (Array Int bounds) (Array Int bounds2) = (Array Int bounds2)
--- tacsup (Array Real bounds) (Array Real bounds2) = (Array Real bounds2)
-
--- tacsup (Array complex1 bounds) (Array complex2 bounds2) = (Array Int bounds2)
-
+    StringOp id -> id
+    CommentOp id -> "## " ++ id
 
 printCast Int Real = "cast_int_to_real"
 

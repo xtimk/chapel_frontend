@@ -13,7 +13,8 @@ data LabelType =
     IfLb |  IfThenLb | ElseLb | 
     FunLb |
     BreakLb | ContinueLb | 
-    VoidLb
+    VoidLb |
+    StringLb
     deriving (Show)
 
 data TACEntry = TACEntry {
@@ -40,7 +41,9 @@ data TACOperation =
     ReturnVoid |
     ReturnValue Temp |
     VoidOp |
-    Cast Temp CastOp Temp
+    Cast Temp CastOp Temp |
+    StringOp String |
+    CommentOp String
     deriving (Show)
 
 data CastOp = CastIntToFloat | CastCharToInt | CastCharToReal
