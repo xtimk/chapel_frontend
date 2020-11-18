@@ -506,10 +506,31 @@ genLazyTacRel'' (Temp mode1 id1 loc ty) (Temp _ id2 _ _) op label = do
       then return ([TACEntry Nothing $ UnconJump label], tempTrue) 
       else return ([],tempFalse)
  
-tacCheckerUnaryBoolean expType _loc e1 = do
-  tacCheckerReverBooleanLabel
-  (tac1,temp1) <- tacGeneratorExpression expType e1
-  return (tac1, temp1)
+tacCheckerUnaryBoolean expType loc e1 = case e1 of
+  Evar (PIdent (loc,id)) -> do
+    tacCheckerReverBooleanLabel
+    let tempVar = Temp Temporary id loc Bool
+    (tacs, Temp _ loc id ty) <- tacGeneratorBooleanVariable tempVar
+    return (tacs, Temp Temporary loc id ty)
+    --labelFalse <- newlabel loc FalseBoolStmLb
+    --labelExit <- newlabel loc ExitBoolStmLb
+    --idTempRight <- newtemp
+    --let tempTrue = Temp Fixed "true" (-1,-1) Bool
+    --let tempFalse = Temp Fixed "false" (-1,-1) Bool
+    --let tempVar = Temp Temporary id loc Bool
+    --let tempRight = Temp Temporary idTempRight loc Bool
+    --let tacIfFalse = TACEntry Nothing $ BoolTrueCondJump tempVar labelFalse
+    --let tacTrue = TACEntry Nothing $ Nullary tempRight tempTrue
+    --let tacGoToExit = TACEntry Nothing $ UnconJump labelExit
+    --let tacFalse = TACEntry (Just labelFalse) $ Nullary tempRight tempFalse
+    --return ([tacIfFalse, tacTrue,tacGoToExit,tacFalse],tempRight)
+  Econst constant -> case constant of
+    ETrue (PTrue (loc,_)) -> return ([], Temp ThreeAddressCode.TAC.Fixed "false" loc Bool)
+    EFalse (PFalse (loc,_)) -> return ([], Temp ThreeAddressCode.TAC.Fixed "true" loc Bool)
+  _ -> do
+    tacCheckerReverBooleanLabel
+    (tac1,temp1) <- tacGeneratorExpression expType e1
+    return (tac1, temp1)
 
 tacCheckerReverBooleanLabel = do
   labels@(SequenceLazyEvalLabels ltrue lfalse lbreak) <- popSequenceControlLabels
