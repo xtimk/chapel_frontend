@@ -782,7 +782,9 @@ genCast t@(Temp _ _ loc origtye) destCastType =
       (Char, Int) ->
         return ([TACEntry Nothing (Cast newtemp1 CastCharToInt t)], newtemp1)
       (Char, Real) ->
-        return ([TACEntry Nothing (Cast newtemp1 CastCharToReal t)], newtemp1)
+        return ([TACEntry Nothing (Cast newtemp1 CastCharToFloat t)], newtemp1)
+      (Int, Char) ->
+        return ([TACEntry Nothing (Cast newtemp1 CastIntToChar t)], newtemp1)
       (String, String) ->
         return ([], t)
       (Pointer p, Int) ->
