@@ -7,7 +7,6 @@ OBBLIGATORIO: Controllare suptable che sia conforme a quanto scritto nella relaz
 OBBLIGATORIO: Print del TAC con i cast. Quasi finito, cosa rimane:
  - vedere cosa non funziona con il +=
  - testare: controllare tutti i possibili casi di cast
-OBBLIGATORIO: Controllare il ! nella valutazione lazy delle variabili booleane
 OBBLIGATORIO: Finire relazione
 OBBLIGATORIO: Gestione stringhe
 
@@ -20,6 +19,7 @@ Controllare visualizzazione errori
 
 Fatte:
 
+OBBLIGATORIO: Controllare il ! nella valutazione lazy delle variabili booleane
 OBBLIGATORIO: Controllare dimensioni in lunghezza degli array
 OBBLIGATORIO: fix bug ordine tac nel caso di espressioni dentro i return
 OBBLIGATORIO: Vedere che i return compaiono sempre (do, while, if, altre cagate)
