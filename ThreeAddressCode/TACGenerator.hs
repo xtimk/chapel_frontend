@@ -819,9 +819,6 @@ tacCastGeneratorAux ent@(TACEntry label optype) = -- tac
             (tac1,newtemp1) <- genCast temp1 suptype 
             (tac2,newtemp2) <- genCast temp2 suptype
             return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2
-<<<<<<< HEAD
-    
-=======
     IndexLeft temp1 temp2 temp3 -> 
       let ty1 = getBasicType (getTacTempTye temp1)
           ty3 = getTacTempTye temp3 in
@@ -831,7 +828,6 @@ tacCastGeneratorAux ent@(TACEntry label optype) = -- tac
             let suptype = supTac ty1 ty3 in do
               (tac3,newtemp3) <- genCast temp3 suptype
               return $ tac3 ++ substituteVarNames ent newtemp3 newtemp3
->>>>>>> 6ab861b7b9544eb60d8f347d22c60f8531074054
     _ -> return [ent]
 
 genCast t@(Temp _ _ loc origtye) destCastType = 
