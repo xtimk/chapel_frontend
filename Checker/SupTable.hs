@@ -94,6 +94,7 @@ sup _ id loc ty1@Int ty2@Bool = createIncompatible id loc ty1 ty2
 sup mode id loc ty1@Real ty2@Int = case mode of
   SupFun -> createIncompatible id loc ty1 ty2
   SupMod ->  createIncompatible id loc ty1 ty2
+  SupRet -> createIncompatibleRet id loc ty1 ty2
   SupBool -> DataChecker Bool []
   _ -> DataChecker Real []
 sup mode id loc ty1@Real ty2@Real = case mode of

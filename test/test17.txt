@@ -1,8 +1,8 @@
-var a = 4 + 2.3;
+var a = 4 + 3;
 var c : int = 'k';
 
 proc main() : int {
     a = 'k';
-
+    return a + 'j';
 
 }
