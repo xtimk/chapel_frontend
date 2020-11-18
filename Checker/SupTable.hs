@@ -6,33 +6,36 @@ import Utils.Type
 
 data SupMode = SupDecl | SupFun | SupBool | SupPlus | SupMinus |  SupArith | SupMod | Sup | SupRet
 
-supTac Int Int = Int
-supTac Int Real = Real
-supTac Real Int = Real
-supTac Char Int = Int
-supTac Int Char = Int
-supTac String String = String
-supTac Char Char = Char
-supTac Real Real = Real
+supTac type1 type2 = 
+  let (DataChecker tye _e) = sup Sup "id" (-3,-3) type1 type2 in
+    tye
+-- supTac Int Int = Int
+-- supTac Int Real = Real
+-- supTac Real Int = Real
+-- supTac Char Int = Int
+-- supTac Int Char = Int
+-- supTac String String = String
+-- supTac Char Char = Char
+-- supTac Real Real = Real
 
-supTac Char Real = Real
-supTac Real Char = Real
+-- supTac Char Real = Real
+-- supTac Real Char = Real
 
-supTac Bool Bool = Bool
-supTac (Reference ty1) ty2 = supTac ty1 ty2
-supTac ty1 (Reference ty2) = supTac ty1 ty2
-supTac (Pointer ty1) ty2 = supTac ty1 ty2
-supTac ty1 (Pointer ty2) = supTac ty1 ty2
+-- supTac Bool Bool = Bool
+-- supTac (Reference ty1) ty2 = supTac ty1 ty2
+-- supTac ty1 (Reference ty2) = supTac ty1 ty2
+-- supTac (Pointer ty1) ty2 = supTac ty1 ty2
+-- supTac ty1 (Pointer ty2) = supTac ty1 ty2
 
-supTac (Array ty bounds) Int = Int
+-- supTac (Array ty bounds) Int = Int
 
 
-supTac (Array Int bounds) (Array Real bounds2) = (Array Real bounds2)
-supTac (Array Real bounds) (Array Int bounds2) = (Array Int bounds2)
-supTac (Array Int bounds) (Array Int bounds2) = (Array Int bounds2)
-supTac (Array Real bounds) (Array Real bounds2) = (Array Real bounds2)
+-- supTac (Array Int bounds) (Array Real bounds2) = (Array Real bounds2)
+-- supTac (Array Real bounds) (Array Int bounds2) = (Array Int bounds2)
+-- supTac (Array Int bounds) (Array Int bounds2) = (Array Int bounds2)
+-- supTac (Array Real bounds) (Array Real bounds2) = (Array Real bounds2)
 
-supTac (Array complex1 bounds) (Array complex2 bounds2) = (Array Int bounds2)
+-- supTac (Array complex1 bounds) (Array complex2 bounds2) = (Array Int bounds2)
 
 
 --Void 
