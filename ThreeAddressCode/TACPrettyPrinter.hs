@@ -63,7 +63,7 @@ printTacEntry' operation = case operation of
 
 
 printLabel m (Just ("FALL",_, _)) = replicate (m+1) ' '
-printLabel m (Just (lab,pos@(l,c),ty)) = lab ++ printLabelType ty ++ "@" ++ show l ++ "," ++ show c ++ ": " ++ replicate (m - (length lab + length (show pos))) ' '
+printLabel m (Just (lab,pos@(l,c),ty)) = lab ++ printLabelType ty ++ "@" ++ show l ++ "," ++ show c ++ replicate (m - (length lab + length (show pos))) ' ' ++ ": "
 printLabel m Nothing = replicate (m+1) ' '
 
 printLabelType ty = case ty of
