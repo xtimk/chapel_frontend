@@ -77,8 +77,8 @@ addLabelToEntry label (TACEntry _  operationType) = TACEntry label operationType
 
 sizeof ty = case ty of
     Array ty bound -> sizeof ty
-    Int -> 4
-    Real -> 8 
+    Int -> 2
+    Real -> 4 
     Char -> 1
     Bool -> 1
 
