@@ -1,10 +1,10 @@
 TODO
 
- - Facoltativa: Dichiarazioni di funzioni e variabili in ordine sparso nel modulo principale
- - Facoltativa: Vedere se mettere +
- + o --
- - OBBLIGATORIO: Finire relazione
+ - SEMI-OBBLIGATORIO: Vedere se mettere ++ o --
  - SEMI-OBBLIGATORIO: Controllare che le variabili siano inizializzate
+
+ - OBBLIGATORIO: Finire relazione 
+   - descrivere gli errori del typechecker.
 
  - Fare test vari
  - Controllare visualizzazione errori
