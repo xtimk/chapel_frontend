@@ -229,6 +229,10 @@ attachLabelToFirstElem Nothing xs = xs
 
 
 tacGeneratorExpression expType exp = case exp of
+    Epreop (MinusUnary (PEminus (loc,_))) e1 -> 
+      case e1 of
+        (Epreop (MinusUnary (PEminus (loc,_))) e1') -> tacGeneratorExpression expType e1'
+        _ -> tacGeneratorExpressionUnary' expType e1 MinusUnaryOp loc
     EAss e1 assign e2 -> tacGeneratorAssignment e1 assign e2
     Eplus e1 (PEplus (loc,_)) e2 -> tacGeneratorExpression' expType e1 Plus e2 loc
     Emod e1 (PEmod (loc,_)) e2 -> tacGeneratorExpression' expType e1 Modul e2 loc
@@ -351,9 +355,17 @@ tacGeneratorExpression' exptype e1 op e2 loc = do
   (tac1,temp1@(Temp _ _ _ ty1)) <- tacGeneratorExpression exptype e1
   (tac2,temp2@(Temp _ _ _ ty2)) <- tacGeneratorExpression exptype e2
   idTemp <- newtemp
-  let temp = Temp ThreeAddressCode.TAC.Temporary idTemp loc (supTac ty1 ty2)
+  let temp = Temp ThreeAddressCode.TAC.Temporary idTemp loc (supTac Sup ty1 ty2)
   let newEntry = TACEntry Nothing (Binary temp temp1 op temp2)
   let tac = newEntry:(tac1 ++ tac2)
+  return (tac, temp)
+
+tacGeneratorExpressionUnary' exptype e1 op loc = do
+  (tac1,temp1@(Temp _ _ _ ty1)) <- tacGeneratorExpression exptype e1
+  idTemp <- newtemp
+  let temp = Temp ThreeAddressCode.TAC.Temporary idTemp loc (supTac Sup Int ty1)
+  let newEntry = TACEntry Nothing (Unary temp op temp1)
+  let tac = newEntry:tac1
   return (tac, temp)
 
 
@@ -793,41 +805,53 @@ tacCastGeneratorAux ent@(TACEntry label optype) = -- tac
         then 
           return [ent]
         else
-          let suptype01 = supTac ty0 ty1
-              suptype02 = supTac ty0 ty2
-              suptype = supTac suptype01 suptype02 in do
+          let suptype01 = supTac Sup ty0 ty1
+              suptype02 = supTac Sup ty0 ty2
+              suptype = supTac Sup suptype01 suptype02 in do
                 (tac1,newtemp1) <- genCast temp1 suptype 
                 (tac2,newtemp2) <- genCast temp2 suptype
-                return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2
+                return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2 suptype
     Nullary temp1 temp2 -> 
       let ty1 = getTacTempTye temp1
           ty2 = getTacTempTye temp2 in
       if ty1 == ty2
         then return [ent]
         else 
-          let suptype = supTac ty1 ty2 in do
+          let suptype = supTac Sup ty1 ty2 in do
             (tac1,newtemp1) <- genCast temp1 suptype 
             (tac2,newtemp2) <- genCast temp2 suptype
-            return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2
+            return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2 suptype
+    Unary temp1 op temp2 -> 
+      case op of
+        MinusUnaryOp -> 
+          let ty1 = getTacTempTye temp1
+              ty2 = getTacTempTye temp2 in
+          if ty1 == ty2
+            then return [ent]
+            else 
+              let suptype = supTac Sup ty1 ty2 in do
+                (tac2,newtemp2) <- genCast temp2 suptype
+                return $ tac2 ++ substituteVarNames ent temp1 newtemp2 suptype
+
     RelCondJump temp1 relop temp2 label -> 
       let ty1 = getTacTempTye temp1
           ty2 = getTacTempTye temp2 in
       if ty1 == ty2
         then return [ent]
         else 
-          let suptype = supTac ty1 ty2 in do
+          let suptype = supTac Sup ty1 ty2 in do
             (tac1,newtemp1) <- genCast temp1 suptype 
             (tac2,newtemp2) <- genCast temp2 suptype
-            return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2
+            return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2 suptype
     IndexLeft temp1 temp2 temp3 -> 
       let ty1 = getBasicType (getTacTempTye temp1)
           ty3 = getTacTempTye temp3 in
         if ty1 == ty3
           then return [ent]
           else
-            let suptype = supTac ty1 ty3 in do
+            let suptype = supTac Sup ty1 ty3 in do
               (tac3,newtemp3) <- genCast temp3 suptype
-              return $ tac3 ++ substituteVarNames ent newtemp3 newtemp3
+              return $ tac3 ++ substituteVarNames ent newtemp3 newtemp3 suptype
     _ -> return [ent]
 
 genCast t@(Temp _ _ loc origtye) destCastType = 
@@ -864,9 +888,12 @@ genCast t@(Temp _ _ loc origtye) destCastType =
 
 
 
-substituteVarNames ent@(TACEntry label optype) newtemp1 newtemp2 = 
+substituteVarNames ent@(TACEntry label optype) newtemp1 newtemp2 newtye = 
   case optype of
-    Binary temp0 temp1 op temp2 -> [TACEntry label $ Binary temp0 newtemp1 op newtemp2]
+    Binary temp0 temp1 op temp2 -> [TACEntry label $ Binary (changeTypeOfTemp temp0 newtye) newtemp1 op newtemp2]
     RelCondJump temp1 relop temp2 labelg -> [TACEntry label $ RelCondJump newtemp1 relop newtemp2 labelg]
     Nullary temp1 temp2 -> [TACEntry label $ Nullary newtemp1 newtemp2]
-    IndexLeft temp1 temp2 temp3 -> [TACEntry label $ IndexLeft temp1 temp2 newtemp2]
+    IndexLeft temp1 temp2 temp3 -> [TACEntry label $ IndexLeft (changeTypeOfTemp temp1 newtye) temp2 newtemp2]
+    Unary temp1 op temp2 -> [TACEntry label $ Unary (changeTypeOfTemp temp1 newtye) op newtemp2]
+
+changeTypeOfTemp t@(Temp a b c _origtye) destCastType = Temp a b c destCastType

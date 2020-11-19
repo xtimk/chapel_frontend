@@ -275,7 +275,10 @@ data Exp
   deriving (Eq, Ord, Show, Read)
 
 data UnaryOperator
-    = Negation PNeg | Address PDef | Indirection PEtimes
+    = Negation PNeg
+    | MinusUnary PEminus
+    | Address PDef
+    | Indirection PEtimes
   deriving (Eq, Ord, Show, Read)
 
 data Constant

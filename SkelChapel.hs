@@ -280,6 +280,7 @@ transExp x = case x of
 transUnaryOperator :: UnaryOperator -> Result
 transUnaryOperator x = case x of
   Negation pneg -> failure x
+  MinusUnary peminus -> failure x
   Address pdef -> failure x
   Indirection petimes -> failure x
 transConstant :: Constant -> Result
