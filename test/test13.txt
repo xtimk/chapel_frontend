@@ -1,12 +1,14 @@
 var a = 1;
 var b = 2;
-var c : bool;
+var c = ["ddd", "dddd", "ffefew"];
 var u : bool;
+var k : bool;
 
 proc main(b:int)
 {
   var a = "pippo";
   var kkk = "mamma";
-  var k = "bella rega";
+
+  var k = k;
   
 }
