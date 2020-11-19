@@ -1,7 +1,7 @@
 var f : [13] int;
 var g : [2] int = [-5,3];
 
-proc main() {
+proc main(ref a : int) {
     var d = 1 + 1.1;
 
     var c = &d + 4;
@@ -9,8 +9,9 @@ proc main() {
     f[2+8] = - 'k' + 'a';
     var t = ----1;
     var j = 'k' + 2;
+    a = 5;
 
-   if (- *c > t) then {
+   if (- *c > a) then {
 
    }
 }
