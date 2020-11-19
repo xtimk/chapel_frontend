@@ -426,6 +426,7 @@ instance Print AbsChapel.Exp where
 instance Print AbsChapel.UnaryOperator where
   prt i e = case e of
     AbsChapel.Negation pneg -> prPrec i 0 (concatD [prt 0 pneg])
+    AbsChapel.MinusUnary peminus -> prPrec i 0 (concatD [prt 0 peminus])
     AbsChapel.Address pdef -> prPrec i 0 (concatD [prt 0 pdef])
     AbsChapel.Indirection petimes -> prPrec i 0 (concatD [prt 0 petimes])
 

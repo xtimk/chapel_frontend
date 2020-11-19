@@ -101,6 +101,7 @@ getTacTempTye (Temp _ _ _ tye) = tye
 
 printTacUop uop = case uop of
     Neg -> " not "
+    MinusUnaryOp -> " -"
     
 printTacRel rel ty = 
     case ty of

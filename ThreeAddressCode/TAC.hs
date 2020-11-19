@@ -53,7 +53,7 @@ data Temp = Temp TempMode String Loc Type
     deriving (Show)
 data Bop =  Plus | Minus | Times | Div | Modul
     deriving (Show)
-data Uop = Neg
+data Uop = Neg | MinusUnaryOp
     deriving (Show)
 data Rel =  LT | GT | LTE | GTE | EQ | NEQ | AND | OR
     deriving (Show)
