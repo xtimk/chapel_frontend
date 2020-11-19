@@ -1,4 +1,4 @@
-var a = 1;
+var a :int;
 var b = 2;
 var c = ["ddd", "dddd", "ffefew"];
 var u : bool;
@@ -6,11 +6,11 @@ var k : bool;
 
 proc main(ref b:bool)
 {
-  var a = "pippo";
+  k = a;
   var kkk = "mamma";
 
   
 
-  b = true;
+  b = "ciao";
   
 }
