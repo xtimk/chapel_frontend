@@ -23,6 +23,7 @@ printTacEqAux tye =
         (Pointer _) -> "_addr"
         (Array t _) -> map toLower $ '_' : show (getBasicType t)
         Real -> "_float"
+        Reference ty -> map toLower $ '_' : show ty
         _ -> map toLower $ '_' : show tye
 
 printTacEntry' operation = case operation of
