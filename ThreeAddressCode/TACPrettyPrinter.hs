@@ -3,12 +3,18 @@ import ThreeAddressCode.TAC
 import Utils.Type
 import Data.Char
 
-printTacEntries ::(Foldable t0) => t0 TACEntry -> IO ()
-printTacEntries = mapM_ printTacEntry
+--printTacEntries ::(Foldable t0) => t0 TACEntry -> IO ()
+printTacEntries m = mapM_ (printTacEntry m)
 
-printTacEntry (TACEntry label operation) = case operation of
+findMaxLenOfLabels xs = maximum (map getLabelLenFromTACEntry xs)
+
+getLabelLenFromTACEntry (TACEntry label _) = case label of
+    Nothing -> 0
+    Just (lab,pos,ty) -> length lab + length (show pos)
+
+printTacEntry m (TACEntry label operation) = case operation of
     CommentOp _-> putStrLn $ printTacEntry' operation
-    _ -> putStrLn $ printLabel label ++ printTacEntry' operation
+    _ -> putStrLn $ printLabel m label ++ printTacEntry' operation
 
 printTacEq tye = " =" ++ printTacEqAux tye ++ " "
 
@@ -56,9 +62,9 @@ printTacEntry' operation = case operation of
     CommentOp id -> "## " ++ id
 
 
-printLabel (Just ("FALL",_, _)) = "         "
-printLabel (Just (lab,(l,c),ty)) = lab ++ printLabelType ty ++ "@" ++ show l ++ "," ++ show c ++ ": "
-printLabel Nothing = "         "
+printLabel m (Just ("FALL",_, _)) = replicate (m+1) ' '
+printLabel m (Just (lab,pos@(l,c),ty)) = lab ++ printLabelType ty ++ "@" ++ show l ++ "," ++ show c ++ replicate (m - (length lab + length (show pos))) ' ' ++ ": "
+printLabel m Nothing = replicate (m+1) ' '
 
 printLabelType ty = case ty of
     TrueBoolStmLb -> "true"
@@ -101,6 +107,7 @@ getTacTempTye (Temp _ _ _ tye) = tye
 
 printTacUop uop = case uop of
     Neg -> " not "
+    MinusUnaryOp -> " -"
     
 printTacRel rel ty = 
     case ty of

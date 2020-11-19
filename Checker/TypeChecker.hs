@@ -338,6 +338,7 @@ typeCheckerBuildArrayBound isNotBounded  lBound rBound =
                     else DataChecker (read dimension,loc) []
 
 typeCheckerExpression environment exp = case exp of
+    Epreop (MinusUnary (PEminus (loc,_))) e1 -> typeCheckerExpressionUnary' environment SupMinus (getExpPos e1) e1 Int
     EAss e1 assign e2 -> typeCheckerAssignment environment e1 assign e2
     Eplus e1 (PEplus (loc,_)) e2 -> typeCheckerExpression' environment SupPlus loc e1 e2
     Emod e1 (PEmod (loc,_)) e2 -> typeCheckerExpression' environment SupMod loc e1 e2
@@ -355,7 +356,7 @@ typeCheckerExpression environment exp = case exp of
     Ege e1 _pEge e2 -> typeCheckerExpression' environment SupBool (getExpPos e1) e1 e2
     Epreop (Indirection _) e1 -> typeCheckerIndirection environment e1
     Epreop (Address _) e1 ->  typeCheckerAddress environment e1
-    Epreop (Negation (PNeg (loc,_))) e1 ->  typeCheckerExpression' environment SupBool (getExpPos e1) e1 (Econst (ETrue (PTrue (loc,"true"))))
+    Epreop (Negation (PNeg (loc,_))) e1 ->  typeCheckerExpressionUnary' environment SupBool (getExpPos e1) e1 Bool
     Earray expIdentifier arDeclaration -> typeCheckerDeclarationArray  environment expIdentifier arDeclaration
     EFun funidentifier _ passedparams _ -> eFunTypeChecker funidentifier passedparams environment
     Evar identifier -> typeCheckerVariableIdentifiers identifier environment
@@ -470,6 +471,11 @@ typeCheckerExpression' environment supMode loc e1 e2 =
       DataChecker tye2 errors2 = typeCheckerExpression environment e2;
       DataChecker tye errors = sup supMode "" loc tye1 tye2 in 
       DataChecker tye (errors1 ++ errors2 ++ errors)    
+
+typeCheckerExpressionUnary' environment supMode loc e1 ty =
+  let DataChecker tye1 errors1 = typeCheckerExpression environment e1;
+      DataChecker tye errors = sup supMode "" loc tye1 ty in 
+      DataChecker tye (errors1 ++ errors)    
 
 typeCheckerDeclarationArray environment exp (ArrayInit _ arrays _ ) = case exp of
   Evar (PIdent ((l,c), identifier)) -> case typeCheckerExpression environment exp of

@@ -328,6 +328,7 @@ All other symbols are terminals.
   |  |  **|**  | //PIdent//
   |  |  **|**  | //Constant//
   | //UnaryOperator// | -> | //PNeg//
+  |  |  **|**  | //PEminus//
   |  |  **|**  | //PDef//
   |  |  **|**  | //PEtimes//
   | //Constant// | -> | //PString//
