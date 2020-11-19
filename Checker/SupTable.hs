@@ -6,8 +6,8 @@ import Utils.Type
 
 data SupMode = SupDecl | SupFun | SupBool | SupPlus | SupMinus |  SupArith | SupMod | Sup | SupRet
 
-supTac type1 type2 = 
-  let (DataChecker tye _e) = sup Sup "id" (-3,-3) type1 type2 in
+supTac supmode type1 type2 = 
+  let (DataChecker tye _e) = sup supmode "id" (-3,-3) type1 type2 in
     tye
 -- supTac Int Int = Int
 -- supTac Int Real = Real
@@ -113,10 +113,17 @@ sup mode id loc ty1@Real ty2@Bool = case mode of
 sup mode id loc ty1@Char ty2@Int = case mode of
   SupFun -> createIncompatible id loc ty1 ty2
   SupBool -> DataChecker Bool []
-  _ -> DataChecker Char []
+  SupDecl -> createIncompatible id loc ty1 ty2
+  SupRet -> createIncompatible id loc ty1 ty2
+  _ -> DataChecker Int []
 sup _ id loc ty1@Char ty2@Real =  createIncompatible id loc ty1 ty2
 sup mode _ _ Char Char = case mode of 
   SupBool -> DataChecker Bool []
+  SupMinus -> DataChecker Int []
+  SupArith -> DataChecker Int []
+  SupMod -> DataChecker Int []
+  SupPlus -> DataChecker Int []
+  Sup -> DataChecker Int []
   _ -> DataChecker Char []
 sup _ id loc ty1@Char ty2@String = createIncompatible id loc ty1 ty2
 sup _ id loc ty1@Char ty2@Bool = createIncompatible id loc ty1 ty2
