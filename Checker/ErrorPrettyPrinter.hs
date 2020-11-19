@@ -47,7 +47,8 @@ data DefinedError =
   ErrorFunctionWithNotEnoughReturns String |
   IncompatibleArrayDimension Int Int |
   ErrorCantUseExprInARefPassedVar | 
-  ErrorCyclicDeclaration Loc String
+  ErrorCyclicDeclaration Loc String |
+  ErrorMissingInitialization String 
   deriving (Show)
 
 data ErrorChecker =  ErrorChecker Loc DefinedError
@@ -97,6 +98,7 @@ printDefinedError tokens error = case error of
   ErrorCantUseExprInARefPassedVar -> "You can't pass an expr by ref, but only a variable."
   ErrorWrongOperationAddress -> "Only permitted operation with pointer are plus or minus"
   ErrorCyclicDeclaration (l,c) id -> "Cyclic declaration with variable " ++ id ++ " in line " ++ show l ++ " and column " ++ show c ++ "." 
+  ErrorMissingInitialization id -> "Missing initialization for variable " ++ id
 
 getTokens [] _ _ = []
 getTokens (x@(PT (Pn _ l c ) _ ):xs) start@(lstart, cstart) end@(lend, cend) 
