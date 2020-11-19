@@ -9,6 +9,6 @@ proc main(b:int)
   var a = "pippo";
   var kkk = "mamma";
 
-  var k = k;
+  var k = k + k;
   
 }

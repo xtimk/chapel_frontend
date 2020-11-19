@@ -46,7 +46,8 @@ data DefinedError =
   NoDecucibleType String |
   ErrorFunctionWithNotEnoughReturns String |
   IncompatibleArrayDimension Int Int |
-  ErrorCantUseExprInARefPassedVar
+  ErrorCantUseExprInARefPassedVar | 
+  ErrorCyclicDeclaration Loc String
   deriving (Show)
 
 data ErrorChecker =  ErrorChecker Loc DefinedError
@@ -95,6 +96,7 @@ printDefinedError tokens error = case error of
   IncompatibleArrayDimension dim1 dim2 -> "Incompatible array dimension. First is "++ show dim1 ++ " and second is " ++  show dim2 ++"."
   ErrorCantUseExprInARefPassedVar -> "You can't pass an expr by ref, but only a variable."
   ErrorWrongOperationAddress -> "Only permitted operation with pointer are plus or minus"
+  ErrorCyclicDeclaration (l,c) id -> "Cyclic declaration with variable " ++ id ++ " in line " ++ show l ++ " and column " ++ show c ++ "." 
 
 getTokens [] _ _ = []
 getTokens (x@(PT (Pn _ l c ) _ ):xs) start@(lstart, cstart) end@(lend, cend) 

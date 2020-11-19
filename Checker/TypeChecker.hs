@@ -41,10 +41,10 @@ typeCheckerExt (x:xs) = case x of
         typeCheckerExt xs
 
 typeCheckerDeclaration x = do
-  environment <- get
+  (_,_t,_a) <- get
   case x of
     AssgmTypeDec ids _colon types assignment exp -> do
-      let DataChecker tyRight errors = typeCheckerDeclExpression environment exp
+      let DataChecker tyRight errors = typeCheckerDeclExpression (typeCheckerConvertIdsToVariable ids,_t,_a) exp
       tyLeft <- typeCheckerTypeSpecification types
       typeCheckerIdentifiers ids (Just assignment) tyLeft tyRight
       modify $ addErrorsCurrentNode errors
@@ -53,10 +53,12 @@ typeCheckerDeclaration x = do
       ty <- typeCheckerTypeSpecification types
       typeCheckerIdentifiers ids Nothing ty Infered
     AssgmDec ids assignment exp -> do
-      let DataChecker ty errors = typeCheckerDeclExpression environment exp
+      let DataChecker ty errors = typeCheckerDeclExpression (typeCheckerConvertIdsToVariable ids,_t,_a) exp
       modify $ addErrorsCurrentNode errors
       typeCheckerIdentifiers ids (Just assignment) Infered ty
       get
+
+typeCheckerConvertIdsToVariable = map (\(PIdent (loc,id)) -> (id,(id, Variable loc Infered)))
 
 typeCheckerTypeSpecification tySpec = case tySpec of
   TypeSpecNorm ty -> return (convertTypeSpecToTypeInferred ty)
@@ -356,13 +358,24 @@ typeCheckerExpression environment exp = case exp of
     Epreop (Negation (PNeg (loc,_))) e1 ->  typeCheckerExpression' environment SupBool (getExpPos e1) e1 (Econst (ETrue (PTrue (loc,"true"))))
     Earray expIdentifier arDeclaration -> typeCheckerDeclarationArray  environment expIdentifier arDeclaration
     EFun funidentifier _ passedparams _ -> eFunTypeChecker funidentifier passedparams environment
-    Evar identifier -> getVarType identifier environment
+    Evar identifier -> typeCheckerVariableIdentifiers identifier environment
     Econst (Estring _) -> DataChecker String []
     Econst (Eint _) -> DataChecker Int []
     Econst (Efloat _) -> DataChecker Real []
     Econst (Echar _) -> DataChecker Char []
     Econst (ETrue _) -> DataChecker Bool []
     Econst (EFalse _) -> DataChecker Bool []
+
+typeCheckerVariableIdentifiers identifier environment@(ids,_t,_a) = 
+  let errors = concatMap (typeCheckerVariableIdentifier identifier) ids in
+    if null errors
+    then getVarType identifier environment
+    else DataChecker Error errors
+
+
+typeCheckerVariableIdentifier (PIdent (locExp,idExp)) (_, (idDecl,Variable locDecl _)) =
+  [ErrorChecker locExp  $ ErrorCyclicDeclaration locDecl idDecl | idDecl == idExp]
+
 
 typeCheckerAssignment environment e1 assign e2 =  
   let DataChecker tyLeft errLeft = typeCheckerLeftExpression assign environment e1;
