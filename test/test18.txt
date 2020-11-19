@@ -1,16 +1,16 @@
-// var f : [13] int;
-// var g : [2] int = [-5,3];
+var f : [13] int;
+var g : [2] int = [-5,3];
 
 proc main() {
-    // var d = 1 + 1.1;
+    var d = 1 + 1.1;
 
-    // var c = &d + 4;
-    // var ch: char = 86 + 'c';
-    // f[2] = - 'k' + 3;
-    // var t = ----1;
+    var c = &d + 4;
+    // var c = 86 + 'c';
+    f[2+8] = - 'k' + 'a';
+    var t = ----1;
     var j = 'k' + 2;
 
-//    if (- *c > t) then {
-//
-//    }
+   if (- *c > t) then {
+
+   }
 }
