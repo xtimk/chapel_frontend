@@ -76,11 +76,14 @@ addLabelToEntry :: Maybe Label -> TACEntry -> TACEntry
 addLabelToEntry label (TACEntry _  operationType) = TACEntry label operationType
 
 sizeof ty = case ty of
-    Array ty bound -> sizeof ty
+    Array ty _ -> sizeof ty
+    Pointer ty -> sizeof ty
+    Reference ty -> sizeof ty
     Int -> 2
     Real -> 4 
     Char -> 1
     Bool -> 1
+    String -> 8
 
 
 notRel ThreeAddressCode.TAC.LT = GTE
