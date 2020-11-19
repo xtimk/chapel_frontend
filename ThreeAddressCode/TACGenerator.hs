@@ -345,7 +345,7 @@ tacGeneratorPointer expType loc e = case e of
     (tacs, temp@(Temp mod id l ty)) <- tacGeneratorExpression expType e
     case ty of 
       Reference ty -> return (tacs, Temp mod id l ty)
-      _ -> do
+      Pointer ty -> do
         refId <- newtemp
         let refTemp = Temp ThreeAddressCode.TAC.Temporary refId loc ty
         let refTac = TACEntry Nothing $  ReferenceRight refTemp temp
