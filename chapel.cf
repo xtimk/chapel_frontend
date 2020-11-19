@@ -224,6 +224,7 @@ _. Exp8 ::= Exp9 ;
 InnerExp. Exp9 ::= POpenParenthesis Exp PCloseParenthesis ;
 
 Negation.      UnaryOperator ::= PNeg ;
+MinusUnary.         UnaryOperator ::= PEminus ;
 Address.      UnaryOperator ::= PDef ;
 Indirection.  UnaryOperator ::= PEtimes ;
 

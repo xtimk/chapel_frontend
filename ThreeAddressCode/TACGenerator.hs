@@ -229,6 +229,10 @@ attachLabelToFirstElem Nothing xs = xs
 
 
 tacGeneratorExpression expType exp = case exp of
+    Epreop (MinusUnary (PEminus (loc,_))) e1 -> 
+      case e1 of
+        (Epreop (MinusUnary (PEminus (loc,_))) e1') -> tacGeneratorExpression expType e1'
+        _ -> tacGeneratorExpressionUnary' expType e1 MinusUnaryOp loc
     EAss e1 assign e2 -> tacGeneratorAssignment e1 assign e2
     Eplus e1 (PEplus (loc,_)) e2 -> tacGeneratorExpression' expType e1 Plus e2 loc
     Emod e1 (PEmod (loc,_)) e2 -> tacGeneratorExpression' expType e1 Modul e2 loc
@@ -354,6 +358,14 @@ tacGeneratorExpression' exptype e1 op e2 loc = do
   let temp = Temp ThreeAddressCode.TAC.Temporary idTemp loc (supTac ty1 ty2)
   let newEntry = TACEntry Nothing (Binary temp temp1 op temp2)
   let tac = newEntry:(tac1 ++ tac2)
+  return (tac, temp)
+
+tacGeneratorExpressionUnary' exptype e1 op loc = do
+  (tac1,temp1@(Temp _ _ _ ty1)) <- tacGeneratorExpression exptype e1
+  idTemp <- newtemp
+  let temp = Temp ThreeAddressCode.TAC.Temporary idTemp loc ty1
+  let newEntry = TACEntry Nothing (Unary temp op temp1)
+  let tac = newEntry:(tac1)
   return (tac, temp)
 
 
@@ -809,6 +821,18 @@ tacCastGeneratorAux ent@(TACEntry label optype) = -- tac
             (tac1,newtemp1) <- genCast temp1 suptype 
             (tac2,newtemp2) <- genCast temp2 suptype
             return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2
+    Unary temp1 op temp2 -> 
+      case op of
+        MinusUnaryOp -> 
+          let ty1 = getTacTempTye temp1
+              ty2 = getTacTempTye temp2 in
+          if ty1 == ty2
+            then return [ent]
+            else 
+              let suptype = supTac ty1 ty2 in do
+                (tac2,newtemp2) <- genCast temp2 suptype
+                return $ tac2 ++ substituteVarNames ent temp1 newtemp2
+
     RelCondJump temp1 relop temp2 label -> 
       let ty1 = getTacTempTye temp1
           ty2 = getTacTempTye temp2 in
@@ -870,3 +894,4 @@ substituteVarNames ent@(TACEntry label optype) newtemp1 newtemp2 =
     RelCondJump temp1 relop temp2 labelg -> [TACEntry label $ RelCondJump newtemp1 relop newtemp2 labelg]
     Nullary temp1 temp2 -> [TACEntry label $ Nullary newtemp1 newtemp2]
     IndexLeft temp1 temp2 temp3 -> [TACEntry label $ IndexLeft temp1 temp2 newtemp2]
+    Unary temp1 op temp2 -> [TACEntry label $ Unary temp1 op newtemp2]

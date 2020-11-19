@@ -348,6 +348,7 @@ Exp9 : POpenParenthesis Exp PCloseParenthesis { AbsChapel.InnerExp $1 $2 $3 }
      | Constant { AbsChapel.Econst $1 }
 UnaryOperator :: { UnaryOperator }
 UnaryOperator : PNeg { AbsChapel.Negation $1 }
+              | PEminus { AbsChapel.MinusUnary $1 }
               | PDef { AbsChapel.Address $1 }
               | PEtimes { AbsChapel.Indirection $1 }
 Constant :: { Constant }
