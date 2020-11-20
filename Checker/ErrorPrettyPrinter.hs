@@ -11,13 +11,16 @@ data DataChecker a = DataChecker {
 
 data DefinedError = 
   ErrorVarNotDeclared String | 
+  ErrorIncompatibleDeclarationType String Type Type (Maybe ExprDecl) |
+  ErrorIncompatibleReturnType String Type Type (Maybe Exp) |
+  ErrorIncompatibleUnaryOpType Loc Type Type Exp |
+  ErrorIncompatibleBinaryOpType Loc Type Type Exp Exp |
   ErrorIncompatibleTypes Type Type | 
   ErrorIncompatibleDeclTypes String Type Type | 
   ErrorMissingReturn String | 
-  ErrorIncompatibleRetTypes String Type Type | 
   ErrorVarAlreadyDeclared Loc String |
-  ErrorSignatureAlreadyDeclared Loc String |
-  ErrorGuardNotBoolean |
+  ErrorSignatureAlreadyDeclared  (Loc,Loc)  Loc String |
+  ErrorGuardNotBoolean Exp Type|
   ErrorDeclarationBoundOnlyConst String |
   ErrorDeclarationBoundNotCorrectType Type String |
   ErrorArrayCallExpression |
@@ -61,12 +64,19 @@ printError tokens (ErrorChecker (l,c) error) =
     putStrLn $ "Error in line " ++ show l ++ " and column " ++ show c ++ ": " ++ printDefinedError tokens error
 
 printDefinedError tokens error = case error of
-  ErrorVarNotDeclared id -> "Variable " ++ id ++  " not declared."
+  ErrorVarNotDeclared id -> "Variable " ++ id ++ " not declared."
+  ErrorIncompatibleDeclarationType idVar ty tyexp exp -> case exp of
+    Just exp -> "Variable " ++ idVar ++ " is of type " ++ show ty ++ " but was found type " ++ show tyexp ++ " in expression " ++ printDeclExpression tokens exp ++ "."
+    --Nothing -> non lo raggiunge
+  ErrorIncompatibleReturnType idFun tyFun tyExp exp -> case exp of
+    Just exp -> "Function " ++ idFun ++ " returns type " ++ show tyFun ++  ", but expression " ++ printExpression tokens exp   ++ " in return statement is of type "  ++ show tyExp ++ "." 
+    --Nothing non lo raggiunge
+  ErrorIncompatibleUnaryOpType locOp ty1 ty2 e -> "Operation " ++ printTokensRange tokens (locOp,locOp) ++ " requires type " ++ show ty1 ++ " but was found type " ++ show ty2 ++ " in expression " ++ printExpression tokens e ++ "."
+  ErrorIncompatibleBinaryOpType locOp ty1 ty2 e1 e2 -> "Not compatible types " ++ show ty1 ++  " and "  ++ show ty2 ++ " for operation " ++ printTokensRange tokens (locOp,locOp) ++ " between expression " ++ printExpression tokens e1 ++ " and expression " ++ printExpression tokens e2 ++ "." 
   ErrorIncompatibleTypes ty1 ty2 -> "Not compatible types " ++ show ty1 ++  " and "  ++ show ty2 ++ "."
   ErrorIncompatibleDeclTypes id ty1 ty2 -> "Variable " ++ id ++ " of type " ++ show ty1 ++  " not compatible with type "  ++ show ty2 ++ "."
-  ErrorIncompatibleRetTypes id ty1 ty2 -> "Function " ++ id ++ " returns type " ++ show ty1 ++  ", but exp in return statement is "  ++ show ty2 ++ "." 
   ErrorVarAlreadyDeclared (l,c) id -> "Variable " ++ id ++" already declared in line " ++ show l ++ " and column " ++ show c ++ "."
-  ErrorGuardNotBoolean -> "Guard must be boolean."
+  ErrorGuardNotBoolean exp ty -> "Guard must be boolean but type " ++ show ty ++ " was found in expression " ++ printExpression tokens exp
   ErrorDeclarationBoundNotCorrectType ty id -> "Variable " ++ id ++ " is of type " ++ show ty ++ " instead of type array."
   ErrorDeclarationBoundOnlyConst id -> "Bound can be only a constant but variable " ++ id ++ " was found."
   ErrorArrayCallExpression -> "Must be call array reference []."
@@ -85,7 +95,7 @@ printDefinedError tokens error = case error of
   ErrorNotLeftExpression exp assgn  -> let expPos = getStartExpPos exp; (l,c) = getAssignPos assgn in  
     "Required left expression before the assignment but was found "  ++ printTokens (getTokens tokens expPos (l,c - 1)) ++ "."
   ErrorMissingReturn funname -> "In Function " ++ funname ++ ": Specify at least one return."
-  ErrorSignatureAlreadyDeclared (l,c) id -> "Signature " ++ id ++" with this parameter already declared in line " ++ show l ++ " and column " ++ show c ++ "."
+  ErrorSignatureAlreadyDeclared  locs (l,c) id -> "Signature with name " ++ id ++" and parameters type " ++ printTokensRange tokens locs ++ " already declared in line " ++ show l ++ " and column " ++ show c ++ "."
   ErrorOverloadingIncompatibleReturnType locStart (l,c) id ty1 ty2 -> "Overloading signature for function " ++ id ++ " must be of type " ++ show ty1 ++ " but was found type " ++ show ty2 ++ " in " ++ printTokens (getTokens tokens locStart (l,c - 1)) ++ "."
   ErrorBreakNotInsideAProcedure -> "Break command must be inside a while or dowhile."
   ErrorContinueNotInsideAProcedure -> "Continue command must be inside a while or dowhile."
@@ -99,6 +109,36 @@ printDefinedError tokens error = case error of
   ErrorWrongOperationAddress -> "Only permitted operation with pointer are plus or minus"
   ErrorCyclicDeclaration (l,c) id -> "Cyclic declaration with variable " ++ id ++ " in line " ++ show l ++ " and column " ++ show c ++ "." 
   ErrorMissingInitialization id -> "Missing initialization for variable " ++ id
+
+
+errorConvertIncompatibleDeclarationType loc idVar ty tyexp exp  = map errorConvertIncompatibleType'
+  where
+    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleTypes {}) = ErrorChecker loc $ ErrorIncompatibleDeclarationType idVar ty tyexp exp
+    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleDeclTypes {}) = ErrorChecker loc $ ErrorIncompatibleDeclarationType idVar ty tyexp exp
+    errorConvertIncompatibleType' error = error
+
+errorConvertIncompatibleReturnType loc idFun tyFun tyExp exp  = map errorConvertIncompatibleType'
+  where
+    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleTypes {}) = ErrorChecker loc $ ErrorIncompatibleReturnType idFun tyFun tyExp exp
+    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleDeclTypes {}) = ErrorChecker loc $ ErrorIncompatibleReturnType idFun tyFun tyExp exp
+    errorConvertIncompatibleType' error = error
+
+
+errorConvertIncompatibleUnaryType loc e ty1 ty2  = map errorConvertIncompatibleType'
+  where
+    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleTypes {}) = ErrorChecker loc $ ErrorIncompatibleUnaryOpType loc ty1 ty2 e
+    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleDeclTypes {}) = ErrorChecker loc $ ErrorIncompatibleUnaryOpType loc ty1 ty2 e
+    errorConvertIncompatibleType' error = error
+
+errorConvertIncompatibleBinaryType loc e1 e2 ty1 ty2  = map errorConvertIncompatibleType'
+  where
+    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleTypes {}) = ErrorChecker loc $ ErrorIncompatibleBinaryOpType loc ty1 ty2 e1 e2
+    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleDeclTypes {}) = ErrorChecker loc $ ErrorIncompatibleBinaryOpType loc ty1 ty2 e1 e2
+    errorConvertIncompatibleType' error = error
+
+printDeclExpression tokens declExpr = printTokens $ getTokens tokens (getExprDeclPos declExpr)  (getEndExprDeclPos declExpr)
+printExpression tokens expr = printTokens $ getTokens tokens (getStartExpPos expr)  (getEndExpPos expr)
+printTokensRange tokens (locStart, locEnd) = printTokens $ getTokens tokens locStart locEnd
 
 getTokens [] _ _ = []
 getTokens (x@(PT (Pn _ l c ) _ ):xs) start@(lstart, cstart) end@(lend, cend) 

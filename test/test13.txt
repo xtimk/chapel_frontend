@@ -1,16 +1,31 @@
-var a :int;
-var b = 2;
+var a :int = 5.8 * 9 + "ciao";
+var b = "ciao";
 var c = ["ddd", "dddd", "ffefew"];
 var u : bool;
 var k : bool;
 
-proc main(ref b:bool)
+proc main(ref b:bool) : int
 {
   k = a;
   var kkk = "mamma";
 
-  
+  while(a + 5 * 7 + "string" - 40)
+  {
 
-  b = "ciao";
+  }
   
+  return "ddd" + 10;
+
+  b = !"ciao";
+  
+}
+
+proc pippo(a:int, d:int)
+{
+
+}
+
+proc pippo(a:int, b:int)
+{
+
 }
