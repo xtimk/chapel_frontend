@@ -82,7 +82,7 @@ printDefinedError tokens error = case error of
   ErrorCalledProcWithVariable id -> "Variable " ++ id ++ " is not a procedure."
   ErrorNoPointerAddress ty id -> "Can only addressed a pointer but was found variable " ++ id ++ " of type " ++ show ty ++ "."
   ErrorAssignDecl -> "Cannot make implicit operation on declaration"
-  ErrorNotLeftExpression exp assgn  -> let expPos = getExpPos exp; (l,c) = getAssignPos assgn in  
+  ErrorNotLeftExpression exp assgn  -> let expPos = getStartExpPos exp; (l,c) = getAssignPos assgn in  
     "Required left expression before the assignment but was found "  ++ printTokens (getTokens tokens expPos (l,c - 1)) ++ "."
   ErrorMissingReturn funname -> "In Function " ++ funname ++ ": Specify at least one return."
   ErrorSignatureAlreadyDeclared (l,c) id -> "Signature " ++ id ++" with this parameter already declared in line " ++ show l ++ " and column " ++ show c ++ "."
