@@ -170,7 +170,7 @@ sup _ id loc ty1 ty2@(Array _ _) = createIncompatible id loc ty1 ty2
 
 createIncompatible id loc ty1 ty2 = DataChecker ty1 [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
 
-createIncompatibleRet id loc ty1 ty2 = DataChecker ty1 [ErrorChecker loc $ ErrorIncompatibleRetTypes id ty1 ty2]
+createIncompatibleRet id loc ty1 ty2 = DataChecker ty1 [ErrorChecker loc $ ErrorIncompatibleDeclTypes id ty1 ty2]
 
 
 errorIncompatibleTypesChange ty1 ty2 (ErrorChecker loc (ErrorIncompatibleDeclTypes id _ _)) = 
