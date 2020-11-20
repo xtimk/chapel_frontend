@@ -1,7 +1,7 @@
 TODO
 
  - SEMI-OBBLIGATORIO: Vedere se mettere ++ o --
- - SEMI-OBBLIGATORIO: Controllare che le variabili siano inizializzate
+
 
  - OBBLIGATORIO: Finire relazione 
    - descrivere gli errori del typechecker.
@@ -14,6 +14,7 @@ TODO
 
 Fatte:
 SEMI-OBBLIGATORIO: Introdurre il - unario.
+SEMI-OBBLIGATORIO: Controllare che le variabili siano inizializzate
 OBBLIGATORIO: Controllare suptable che sia conforme a quanto scritto nella relazione.
 OBBLIGATORIO: Print del TAC con i cast. Quasi finito, cosa rimane:
  - vedere cosa non funziona con il +=

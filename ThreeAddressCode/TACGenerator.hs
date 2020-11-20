@@ -54,8 +54,8 @@ tacGeneratorDeclExpression' assgn lengths temps decExp =
           res <- mapM (tacGeneratorIdentifier Nothing temp) (tail temps)
           return $ reverse tacEntry ++ [resFirst] ++ res
         else do
-          resFirst <- tacGeneratorArrayIdentifier labelExit temp  (getExpPos exp) lengths firstTemp
-          res <- mapM (tacGeneratorArrayIdentifier Nothing temp (getExpPos exp) lengths ) (tail temps)
+          resFirst <- tacGeneratorArrayIdentifier labelExit temp  (getStartExpPos exp) lengths firstTemp
+          res <- mapM (tacGeneratorArrayIdentifier Nothing temp (getStartExpPos exp) lengths ) (tail temps)
           return $ reverse tacEntry ++ [resFirst] ++ res
         where
           tacGeneratorRightExpression' _ ty = case ty of 
@@ -73,7 +73,7 @@ tacGeneratorDeclExpression'' assgn lengths@(x:xs) ids (y:ys) = do
   
 tacGeneratorIdentifierTemp id@(PIdent (_, identifier)) = do
   tacEnv <- get
-  let Checker.SymbolTable.Variable loc ty _ = getVarTypeTAC id tacEnv
+  let Checker.SymbolTable.Variable loc ty = getVarTypeTAC id tacEnv
   let temp = Temp ThreeAddressCode.TAC.Variable identifier loc ty
   return temp
 
@@ -82,7 +82,7 @@ tacGeneratorIdentifier labelExit tempRight tempLeft =
 
 tacGeneratorArrayIdentifier labelExit temp _ lenghts tempLeft@(Temp _ idVar locVar ty) = do
   tacEnv <- get
-  let Checker.SymbolTable.Variable loc ty _ = getVarTypeTACDirect locVar idVar tacEnv
+  let Checker.SymbolTable.Variable loc ty = getVarTypeTACDirect locVar idVar tacEnv
   let arrayPos = arrayCalculatePosition ty lenghts
   let temp1 = Temp ThreeAddressCode.TAC.Variable idVar loc ty
   let temp2 = Temp ThreeAddressCode.TAC.Fixed (show arrayPos) loc Int
@@ -302,7 +302,7 @@ tacGeneratorBooleanStatement loc rightExp = do
 
 tacGeneratorVariable expType identifier@(PIdent (_, id)) = do
   tacEnv <- get
-  let Checker.SymbolTable.Variable loc ty _ = getVarTypeTAC identifier tacEnv
+  let Checker.SymbolTable.Variable loc ty = getVarTypeTAC identifier tacEnv
   let varTemp =  Temp ThreeAddressCode.TAC.Variable id loc ty
   case ty of 
     Reference tyRef -> case expType of
@@ -383,8 +383,8 @@ tacCheckerBinaryBoolean vtype loc e1 op e2 = do
         (tacs, _) <- genLazyTacOR BooleanExp loc e1 op e2 ltrue lfalse
         return (tacs,fakeTemp)
       _ -> do
-        (tacs1, temp1, label1) <- tacGeneratorBooleanStatement (getExpPos e1) e1
-        (tacs2, temp2, label2) <- tacGeneratorBooleanStatement (getExpPos e2) e2
+        (tacs1, temp1, label1) <- tacGeneratorBooleanStatement (getStartExpPos e1) e1
+        (tacs2, temp2, label2) <- tacGeneratorBooleanStatement (getStartExpPos e2) e2
         let tacs = reverse tacs1 ++ attachLabelToFirstElem label1 (reverse tacs2)
         (tacRel, _temp) <- genLazyTacREL label2 temp1 op temp2 ltrue lfalse
         return (tacs ++ tacRel, fakeTemp)
@@ -569,7 +569,7 @@ tacGeneratorFunctionParameter expType paramPassed = case paramPassed of
       case exp of
         Evar identifier@(PIdent (_, id)) -> do
           tacEnv <- get
-          let Checker.SymbolTable.Variable loc ty _= getVarTypeTAC identifier tacEnv
+          let Checker.SymbolTable.Variable loc ty= getVarTypeTAC identifier tacEnv
           let varTemp =  Temp ThreeAddressCode.TAC.Variable id loc (convertTyMode mode ty) 
           return ([], varTemp)
         _ -> do
@@ -578,7 +578,7 @@ tacGeneratorFunctionParameter expType paramPassed = case paramPassed of
 
 tacGenerationEntryParameter temp = TACEntry Nothing $ SetParam temp
 
-tacGenerationTempParameter (Checker.SymbolTable.Variable locMode tyPar _,temp@(Temp _ _ _ tyTemp)) = 
+tacGenerationTempParameter (Checker.SymbolTable.Variable locMode tyPar,temp@(Temp _ _ _ tyTemp)) = 
     case (tyPar, tyTemp) of
       (Reference _, Reference _)  -> return ([], temp)
       (_, Reference tyFound) -> do
@@ -596,7 +596,7 @@ tacGenerationTempParameter (Checker.SymbolTable.Variable locMode tyPar _,temp@(T
 
 tacGeneratorArrayIndexing var@(Evar identifier@(PIdent (_, id))) arrayDecl = do
   tacEnv <- get
-  let Checker.SymbolTable.Variable loc ty _= getVarTypeTAC identifier tacEnv
+  let Checker.SymbolTable.Variable loc ty= getVarTypeTAC identifier tacEnv
   (tacsAdd, temp) <- tacGeneratorArrayIndexing' var arrayDecl
   let tySubArray = calculateSubArrayTy ty arrayDecl
   idArVal <- newtemp
@@ -681,7 +681,7 @@ tacGenerationArrayPosition (ArrayInit _ expressions _ ) = tacGenerationArrayPosi
       (tacOther, tempOthers) <- tacGenerationArrayPosition' xs
       return (tacExp ++ tacOther, tempExp:tempOthers)
 
-tacGenerationArrayPosAdd (Checker.SymbolTable.Variable loc ty _) temps = do
+tacGenerationArrayPosAdd (Checker.SymbolTable.Variable loc ty) temps = do
   (tacs, temp) <- tacGenerationArrayPosAdd' (tail (reverse (getArrayDimensions ty))) (reverse temps)
   idSize <- newtemp
   let size = sizeof ty

@@ -6,7 +6,7 @@ import Utils.AbsUtils
 type SymbolTable = Map String (String, EnvEntry)
 
 data EnvEntry = 
-  Variable Loc Type Bool
+  Variable Loc Type
   | Function [(Loc,[EnvEntry])] Type 
  deriving (Show)
 
