@@ -11,6 +11,8 @@ proc main(ref b:bool) : int
 
   kkk += "mamma";
 
+  main(k);
+
   while(a + 5 * 7 + "string" - 40)
   {
 

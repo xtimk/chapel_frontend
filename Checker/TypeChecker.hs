@@ -76,14 +76,14 @@ typeCheckerIdentifiers identifiers assgn typeLeft typeRight exp = do
 
 typeCheckerIdentifier assgn typeLeft typeRight exp id@(PIdent (loc, identifier))  = do
   (_s,_,current_id) <- get
-  --sup convertion
-  let DataChecker ty errors = sup SupDecl identifier loc typeLeft typeRight in do
-    modify $ addErrorsCurrentNode (errorConvertIncompatibleDeclarationType loc identifier typeLeft typeRight exp errors ++ typeCheckerAssignmentDecl assgn)
-    case ty of
-      Error -> get
-      _ -> do
-        modify (\(_s,tree,_i) -> (_s, typeCheckerVariable id tree ty current_id, _i ))
-        get
+  let (ty, compatibility) = sup SupDecl typeLeft typeRight 
+  let errorSup = createNewError (errorIncompatibleDeclarationType loc identifier typeLeft typeRight exp) compatibility
+  modify $ addErrorsCurrentNode (errorSup ++ typeCheckerAssignmentDecl assgn)
+  case ty of
+    Error -> get
+    _ -> do
+      modify (\(_s,tree,_i) -> (_s, typeCheckerVariable id tree ty current_id, _i ))
+      get
 
 typeCheckerFunction (FunDec (PProc (loc@(l,c),_) ) signature body@(BodyBlock  (POpenGraph (locGraph,_)) _ _)) = do
   tyReturn <- typeCheckerSignature loc locGraph signature
@@ -120,9 +120,8 @@ typeCheckerSignature' locstart locEnd locParamStart locParamEnd ident@(PIdent (l
             get
           Function varOfvar t -> do
             let errorsOverloading = typeCheckerSignatureOverloading (locParamStart,locParamEnd) identifier loc variables varOfvar
-            --sup convertion
-            let DataChecker _ errorsReturnType = sup SupFun identifier loc types t
-            let convertErrors = map (errorConvertOVerloadingReturn locstart locEnd) errorsReturnType
+            let (_,compatibility) = sup SupFun types t
+            let convertErrors = createNewError (errorOverloadingReturn loc locstart locEnd identifier types t) compatibility
             if null errors 
             then do
               put (symtable, updateTree (modFunAddOverloading identifier loc variables node) tree, currentIdNode )
@@ -265,9 +264,9 @@ typeCheckerReturn (PReturn (pos, _ret)) tyret exp = do
   case findProcedureGetBlkType tree current_id of
     ProcedureBlk _ -> do
       let DataChecker tyfun errs1 = getFunRetType (_s,tree,current_id);
-      --sup convertion
-      let DataChecker _ errs = sup SupRet "" pos tyret tyfun 
-      let errors = errs1 ++ errorConvertIncompatibleReturnType pos (getFunNameFromEnv (_s,tree,current_id)) tyfun tyret exp  errs 
+      let (_,compatibility) = sup SupRet tyret tyfun 
+      let returnError = createNewError (errorIncompatibleReturnType pos (getFunNameFromEnv (_s,tree,current_id)) tyfun tyret exp) compatibility
+      let errors = errs1 ++ returnError
       modify $ addErrorsCurrentNode errors
       get
     _otherwhise -> do
@@ -313,11 +312,10 @@ typeCheckerDeclExpression environment decExp = case decExp of
   ExprDecArray (ArrayInit _ expression _) -> foldl (typeCheckerDeclArrayExp environment) (DataChecker (Array Infered (0, -1)) []) expression
   ExprDec exp -> typeCheckerExpression environment exp
 
-typeCheckerDeclArrayExp environment types expression = case (typeCheckerDeclExpression environment expression, types) of
-  -- sup convertion 
-  (DataChecker typesFound errorsExp, DataChecker (Array typesInfered (first, n)) errorsTy) -> case sup SupDecl "array" (getExprDeclPos expression) typesInfered typesFound of
-    DataChecker Error e -> DataChecker (Array typesInfered (first, n + 1)) $ errorConvertIncompatibleDeclarationArrayType (getExprDeclPos expression)  typesInfered typesFound expression e ++ errorsExp ++ errorsTy
-    DataChecker typesChecked e -> DataChecker (Array typesChecked (first, n + 1)) (errorConvertIncompatibleDeclarationArrayType (getExprDeclPos expression) typesInfered typesFound expression e ++ errorsExp ++ errorsTy)  
+typeCheckerDeclArrayExp environment types exp = case (typeCheckerDeclExpression environment exp, types) of
+  (DataChecker typesFound errorsExp, DataChecker (Array typesInfered (first, n)) errorsTy) -> case sup SupDecl typesInfered typesFound of
+    (Error,compatibility) -> DataChecker (Array typesInfered (first, n + 1)) $ createNewError (errorIncompatibleDeclarationArrayType (getExprDeclPos exp)  typesInfered typesFound exp) compatibility ++ errorsExp ++ errorsTy
+    (typesChecked,compatibility) -> DataChecker (Array typesChecked (first, n + 1)) (createNewError (errorIncompatibleDeclarationArrayType (getExprDeclPos exp) typesInfered typesFound exp) compatibility ++ errorsExp ++ errorsTy)  
   (DataChecker _ err1, DataChecker ty err2 ) -> DataChecker ty (err1 ++ err2)
 
 typeCheckerBuildArrayParameter array = case array of
@@ -390,15 +388,16 @@ typeCheckerAssignment environment e1 assign e2 =
       DataChecker tyRight errRight = typeCheckerExpression environment e2 in 
         case assign of
           AssgnEq (PAssignmEq (_,_)) -> 
-            --sup convertion
-            let DataChecker ty errors = sup SupDecl "" (getStartExpPos e1) tyLeft tyRight; in 
-                  DataChecker ty (errLeft ++ errRight ++ errorConvertIncompatibleBinaryType assOp e1 e2 tyLeft tyRight errors)
+            
+            let (ty,compatibility) = sup SupDecl tyLeft tyRight
+                equalError = createNewError (errorIncompatibleBinaryType assOp e1 e2 tyLeft tyRight) compatibility  in 
+                  DataChecker ty (errLeft ++ errRight ++ equalError)
           AssgnPlEq (PAssignmPlus (_,_)) -> 
-            --sup convertion 
-            let DataChecker ty3 errors3 = sup SupPlus "" (getStartExpPos e1) tyLeft tyRight;
-                --sup convertion
-                DataChecker ty errors = sup SupDecl "" (getStartExpPos e1) tyLeft ty3 in  
-                  DataChecker ty (errLeft ++ errRight ++ errorConvertIncompatibleAssgnOpType assOp tyLeft e1 errors3 ++ errorConvertIncompatibleBinaryType assOp e1 e2 tyLeft tyRight errors)
+            let (ty3,compatibilityPlus) = sup SupPlus tyLeft tyRight
+                plusError = createNewError (errorIncompatibleAssgnOpType assOp tyLeft e1) compatibilityPlus
+                (ty,compatibilityEqual) = sup SupDecl tyLeft ty3 
+                equalError = createNewError (errorIncompatibleBinaryType assOp e1 e2 tyLeft tyRight) compatibilityEqual in  
+                  DataChecker ty (errLeft ++ errRight ++ plusError ++ equalError)
 
 typeCheckerLeftExpression assign enviroment exp = case exp of
   Evar {} -> typeCheckerExpression enviroment exp
@@ -460,35 +459,28 @@ checkCorrectTypeOfParam actual (PIdent (_, identifier)) passedParam (Variable _ 
           case exp of
             Evar (PIdent (_, identifier)) ->
               let DataChecker tyExp errorsExp = typeCheckerExpression environment exp
-              --sup convertion
-                  DataChecker _ errorsVar = sup SupFun "" (getStartExpPos exp) tyVar (convertTyMode mode tyExp) in 
-                    errorsIncompatibleTypesChangeToFun actual identifier (errorsVar ++ errorsExp)
+                  (ty1,compatibility) = sup SupFun tyVar (convertTyMode mode tyExp) 
+                  errorsVar = createNewError (errorIncompatibleTypesChangeToFun (getStartExpPos exp) actual identifier ty1 tyExp) compatibility in 
+                    errorsVar ++ errorsExp
             _ -> [ErrorChecker (getStartExpPos exp) ErrorCantUseExprInARefPassedVar]
         Utils.Type.Normal ->
           let DataChecker tyExp errorsExp = typeCheckerExpression environment exp
-          --sup convertion
-              DataChecker _ errorsVar = sup SupFun "" (getStartExpPos exp) tyVar (convertTyMode mode tyExp) in 
-                errorsIncompatibleTypesChangeToFun actual identifier (errorsVar ++ errorsExp)
-
-
-errorsIncompatibleTypesChangeToFun pos id = map (errorIncompatibleTypesChangeToFun pos id)
-
-errorIncompatibleTypesChangeToFun pos id (ErrorChecker loc (ErrorIncompatibleDeclTypes _ ty1 ty2)) = 
-  ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam pos ty1 ty2 id
-errorIncompatibleTypesChangeToFun _ _ error = error
+              (ty1, compatibility) = sup SupFun tyVar (convertTyMode mode tyExp) 
+              errorsVar = createNewError (errorIncompatibleTypesChangeToFun (getStartExpPos exp) actual identifier ty1 tyExp) compatibility in 
+                errorsVar ++ errorsExp
 
 typeCheckerExpression' environment supMode loc e1 e2 =
   let DataChecker tye1 errors1 = typeCheckerExpression environment e1; 
       DataChecker tye2 errors2 = typeCheckerExpression environment e2;
-       --sup convertion
-      DataChecker tye errors = sup supMode "" loc tye1 tye2 in 
-        DataChecker tye (errors1 ++ errors2 ++ errorConvertIncompatibleBinaryType loc e1 e2 tye1 tye2 errors)  
+      (tye,compatibility) = sup supMode tye1 tye2 
+      errors = createNewError (errorIncompatibleBinaryType loc e1 e2 tye1 tye2) compatibility in 
+        DataChecker tye (errors1 ++ errors2 ++ errors)  
 
 typeCheckerExpressionUnary' environment supMode loc e1 ty =
   let DataChecker tye1 errors1 = typeCheckerExpression environment e1
-      --sup convertion
-      DataChecker tye errors = sup supMode "" loc tye1 ty in 
-        DataChecker tye (errors1 ++ errorConvertIncompatibleUnaryType loc e1 ty tye1 errors)    
+      (tye,compatibility) = sup supMode tye1 ty 
+      errors = createNewError (errorIncompatibleUnaryType loc e1 ty tye1) compatibility in 
+        DataChecker tye (errors1 ++ errors)    
    
 
 typeCheckerDeclarationArray environment exp (ArrayInit _ arrays _ ) = case exp of
@@ -506,11 +498,11 @@ typeCheckerDeclarationArray environment exp (ArrayInit _ arrays _ ) = case exp o
 getDeclarationDimension _ [] = DataChecker 0 [] 
 getDeclarationDimension environment (array:arrays) = let DataChecker dimension errors = getDeclarationDimension environment arrays in 
   case array of
-    ExprDec exp -> let DataChecker ty expErrors = typeCheckerExpression environment exp 
-
-    --sup convertion
-                       DataChecker _ errorsFound = sup SupDecl "" (getStartExpPos exp) Int ty in
-                         DataChecker (dimension + 1) (errors ++ errorConvertIncompatibleTypeArrayIndex (getStartExpPos exp) ty exp errorsFound ++ expErrors)
+    ExprDec exp -> 
+      let DataChecker ty expErrors = typeCheckerExpression environment exp 
+          (_,compatibility) = sup SupDecl Int ty 
+          errorsFound = createNewError (errorIncompatibleTypeArrayIndex (getStartExpPos exp) ty exp )  compatibility in
+            DataChecker (dimension + 1) (errors ++ errorsFound ++ expErrors)
     expDecl -> DataChecker (dimension + 1) $ ErrorChecker (getExprDeclPos expDecl) ErrorArrayExpressionRequest : errors
 
 
