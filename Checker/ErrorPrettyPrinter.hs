@@ -114,47 +114,19 @@ printDefinedError tokens error = case error of
   ErrorMissingInitialization id -> "Missing initialization for variable " ++ id
 
 
-errorConvertIncompatibleTypeArrayIndex loc ty exp  = map errorConvertIncompatibleType'
-  where
-    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleTypes {}) = ErrorChecker loc $ ErrorIncompatibleTypeArrayIndex ty exp
-    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleDeclTypes {}) = ErrorChecker loc $ ErrorIncompatibleTypeArrayIndex ty exp
+createNewError errorFun isCompatible = [errorFun | not isCompatible]
 
-errorConvertIncompatibleAssgnOpType loc ty exp  = map errorConvertIncompatibleType'
-  where
-    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleTypes {}) = ErrorChecker loc $ ErrorIncompatibleAssgnOpType loc ty exp
-    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleDeclTypes {}) = ErrorChecker loc $ ErrorIncompatibleAssgnOpType loc ty exp
-    errorConvertIncompatibleType' error = error
-
-errorConvertIncompatibleDeclarationArrayType loc ty tyexp exp  = map errorConvertIncompatibleType'
-  where
-    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleTypes {}) = ErrorChecker loc $ ErrorIncompatibleDeclarationArrayType ty tyexp exp
-    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleDeclTypes {}) = ErrorChecker loc $ ErrorIncompatibleDeclarationArrayType ty tyexp exp
-    errorConvertIncompatibleType' error = error
-
-errorConvertIncompatibleDeclarationType loc idVar ty tyexp exp  = map errorConvertIncompatibleType'
-  where
-    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleTypes {}) = ErrorChecker loc $ ErrorIncompatibleDeclarationType idVar ty tyexp exp
-    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleDeclTypes {}) = ErrorChecker loc $ ErrorIncompatibleDeclarationType idVar ty tyexp exp
-    errorConvertIncompatibleType' error = error
-
-errorConvertIncompatibleReturnType loc idFun tyFun tyExp exp  = map errorConvertIncompatibleType'
-  where
-    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleTypes {}) = ErrorChecker loc $ ErrorIncompatibleReturnType idFun tyFun tyExp exp
-    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleDeclTypes {}) = ErrorChecker loc $ ErrorIncompatibleReturnType idFun tyFun tyExp exp
-    errorConvertIncompatibleType' error = error
+errorOverloadingReturn loc locStart locEnd id ty1 ty2 = ErrorChecker loc $ ErrorOverloadingIncompatibleReturnType locStart locEnd id ty1 ty2
+errorIncompatibleTypeArrayIndex loc ty exp = ErrorChecker loc $ ErrorIncompatibleTypeArrayIndex ty exp
+errorIncompatibleAssgnOpType loc ty exp  = ErrorChecker loc $ ErrorIncompatibleAssgnOpType loc ty exp
+errorIncompatibleDeclarationArrayType loc ty tyexp exp =  ErrorChecker loc $ ErrorIncompatibleDeclarationArrayType ty tyexp exp
+errorIncompatibleDeclarationType loc idVar ty tyexp exp = ErrorChecker loc $ ErrorIncompatibleDeclarationType idVar ty tyexp exp
+errorIncompatibleReturnType loc idFun tyFun tyExp exp = ErrorChecker loc $ ErrorIncompatibleReturnType idFun tyFun tyExp exp
+errorIncompatibleUnaryType loc e ty1 ty2 = ErrorChecker loc $ ErrorIncompatibleUnaryOpType loc ty1 ty2 e
+errorIncompatibleBinaryType loc e1 e2 ty1 ty2  = ErrorChecker loc $ ErrorIncompatibleBinaryOpType loc ty1 ty2 e1 e2
+errorIncompatibleTypesChangeToFun loc pos id ty1 ty2 = ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam pos ty1 ty2 id
 
 
-errorConvertIncompatibleUnaryType loc e ty1 ty2  = map errorConvertIncompatibleType'
-  where
-    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleTypes {}) = ErrorChecker loc $ ErrorIncompatibleUnaryOpType loc ty1 ty2 e
-    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleDeclTypes {}) = ErrorChecker loc $ ErrorIncompatibleUnaryOpType loc ty1 ty2 e
-    errorConvertIncompatibleType' error = error
-
-errorConvertIncompatibleBinaryType loc e1 e2 ty1 ty2  = map errorConvertIncompatibleType'
-  where
-    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleTypes {}) = ErrorChecker loc $ ErrorIncompatibleBinaryOpType loc ty1 ty2 e1 e2
-    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleDeclTypes {}) = ErrorChecker loc $ ErrorIncompatibleBinaryOpType loc ty1 ty2 e1 e2
-    errorConvertIncompatibleType' error = error
 
 printDeclExpression tokens declExpr = printTokens $ getTokens tokens (getExprDeclPos declExpr)  (getEndExprDeclPos declExpr)
 printExpression tokens expr = printTokens $ getTokens tokens (getStartExpPos expr)  (getEndExpPos expr)
