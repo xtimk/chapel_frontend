@@ -11,6 +11,9 @@ data DataChecker a = DataChecker {
 
 data DefinedError = 
   ErrorVarNotDeclared String | 
+  ErrorIncompatibleTypeArrayIndex Type Exp | 
+  ErrorIncompatibleAssgnOpType Loc Type Exp |
+  ErrorIncompatibleDeclarationArrayType Type Type ExprDecl  |
   ErrorIncompatibleDeclarationType String Type Type (Maybe ExprDecl) |
   ErrorIncompatibleReturnType String Type Type (Maybe Exp) |
   ErrorIncompatibleUnaryOpType Loc Type Type Exp |
@@ -45,7 +48,6 @@ data DefinedError =
   ErrorNotLeftExpression Exp AssgnmOp |
   ErrorOverloadingIncompatibleReturnType Loc Loc String Type Type |
   ErrorFunctionVoid |
-  ErrorReturnNotVoid |
   NoDecucibleType String |
   ErrorFunctionWithNotEnoughReturns String |
   IncompatibleArrayDimension Int Int |
@@ -65,14 +67,17 @@ printError tokens (ErrorChecker (l,c) error) =
 
 printDefinedError tokens error = case error of
   ErrorVarNotDeclared id -> "Variable " ++ id ++ " not declared."
+  ErrorIncompatibleTypeArrayIndex tyFound exp -> "Only type Int is accepted for indexing an array but was found type " ++ show tyFound ++ " in expression " ++ printExpression tokens exp
+  ErrorIncompatibleAssgnOpType locOp ty exp -> "Assignment operation " ++ printTokensRange tokens (locOp,locOp) ++ " is not compatible with type " ++ show ty ++ " for left expression " ++ printExpression tokens exp
+  ErrorIncompatibleDeclarationArrayType tyAr tyFound exp -> "On actual array declaration cell type found expect is " ++ show tyAr ++ " but was found type " ++ show tyFound ++ " in expression " ++ printDeclExpression tokens exp ++ "."
   ErrorIncompatibleDeclarationType idVar ty tyexp exp -> case exp of
     Just exp -> "Variable " ++ idVar ++ " is of type " ++ show ty ++ " but was found type " ++ show tyexp ++ " in expression " ++ printDeclExpression tokens exp ++ "."
-    --Nothing -> non lo raggiunge
+    Nothing -> "non lo raggiunge"
   ErrorIncompatibleReturnType idFun tyFun tyExp exp -> case exp of
     Just exp -> "Function " ++ idFun ++ " returns type " ++ show tyFun ++  ", but expression " ++ printExpression tokens exp   ++ " in return statement is of type "  ++ show tyExp ++ "." 
-    --Nothing non lo raggiunge
+    Nothing -> "Function " ++ idFun ++ " returns type " ++ show tyFun ++  " but nothing is returned " 
   ErrorIncompatibleUnaryOpType locOp ty1 ty2 e -> "Operation " ++ printTokensRange tokens (locOp,locOp) ++ " requires type " ++ show ty1 ++ " but was found type " ++ show ty2 ++ " in expression " ++ printExpression tokens e ++ "."
-  ErrorIncompatibleBinaryOpType locOp ty1 ty2 e1 e2 -> "Not compatible types " ++ show ty1 ++  " and "  ++ show ty2 ++ " for operation " ++ printTokensRange tokens (locOp,locOp) ++ " between expression " ++ printExpression tokens e1 ++ " and expression " ++ printExpression tokens e2 ++ "." 
+  ErrorIncompatibleBinaryOpType locOp ty1 ty2 e1 e2 -> "Not compatible types " ++ show ty1 ++  " and "  ++ show ty2 ++ " for operation " ++ printTokensRange tokens (locOp,locOp) ++ " between expressions " ++ printExpression tokens e1 ++ " and " ++ printExpression tokens e2 ++ "." 
   ErrorIncompatibleTypes ty1 ty2 -> "Not compatible types " ++ show ty1 ++  " and "  ++ show ty2 ++ "."
   ErrorIncompatibleDeclTypes id ty1 ty2 -> "Variable " ++ id ++ " of type " ++ show ty1 ++  " not compatible with type "  ++ show ty2 ++ "."
   ErrorVarAlreadyDeclared (l,c) id -> "Variable " ++ id ++" already declared in line " ++ show l ++ " and column " ++ show c ++ "."
@@ -100,8 +105,6 @@ printDefinedError tokens error = case error of
   ErrorBreakNotInsideAProcedure -> "Break command must be inside a while or dowhile."
   ErrorContinueNotInsideAProcedure -> "Continue command must be inside a while or dowhile."
   ErrorOnlyRightExpression _exp -> "Statement must be an assignment or left expression"
-  ErrorFunctionVoid -> "A procedure cannot return a value"
-  ErrorReturnNotVoid -> "Function must return a value"
   NoDecucibleType id -> "Impossible infered type from expression for variable " ++ show id ++ "."
   ErrorFunctionWithNotEnoughReturns funname -> "In function " ++ show funname ++ ": there is a possible path in the code with no returns."
   IncompatibleArrayDimension dim1 dim2 -> "Incompatible array dimension. First is "++ show dim1 ++ " and second is " ++  show dim2 ++"."
@@ -110,6 +113,23 @@ printDefinedError tokens error = case error of
   ErrorCyclicDeclaration (l,c) id -> "Cyclic declaration with variable " ++ id ++ " in line " ++ show l ++ " and column " ++ show c ++ "." 
   ErrorMissingInitialization id -> "Missing initialization for variable " ++ id
 
+
+errorConvertIncompatibleTypeArrayIndex loc ty exp  = map errorConvertIncompatibleType'
+  where
+    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleTypes {}) = ErrorChecker loc $ ErrorIncompatibleTypeArrayIndex ty exp
+    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleDeclTypes {}) = ErrorChecker loc $ ErrorIncompatibleTypeArrayIndex ty exp
+
+errorConvertIncompatibleAssgnOpType loc ty exp  = map errorConvertIncompatibleType'
+  where
+    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleTypes {}) = ErrorChecker loc $ ErrorIncompatibleAssgnOpType loc ty exp
+    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleDeclTypes {}) = ErrorChecker loc $ ErrorIncompatibleAssgnOpType loc ty exp
+    errorConvertIncompatibleType' error = error
+
+errorConvertIncompatibleDeclarationArrayType loc ty tyexp exp  = map errorConvertIncompatibleType'
+  where
+    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleTypes {}) = ErrorChecker loc $ ErrorIncompatibleDeclarationArrayType ty tyexp exp
+    errorConvertIncompatibleType' (ErrorChecker _ ErrorIncompatibleDeclTypes {}) = ErrorChecker loc $ ErrorIncompatibleDeclarationArrayType ty tyexp exp
+    errorConvertIncompatibleType' error = error
 
 errorConvertIncompatibleDeclarationType loc idVar ty tyexp exp  = map errorConvertIncompatibleType'
   where

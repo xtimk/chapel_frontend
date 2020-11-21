@@ -9,39 +9,11 @@ data SupMode = SupDecl | SupFun | SupBool | SupPlus | SupMinus |  SupArith | Sup
 supTac supmode type1 type2 = 
   let (DataChecker tye _e) = sup supmode "id" (-3,-3) type1 type2 in
     tye
--- supTac Int Int = Int
--- supTac Int Real = Real
--- supTac Real Int = Real
--- supTac Char Int = Int
--- supTac Int Char = Int
--- supTac String String = String
--- supTac Char Char = Char
--- supTac Real Real = Real
-
--- supTac Char Real = Real
--- supTac Real Char = Real
-
--- supTac Bool Bool = Bool
--- supTac (Reference ty1) ty2 = supTac ty1 ty2
--- supTac ty1 (Reference ty2) = supTac ty1 ty2
--- supTac (Pointer ty1) ty2 = supTac ty1 ty2
--- supTac ty1 (Pointer ty2) = supTac ty1 ty2
-
--- supTac (Array ty bounds) Int = Int
-
-
--- supTac (Array Int bounds) (Array Real bounds2) = (Array Real bounds2)
--- supTac (Array Real bounds) (Array Int bounds2) = (Array Int bounds2)
--- supTac (Array Int bounds) (Array Int bounds2) = (Array Int bounds2)
--- supTac (Array Real bounds) (Array Real bounds2) = (Array Real bounds2)
-
--- supTac (Array complex1 bounds) (Array complex2 bounds2) = (Array Int bounds2)
-
 
 --Void 
 sup _ _ _ Void Void =  DataChecker Void []
-sup _ _ loc Void ty2 = DataChecker ty2 [ErrorChecker loc ErrorReturnNotVoid]
-sup _ _ loc ty1 Void = DataChecker ty1 [ErrorChecker loc ErrorFunctionVoid]
+sup _ id loc ty1@Void ty2 = createIncompatible id loc ty1 ty2
+sup _ id loc ty1 ty2@Void = createIncompatible id loc ty1 ty2
 --Infered
 sup _ _ _ Infered ty = DataChecker ty []
 sup _ _ _ ty Infered = DataChecker ty []
@@ -59,19 +31,19 @@ sup mode id loc point@(Pointer _p1) (Pointer _p2) = let DataChecker ty errors = 
   SupMinus -> DataChecker (Pointer ty) errors
   SupRet -> DataChecker (Pointer ty) errors
   SupDecl -> DataChecker (Pointer ty) errors
-  _ -> DataChecker point [ErrorChecker loc ErrorWrongOperationAddress]
-sup mode _ loc point@(Pointer _p) Int = case mode of 
+  _ -> createIncompatible id loc point _p2
+sup mode id loc point@(Pointer _p) Int = case mode of 
   SupPlus -> DataChecker (Pointer _p) []
   SupMinus -> DataChecker (Pointer _p) []
   SupRet -> DataChecker (Pointer _p) []
   SupDecl -> DataChecker (Pointer _p) []
-  _ -> DataChecker point [ErrorChecker loc $ ErrorCantOpToAddress Int]
-sup _ _ loc (Pointer _p) ty = DataChecker _p [ErrorChecker loc $ ErrorCantOpToAddress ty]
-sup mode _ loc Int point@(Pointer _p) = case mode of 
+  _ -> createIncompatible id loc point Int
+sup _ id loc point@(Pointer _p) ty = createIncompatible id loc point ty 
+sup mode id loc Int point@(Pointer _p) = case mode of 
   SupPlus -> DataChecker (Pointer _p) []
   SupMinus -> DataChecker (Pointer _p) []
-  _ -> DataChecker point [ErrorChecker loc $ ErrorCantOpToAddress Int]
-sup _ _ loc ty (Pointer _p) = DataChecker _p [ErrorChecker loc $ ErrorCantOpToAddress ty]
+  _ ->createIncompatible id loc Int point
+sup _ id loc ty point@(Pointer _p) = createIncompatible id loc ty point  
 --Int 
 sup mode _ _ Int Int = case mode of 
   SupBool -> DataChecker Bool []
@@ -92,7 +64,6 @@ sup _ id loc ty1@Int ty2@Bool = createIncompatible id loc ty1 ty2
 sup mode id loc ty1@Real ty2@Int = case mode of
   SupFun -> createIncompatible id loc ty1 ty2
   SupMod ->  createIncompatible id loc ty1 ty2
-  SupRet -> createIncompatibleRet id loc ty1 ty2
   SupBool -> DataChecker Bool []
   _ -> DataChecker Real []
 sup mode id loc ty1@Real ty2@Real = case mode of
@@ -105,10 +76,7 @@ sup mode id loc ty1@Real ty2@Char = case mode of
   SupBool -> DataChecker Bool []
   _ -> DataChecker Real []
 sup _ id loc ty1@Real ty2@String = createIncompatible id loc ty1 ty2
-sup mode id loc ty1@Real ty2@Bool = case mode of
-  SupRet -> createIncompatibleRet id loc ty1 ty2
-  SupFun -> createIncompatible id loc ty1 ty2
-  _otherwhise -> createIncompatible id loc ty1 ty2
+sup _ id loc ty1@Real ty2@Bool = createIncompatible id loc ty1 ty2
 --Char
 sup mode id loc ty1@Char ty2@Int = case mode of
   SupFun -> createIncompatible id loc ty1 ty2
