@@ -24,24 +24,23 @@ data DefinedError =
   ErrorGuardNotBoolean Exp Type|
   ErrorDeclarationBoundOnlyConst String |
   ErrorDeclarationBoundNotCorrectType Type String |
-  ErrorArrayCallExpression |
+  ErrorArrayCallExpression Exp|
   ErrorArrayIdentifierType Type String |
   ErrorDeclarationBoundArray Type String |
   ErrorBoundsArray Int Int |
   ErrorDimensionArray Int Loc Int | 
   ErrorWrongDimensionArray Int Int String |
-  ErrorArrayExpressionRequest |
-  ErrorCantOpToAddress Type|
+  ErrorArrayExpressionRequest ExprDecl|
   ErrorWrongOperationAddress |
-  ErrorCantAddressAnExpression |
+  ErrorCantAddressAnExpression Exp|
   ErrorReturnNotInsideAProcedure |
   ErrorBreakNotInsideAProcedure |
   ErrorContinueNotInsideAProcedure |
   ErrorCalledProcWithWrongTypeParam Int Type Type String|
   ErrorCalledProcWrongArgs Int Int String |
   ErrorCalledProcWithVariable String |
-  ErrorNoPointerAddress Type String |
-  ErrorAssignDecl |
+  ErrorNoPointerAddress Type Exp|
+  ErrorAssignDecl String|
   ErrorOnlyRightExpression Exp |
   ErrorNotLeftExpression Exp AssgnmOp |
   ErrorOverloadingIncompatibleReturnType Loc Loc String Type Type |
@@ -64,39 +63,38 @@ printError tokens (ErrorChecker (l,c) error) =
 
 printDefinedError tokens error = case error of
   ErrorVarNotDeclared id -> "Variable " ++ id ++ " not declared."
-  ErrorIncompatibleTypeArrayIndex tyFound exp -> "Only type Int is accepted for indexing an array but was found type " ++ show tyFound ++ " in expression " ++ printExpression tokens exp
-  ErrorIncompatibleAssgnOpType locOp ty exp -> "Assignment operation " ++ printTokensRange tokens (locOp,locOp) ++ " is not compatible with type " ++ show ty ++ " for left expression " ++ printExpression tokens exp
-  ErrorIncompatibleDeclarationArrayType tyAr tyFound exp -> "On actual array declaration cell type found expect is " ++ show tyAr ++ " but was found type " ++ show tyFound ++ " in expression " ++ printDeclExpression tokens exp ++ "."
+  ErrorIncompatibleTypeArrayIndex tyFound exp -> "Only type Int is accepted for indexing an array but was found type " ++ prettyPrinterType tyFound ++ " in expression " ++ printExpression tokens exp
+  ErrorIncompatibleAssgnOpType locOp ty exp -> "Assignment operation " ++ printTokensRange tokens (locOp,locOp) ++ " is not compatible with type " ++ prettyPrinterType ty ++ " for left expression " ++ printExpression tokens exp
+  ErrorIncompatibleDeclarationArrayType tyAr tyFound exp -> "On actual array declaration cell type found expect is " ++ prettyPrinterType tyAr ++ " but was found type " ++ prettyPrinterType tyFound ++ " in expression " ++ printDeclExpression tokens exp ++ "."
   ErrorIncompatibleDeclarationType idVar ty tyexp exp -> case exp of
-    Just exp -> "Variable " ++ idVar ++ " is of type " ++ show ty ++ " but was found type " ++ show tyexp ++ " in expression " ++ printDeclExpression tokens exp ++ "."
+    Just exp -> "Variable \"" ++ idVar ++ "\" is of type " ++ prettyPrinterType ty ++ " but was found type " ++ prettyPrinterType tyexp ++ " in expression " ++ printDeclExpression tokens exp ++ "."
     Nothing -> "non lo raggiunge"
   ErrorIncompatibleReturnType idFun tyFun tyExp exp -> case exp of
-    Just exp -> "Function " ++ idFun ++ " returns type " ++ show tyFun ++  ", but expression " ++ printExpression tokens exp   ++ " in return statement is of type "  ++ show tyExp ++ "." 
-    Nothing -> "Function " ++ idFun ++ " returns type " ++ show tyFun ++  " but nothing is returned " 
-  ErrorIncompatibleUnaryOpType locOp ty1 ty2 e -> "Operation " ++ printTokensRange tokens (locOp,locOp) ++ " requires type " ++ show ty1 ++ " but was found type " ++ show ty2 ++ " in expression " ++ printExpression tokens e ++ "."
-  ErrorIncompatibleBinaryOpType locOp ty1 ty2 e1 e2 -> "Not compatible types " ++ show ty1 ++  " and "  ++ show ty2 ++ " for operation " ++ printTokensRange tokens (locOp,locOp) ++ " between expressions " ++ printExpression tokens e1 ++ " and " ++ printExpression tokens e2 ++ "." 
+    Just exp -> "Function \"" ++ idFun ++ "\" returns type " ++ prettyPrinterType tyFun ++  ", but expression " ++ printExpression tokens exp   ++ " in return statement is of type "  ++ prettyPrinterType tyExp ++ "." 
+    Nothing -> "Function \"" ++ idFun ++ "\" returns type " ++ prettyPrinterType tyFun ++  " but nothing is returned " 
+  ErrorIncompatibleUnaryOpType locOp ty1 ty2 e -> "Operation " ++ printTokensRange tokens (locOp,locOp) ++ " requires type " ++ prettyPrinterType ty1 ++ " but was found type " ++ prettyPrinterType ty2 ++ " in expression " ++ printExpression tokens e ++ "."
+  ErrorIncompatibleBinaryOpType locOp ty1 ty2 e1 e2 -> "Not compatible types " ++ prettyPrinterType ty1 ++  " and "  ++ prettyPrinterType ty2 ++ " for operation " ++ printTokensRange tokens (locOp,locOp) ++ " between expressions " ++ printExpression tokens e1 ++ " and " ++ printExpression tokens e2 ++ "." 
   ErrorVarAlreadyDeclared (l,c) id -> "Variable " ++ id ++" already declared in line " ++ show l ++ " and column " ++ show c ++ "."
-  ErrorGuardNotBoolean exp ty -> "Guard must be boolean but type " ++ show ty ++ " was found in expression " ++ printExpression tokens exp
-  ErrorDeclarationBoundNotCorrectType ty id -> "Variable " ++ id ++ " is of type " ++ show ty ++ " instead of type array."
+  ErrorGuardNotBoolean exp ty -> "Guard must be boolean but type " ++ prettyPrinterType ty ++ " was found in expression " ++ printExpression tokens exp
+  ErrorDeclarationBoundNotCorrectType ty id -> "Variable " ++ id ++ " is of type " ++ prettyPrinterType ty ++ " instead of type array."
   ErrorDeclarationBoundOnlyConst id -> "Bound can be only a constant but variable " ++ id ++ " was found."
-  ErrorArrayCallExpression -> "Must be call array reference []."
-  ErrorDeclarationBoundArray ty const -> "Bound of array must be an Int but was found " ++ show const ++ " of type " ++ show ty ++ "."
+  ErrorArrayCallExpression exp -> "Only a variable can index like an array but was found expression " ++ printExpression tokens exp ++ "."
+  ErrorDeclarationBoundArray ty const -> "Bound of array must be an Int but was found " ++ show const ++ " of type " ++ prettyPrinterType ty ++ "."
   ErrorBoundsArray boundLeft boundRight -> "In arrays bound right must be greater than bound left but was found " ++ show boundLeft ++ " in bound left and " ++ show boundRight ++ " in bound right."
   ErrorWrongDimensionArray arDim callDim id -> "Array variable " ++ id ++ " is declared of " ++ show arDim ++ " dimensions but is called to keep " ++ show callDim ++ " dimensions."
-  ErrorArrayExpressionRequest -> "Must be call array reference []."
-  ErrorCantOpToAddress ty -> "Operation with pointer must be with Int or Pointer but was found type "++ show ty ++ "."
-  ErrorCantAddressAnExpression -> "An expression cannot address"
+  ErrorArrayExpressionRequest expDecl-> "Must be call an array indexing like \" a[2,3] \" but was found an array declaration " ++ printDeclExpression tokens expDecl ++ "."
+  ErrorCantAddressAnExpression exp -> "An expression cannot address in " ++ printExpression tokens exp ++ "."
   ErrorReturnNotInsideAProcedure -> "Return can be write only in a procedure"
-  ErrorCalledProcWithWrongTypeParam pos ty1 ty2 id-> "Parameter in position " ++ show pos ++ " must be of type " ++ show ty1 ++ " but was found type "++ show ty2 ++ " on call function " ++ id ++ "."
+  ErrorCalledProcWithWrongTypeParam pos ty1 ty2 id-> "On call function \"" ++ id ++ "\" parameter in position " ++ show pos ++ " must be of type " ++ prettyPrinterTypeParams ty1 ++ " but was found type "++ prettyPrinterTypeParams ty2 ++ "."
   ErrorCalledProcWrongArgs dim1 dim2 id-> "Function " ++ id ++ " expect " ++ show dim1 ++ " arguments but found " ++ show dim2 ++ " arguments."
   ErrorCalledProcWithVariable id -> "Variable " ++ id ++ " is not a procedure."
-  ErrorNoPointerAddress ty id -> "Can only addressed a pointer but was found variable " ++ id ++ " of type " ++ show ty ++ "."
-  ErrorAssignDecl -> "Cannot make implicit operation on declaration"
+  ErrorNoPointerAddress ty exp -> "Can only addressed a pointer but was found expression " ++ printExpression tokens exp ++ " of type " ++ prettyPrinterType ty ++ "."
+  ErrorAssignDecl id -> "Cannot make implicit operation on declaration in variable \"" ++ id ++ "\"."
   ErrorNotLeftExpression exp assgn  -> let expPos = getStartExpPos exp; (l,c) = getAssignPos assgn in  
     "Required left expression before the assignment but was found "  ++ printTokens (getTokens tokens expPos (l,c - 1)) ++ "."
   ErrorMissingReturn funname -> "In Function " ++ funname ++ ": Specify at least one return."
   ErrorSignatureAlreadyDeclared  locs (l,c) id -> "Signature with name " ++ id ++" and parameters type " ++ printTokensRange tokens locs ++ " already declared in line " ++ show l ++ " and column " ++ show c ++ "."
-  ErrorOverloadingIncompatibleReturnType locStart (l,c) id ty1 ty2 -> "Overloading signature for function " ++ id ++ " must be of type " ++ show ty1 ++ " but was found type " ++ show ty2 ++ " in " ++ printTokens (getTokens tokens locStart (l,c - 1)) ++ "."
+  ErrorOverloadingIncompatibleReturnType locStart (l,c) id ty1 ty2 -> "Overloading signature for function " ++ id ++ " must be of type " ++ prettyPrinterType ty1 ++ " but was found type " ++ prettyPrinterType ty2 ++ " in " ++ printTokens (getTokens tokens locStart (l,c - 1)) ++ "."
   ErrorBreakNotInsideAProcedure -> "Break command must be inside a while or dowhile."
   ErrorContinueNotInsideAProcedure -> "Continue command must be inside a while or dowhile."
   ErrorOnlyRightExpression _exp -> "Statement must be an assignment or left expression"
@@ -108,6 +106,21 @@ printDefinedError tokens error = case error of
   ErrorCyclicDeclaration (l,c) id -> "Cyclic declaration with variable " ++ id ++ " in line " ++ show l ++ " and column " ++ show c ++ "." 
   ErrorMissingInitialization id -> "Missing initialization for variable " ++ id
 
+prettyPrinterTypeParams ty = case ty of
+  Reference ty -> prettyPrinterType ty ++ " in reference modality"
+  _ -> prettyPrinterType ty
+
+prettyPrinterType ty  = case ty of
+  tyAr@(Array ty _) -> "array of dimension [" ++ show (getArrayLenght tyAr) ++ prettyPrinterTypeArray ty
+  Reference ty ->  prettyPrinterType ty
+  Pointer ty -> "*" ++ prettyPrinterType ty
+  Error -> "impossible to infered from context ( check for other errors )"
+  _ -> show ty
+
+prettyPrinterTypeArray tyAr@(Array ty _) = "," ++ show (getArrayLenght tyAr) ++ prettyPrinterTypeArray ty
+prettyPrinterTypeArray ty = "] of type " ++ prettyPrinterType ty
+
+  
 
 createNewError errorFun isCompatible = [errorFun | not isCompatible]
 

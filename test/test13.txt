@@ -1,17 +1,24 @@
 var a :int = 5.8 * 9 + "ciao";
 var b = "ciao";
-var c : [4] string= ["ddd", "piipo", "ffefew"];
+var c : [3] string= ["ddd", "piipo", "ffefew"];
 var u : bool;
 var k : bool;
 
 proc main(ref b:bool) : int
 {
+  var klkk = &c;
+  var owefkjoekjfowefkj: string =  (*klkk)[2];
+
   k = a;
   var kkk = "mamma";
 
   kkk += "mamma";
 
   main(k);
+
+  var l  = c[[3]];
+  
+ 
 
   while(a + 5 * 7 + "string" - 40)
   {
