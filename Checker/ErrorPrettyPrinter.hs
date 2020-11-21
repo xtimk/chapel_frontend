@@ -18,8 +18,6 @@ data DefinedError =
   ErrorIncompatibleReturnType String Type Type (Maybe Exp) |
   ErrorIncompatibleUnaryOpType Loc Type Type Exp |
   ErrorIncompatibleBinaryOpType Loc Type Type Exp Exp |
-  ErrorIncompatibleTypes Type Type | 
-  ErrorIncompatibleDeclTypes String Type Type | 
   ErrorMissingReturn String | 
   ErrorVarAlreadyDeclared Loc String |
   ErrorSignatureAlreadyDeclared  (Loc,Loc)  Loc String |
@@ -47,7 +45,6 @@ data DefinedError =
   ErrorOnlyRightExpression Exp |
   ErrorNotLeftExpression Exp AssgnmOp |
   ErrorOverloadingIncompatibleReturnType Loc Loc String Type Type |
-  ErrorFunctionVoid |
   NoDecucibleType String |
   ErrorFunctionWithNotEnoughReturns String |
   IncompatibleArrayDimension Int Int |
@@ -78,8 +75,6 @@ printDefinedError tokens error = case error of
     Nothing -> "Function " ++ idFun ++ " returns type " ++ show tyFun ++  " but nothing is returned " 
   ErrorIncompatibleUnaryOpType locOp ty1 ty2 e -> "Operation " ++ printTokensRange tokens (locOp,locOp) ++ " requires type " ++ show ty1 ++ " but was found type " ++ show ty2 ++ " in expression " ++ printExpression tokens e ++ "."
   ErrorIncompatibleBinaryOpType locOp ty1 ty2 e1 e2 -> "Not compatible types " ++ show ty1 ++  " and "  ++ show ty2 ++ " for operation " ++ printTokensRange tokens (locOp,locOp) ++ " between expressions " ++ printExpression tokens e1 ++ " and " ++ printExpression tokens e2 ++ "." 
-  ErrorIncompatibleTypes ty1 ty2 -> "Not compatible types " ++ show ty1 ++  " and "  ++ show ty2 ++ "."
-  ErrorIncompatibleDeclTypes id ty1 ty2 -> "Variable " ++ id ++ " of type " ++ show ty1 ++  " not compatible with type "  ++ show ty2 ++ "."
   ErrorVarAlreadyDeclared (l,c) id -> "Variable " ++ id ++" already declared in line " ++ show l ++ " and column " ++ show c ++ "."
   ErrorGuardNotBoolean exp ty -> "Guard must be boolean but type " ++ show ty ++ " was found in expression " ++ printExpression tokens exp
   ErrorDeclarationBoundNotCorrectType ty id -> "Variable " ++ id ++ " is of type " ++ show ty ++ " instead of type array."
