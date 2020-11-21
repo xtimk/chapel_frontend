@@ -1,6 +1,22 @@
 var a : real = 20 ;
 var b : int = 42;
 
+proc fun2(x : int) : real{ 
+    return 1.2;
+}
+
+proc fun2(x: int, y : int) : real { 
+    return 2.4;
+}
+
+proc fun2(x: int, y : int, z : int) : real { 
+    return 3.6;
+}
+
+proc fun2(x: int, y : int, z : int, w : real) : real { 
+    return 4.8;
+}
+
 proc foo(ref x : int){
    if (x < 3) then
    {
@@ -10,49 +26,71 @@ proc foo(ref x : int){
 }
 
 proc main(kk:real)
-{
-   var b = 5;
-   foo(ref (b + 3));
-   var c = a + b;
-   var d = b + a;
-   main(a + b);
-   if (a < b) then {
-      var c = 5;
-      return;
-   }
-   var f : [1..3] int = [1,2,3,4];
-   var k = 2.3;
-   var pointer_k = &k;
-   var new_k = *pointer_k;
+{   
+    fun2(2.3,3);
+    var b = 5;
+    foo(ref (b + 3));
+    var c = a + b;
+    var d = b + a;
+    main(a + b);
+    if (a < b) then {
+        var c = 5;
+        return;
+    }
+    var f : [1..3] int = [1,2,3,4];
+    var k = 2.3;
+    var pointer_k = &k;
+    var new_k = *pointer_k;
 
-   var z = &kk + 5;
+    var z = &kk + 5;
 
-   var t = 3;
-   var asd = &t + 2.2;
+    var t = 3;
+    var asd = &t + 2.2;
 
-   var op += 4;
+    var op += 4;
 
-   (t + 3) = 6;
+    (t + 3) = 6;
 
-   4;
-   3 + 2;
+    4;
+    3 + 2;
 
-   var r = 5;
-   var a_r = &r;
-   var w = a_r * 5;
+    var r = 5;
+    var a_r = &r;
+    var w = a_r * 5;
 
-   var cyc = 4 + cyc;
 
+
+    var cyc = 4 + cyc;
+
+    // ErrorArrayExpressionRequest
+    var ar1 : [5] int = [1,2,3,4,5];
+    var d = ar1[[2]];
+
+    // ErrorIncompatibleTypeArrayIndex
+    var g : [1..3] int = [1,2,3];
+    g[2.2] = 4;
+
+
+    // ErrorIncompatibleAssgnOpType
+    var u : int = "ciao";
    
+    // ErrorIncompatibleDeclarationArrayType
+    var g2 : [1..3] int = [1,2,"3"];
    
+    // ErrorIncompatibleDeclarationType
+    var m2 : string = 5;
+
+    // ErrorArrayCallExpression
+    var g3 : [3] int = [1,2,3];
+    var d3 = (g3 + 1)[2];
 }
 
 proc pluto(x : int) : real{ 
-   return x + 1.2;
+    return x + 1.2;
 } 
 
 proc pluto(x: real) : real { 
-   return x ;
+    return x ;
 } 
 
 proc bar(x : int) : real{ 
@@ -72,3 +110,4 @@ proc anotherfun(x : int) : int {
    }
    return x + 15;
 }
+
