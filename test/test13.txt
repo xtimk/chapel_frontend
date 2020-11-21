@@ -1,6 +1,6 @@
 var a :int = 5.8 * 9 + "ciao";
 var b = "ciao";
-var c = ["ddd", "dddd", "ffefew"];
+var c :int = ["ddd", [1,2], "ffefew"];
 var u : bool;
 var k : bool;
 
@@ -9,13 +9,24 @@ proc main(ref b:bool) : int
   k = a;
   var kkk = "mamma";
 
+  kkk += "mamma";
+
+  main(k);
+
   while(a + 5 * 7 + "string" - 40)
   {
 
   }
-  
-  return "ddd" + 10;
+ while(mmmm)
+  {
 
+  }
+  var bella = &a;
+  var cavolo = bella * 5;
+  
+  return;
+
+  b = 10 + mmmmm;
   b = !"ciao";
   
 }
