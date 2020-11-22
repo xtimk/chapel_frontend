@@ -79,11 +79,16 @@ sup _ ty1@Real Bool = incompatible ty1
 --Char
 sup mode ty1@Char ty2@Int = case mode of
   SupFun -> incompatible ty2
-  SupBool -> compatible Bool
   SupDecl -> incompatible ty1
   SupRet -> incompatible ty1
+  SupBool -> compatible Bool
   _ -> compatible Int
-sup _ ty1@Char Real =  incompatible ty1
+sup mode ty1@Char ty2@Real = case mode of
+  SupFun -> incompatible ty2
+  SupDecl -> incompatible ty1
+  SupRet -> incompatible ty1
+  SupBool -> compatible Bool
+  _ -> compatible Real
 sup mode Char Char = case mode of 
   SupBool -> compatible Bool
   SupMinus -> compatible Int 
@@ -102,6 +107,7 @@ sup mode ty1@String String = case mode of
   SupFun ->  compatible String
   SupRet ->  compatible String
   SupDecl ->  compatible String
+  Sup -> compatible String
   _ ->  incompatible ty1 
 sup _ ty1@String Bool = incompatible ty1 
 --Bool
