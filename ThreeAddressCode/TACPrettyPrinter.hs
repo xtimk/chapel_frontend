@@ -91,6 +91,7 @@ printTacBop bop ty =
         Times -> " mul_" ++ map toLower (printTyAux (getBasicType t)) ++ " "
         Div -> " div_" ++ map toLower (printTyAux (getBasicType t)) ++ " "
         Modul -> " mod_" ++ map toLower (printTyAux (getBasicType t)) ++ " "
+        Pow -> " pow_" ++ map toLower (printTyAux ty) ++ " "
 
     _ -> case bop of
             Plus -> " plus_" ++ map toLower (printTyAux ty) ++ " "
@@ -98,6 +99,7 @@ printTacBop bop ty =
             Times -> " mul_" ++ map toLower (printTyAux ty) ++ " "
             Div -> " div_" ++ map toLower (printTyAux ty) ++ " "
             Modul -> " mod_" ++ map toLower (printTyAux ty) ++ " "
+            Pow -> " pow_" ++ map toLower (printTyAux ty) ++ " "
 
 -- la uso per stampare float invece che real nel TAC
 printTyAux ty = case ty of

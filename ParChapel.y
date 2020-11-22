@@ -42,6 +42,7 @@ import ErrM
   L_PReturn { PT _ (T_PReturn _) }
   L_PTrue { PT _ (T_PTrue _) }
   L_PFalse { PT _ (T_PFalse _) }
+  L_PEpow { PT _ (T_PEpow _) }
   L_PElthen { PT _ (T_PElthen _) }
   L_PEgrthen { PT _ (T_PEgrthen _) }
   L_PEplus { PT _ (T_PEplus _) }
@@ -149,6 +150,9 @@ PTrue  : L_PTrue { PTrue (mkPosToken $1)}
 
 PFalse :: { PFalse}
 PFalse  : L_PFalse { PFalse (mkPosToken $1)}
+
+PEpow :: { PEpow}
+PEpow  : L_PEpow { PEpow (mkPosToken $1)}
 
 PElthen :: { PElthen}
 PElthen  : L_PElthen { PElthen (mkPosToken $1)}
@@ -340,7 +344,9 @@ Exp6 : Exp6 PEtimes Exp7 { AbsChapel.Etimes $1 $2 $3 }
 Exp7 :: { Exp }
 Exp7 : UnaryOperator Exp7 { AbsChapel.Epreop $1 $2 } | Exp8 { $1 }
 Exp8 :: { Exp }
-Exp8 : Exp9 ArInit { AbsChapel.Earray $1 $2 } | Exp9 { $1 }
+Exp8 : Exp8 PEpow Exp9 { AbsChapel.Epow $1 $2 $3 }
+     | Exp9 ArInit { AbsChapel.Earray $1 $2 }
+     | Exp9 { $1 }
 Exp9 :: { Exp }
 Exp9 : POpenParenthesis Exp PCloseParenthesis { AbsChapel.InnerExp $1 $2 $3 }
      | PIdent POpenParenthesis ListPassedParam PCloseParenthesis { AbsChapel.EFun $1 $2 $3 $4 }

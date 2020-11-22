@@ -163,6 +163,7 @@ printTokens' (x@(PT (Pn _ l c ) token ):xs) = " " ++ case token of
   TV id -> id ++ printTokens' xs         -- identifiers
   TD id -> id ++ printTokens' xs         -- double precision float literals
   TC id -> id ++ printTokens' xs         -- character literals
+  T_PEpow id -> id ++ printTokens' xs
   T_POpenGraph id -> id ++ printTokens' xs
   T_PCloseGraph id -> id ++ printTokens' xs
   T_POpenParenthesis id -> id ++ printTokens' xs

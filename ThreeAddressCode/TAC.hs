@@ -51,7 +51,7 @@ data CastOp = CastIntToFloat | CastCharToInt | CastCharToFloat | CastIntToChar
 
 data Temp = Temp TempMode String Loc Type
     deriving (Show)
-data Bop =  Plus | Minus | Times | Div | Modul
+data Bop =  Plus | Minus | Times | Div | Modul | Pow
     deriving (Show)
 data Uop = Neg | MinusUnaryOp
     deriving (Show)

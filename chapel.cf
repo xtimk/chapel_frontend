@@ -45,6 +45,7 @@ position token PReturn ({"return"});
 position token PTrue ({"true"});
 position token PFalse ({"false"});
 
+position token PEpow ('^');
 position token PElthen ('<');
 position token PEgrthen ('>');
 position token PEplus ('+');
@@ -210,6 +211,7 @@ Etimes.      Exp6 ::= Exp6 PEtimes Exp7;
 Ediv.        Exp6 ::= Exp6 PEdiv Exp7;
 Emod.        Exp6 ::= Exp6 PEmod Exp7;
 Epreop.      Exp7 ::= UnaryOperator Exp7;
+Epow.        Exp8 ::= Exp8 PEpow Exp9;
 Earray.      Exp8 ::= Exp9 ArInit ;
 
 _. Exp  ::= Exp1 ;
