@@ -21,10 +21,12 @@ printTacEq tye = " =" ++ printTacEqAux tye ++ " "
 printTacEqAux tye = 
     case tye of
         (Pointer _) -> "_addr"
-        (Array t _) -> map toLower $ '_' : show (getBasicType t)
+        (Array t _) -> map toLower $ '_' : printTyAux (getBasicType t)
         Real -> "_float"
-        Reference ty -> map toLower $ '_' : show ty
-        _ -> map toLower $ '_' : show tye
+        Reference ty -> map toLower $ '_' : printTyAux ty
+        _ -> map toLower $ '_' : printTyAux tye
+
+
 
 printTacEntry' operation = case operation of
     Binary temp1 temp2 bop temp3 -> -- printTacTemp temp1 ++ " = " ++ printTacTemp temp2 ++  printTacBop bop tye1 ++ printTacTemp temp3
