@@ -93,6 +93,9 @@ transPTrue x = case x of
 transPFalse :: PFalse -> Result
 transPFalse x = case x of
   PFalse string -> failure x
+transPEpow :: PEpow -> Result
+transPEpow x = case x of
+  PEpow string -> failure x
 transPElthen :: PElthen -> Result
 transPElthen x = case x of
   PElthen string -> failure x
@@ -272,6 +275,7 @@ transExp x = case x of
   Ediv exp1 pediv exp2 -> failure x
   Emod exp1 pemod exp2 -> failure x
   Epreop unaryoperator exp -> failure x
+  Epow exp1 pepow exp2 -> failure x
   Earray exp arinit -> failure x
   InnerExp popenparenthesis exp pcloseparenthesis -> failure x
   EFun pident popenparenthesis passedparams pcloseparenthesis -> failure x

@@ -172,6 +172,9 @@ instance Print AbsChapel.PTrue where
 instance Print AbsChapel.PFalse where
   prt _ (AbsChapel.PFalse (_,i)) = doc (showString i)
 
+instance Print AbsChapel.PEpow where
+  prt _ (AbsChapel.PEpow (_,i)) = doc (showString i)
+
 instance Print AbsChapel.PElthen where
   prt _ (AbsChapel.PElthen (_,i)) = doc (showString i)
 
@@ -417,6 +420,7 @@ instance Print AbsChapel.Exp where
     AbsChapel.Ediv exp1 pediv exp2 -> prPrec i 6 (concatD [prt 6 exp1, prt 0 pediv, prt 7 exp2])
     AbsChapel.Emod exp1 pemod exp2 -> prPrec i 6 (concatD [prt 6 exp1, prt 0 pemod, prt 7 exp2])
     AbsChapel.Epreop unaryoperator exp -> prPrec i 7 (concatD [prt 0 unaryoperator, prt 7 exp])
+    AbsChapel.Epow exp1 pepow exp2 -> prPrec i 8 (concatD [prt 8 exp1, prt 0 pepow, prt 9 exp2])
     AbsChapel.Earray exp arinit -> prPrec i 8 (concatD [prt 9 exp, prt 0 arinit])
     AbsChapel.InnerExp popenparenthesis exp pcloseparenthesis -> prPrec i 9 (concatD [prt 0 popenparenthesis, prt 0 exp, prt 0 pcloseparenthesis])
     AbsChapel.EFun pident popenparenthesis passedparams pcloseparenthesis -> prPrec i 9 (concatD [prt 0 pident, prt 0 popenparenthesis, prt 0 passedparams, prt 0 pcloseparenthesis])

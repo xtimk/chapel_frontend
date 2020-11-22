@@ -86,6 +86,8 @@ t r u e
     { tok (\p s -> PT p (eitherResIdent (T_PTrue . share) s)) }
 f a l s e
     { tok (\p s -> PT p (eitherResIdent (T_PFalse . share) s)) }
+\^
+    { tok (\p s -> PT p (eitherResIdent (T_PEpow . share) s)) }
 \<
     { tok (\p s -> PT p (eitherResIdent (T_PElthen . share) s)) }
 \>
@@ -179,6 +181,7 @@ data Tok =
  | T_PReturn !String
  | T_PTrue !String
  | T_PFalse !String
+ | T_PEpow !String
  | T_PElthen !String
  | T_PEgrthen !String
  | T_PEplus !String
@@ -265,6 +268,7 @@ prToken t = case t of
   PT _ (T_PReturn s) -> s
   PT _ (T_PTrue s) -> s
   PT _ (T_PFalse s) -> s
+  PT _ (T_PEpow s) -> s
   PT _ (T_PElthen s) -> s
   PT _ (T_PEgrthen s) -> s
   PT _ (T_PEplus s) -> s

@@ -87,6 +87,9 @@ newtype PTrue = PTrue ((Int,Int),String)
 newtype PFalse = PFalse ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
+newtype PEpow = PEpow ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
 newtype PElthen = PElthen ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
@@ -267,6 +270,7 @@ data Exp
     | Ediv Exp PEdiv Exp
     | Emod Exp PEmod Exp
     | Epreop UnaryOperator Exp
+    | Epow Exp PEpow Exp
     | Earray Exp ArInit
     | InnerExp POpenParenthesis Exp PCloseParenthesis
     | EFun PIdent POpenParenthesis [PassedParam] PCloseParenthesis

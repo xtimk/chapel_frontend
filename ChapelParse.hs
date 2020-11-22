@@ -82,7 +82,9 @@ parseTest filepath = do
   let p = pProgram (myLLexer s) in case p of
     Bad s    -> do putStrLn s
                    exitFailure
-    Ok  tree -> do putStrLn "\nParse Successful!"
+    Ok  tree -> do putStrLn "\n\nParse Successful!"
+                   print tree
+                   putStrLn "\n\nPretty Print of Code"
                    showTree 2 tree
 
                    --putStrLn "\n\n ** After Type Checker **\n\n"

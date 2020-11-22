@@ -1,0 +1,8 @@
+proc main()
+{   
+    var c = 10;
+    var d = 1^2+3;
+    var e = 4.1^'a';
+    var f = 1^2^3^4^5^6^7;
+    var ar : [4] real = [e,d,c,f];
+}
