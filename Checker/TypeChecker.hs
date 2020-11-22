@@ -313,7 +313,7 @@ typeCheckerDeclExpression environment decExp = case decExp of
   ExprDec exp -> typeCheckerExpression environment exp
 
 typeCheckerDeclArrayExp environment types exp = case (typeCheckerDeclExpression environment exp, types) of
-  (DataChecker typesFound errorsExp, DataChecker (Array typesInfered (first, n)) errorsTy) -> case sup SupDecl typesInfered typesFound of
+  (DataChecker typesFound errorsExp, DataChecker (Array typesInfered (first, n)) errorsTy) -> case sup Sup typesInfered typesFound of
     (Error,compatibility) -> DataChecker (Array typesInfered (first, n + 1)) $ createNewError (errorIncompatibleDeclarationArrayType (getExprDeclPos exp)  typesInfered typesFound exp) compatibility ++ errorsExp ++ errorsTy
     (typesChecked,compatibility) -> DataChecker (Array typesChecked (first, n + 1)) (createNewError (errorIncompatibleDeclarationArrayType (getExprDeclPos exp) typesInfered typesFound exp) compatibility ++ errorsExp ++ errorsTy)  
   (DataChecker _ err1, DataChecker ty err2 ) -> DataChecker ty (err1 ++ err2)
@@ -416,16 +416,12 @@ typeCheckerAddress environment exp = case exp of
 typeCheckerIndirection environment e1 = 
   let newLoc = getStartExpPos e1 in case e1 of
     InnerExp _ e _ -> typeCheckerIndirection environment e
-    Epreop (Address _) e1 -> let DataChecker ty errors = typeCheckerAddress environment e1 in case ty of
+    Epreop (Address _) eAddr -> let DataChecker ty errors = typeCheckerAddress environment eAddr in case ty of
       Pointer tyPoint -> DataChecker tyPoint errors
       ty ->  DataChecker ty $  ErrorChecker newLoc (ErrorNoPointerAddress ty e1):errors
-    Epreop (Indirection (PEtimes (loc,_))) e1 -> let DataChecker ty errors = typeCheckerIndirection environment e1 in case ty of
+    Epreop (Indirection (PEtimes (loc,_))) ePoint -> let DataChecker ty errors = typeCheckerIndirection environment ePoint in case ty of
       Pointer tyPoint -> DataChecker tyPoint errors
       ty ->  DataChecker ty $  ErrorChecker loc (ErrorNoPointerAddress ty e1):errors
-    Earray {} -> let DataChecker ty errors = typeCheckerExpression environment e1 in case ty of
-      Pointer tyPointed -> DataChecker tyPointed []
-      Error -> DataChecker ty $ ErrorChecker newLoc (ErrorNoPointerAddress ty e1):errors
-      _ -> DataChecker ty $ ErrorChecker newLoc (ErrorNoPointerAddress ty e1):errors
     Evar id ->  let DataChecker ty errors = getVarType id environment in case ty of
       Pointer tyPointed -> DataChecker tyPointed []
       Error -> DataChecker ty errors
@@ -486,19 +482,23 @@ typeCheckerExpressionUnary' environment supMode loc e1 ty =
       (tye,compatibility) = sup supMode tye1 ty 
       errors = createNewError (errorIncompatibleUnaryType loc e1 ty tye1) compatibility in 
         DataChecker tye (errors1 ++ errors)    
-   
 
-typeCheckerDeclarationArray environment exp (ArrayInit _ arrays _ ) = case exp of
-  Evar (PIdent ((l,c), identifier)) -> case typeCheckerExpression environment exp of
-    DataChecker types@(Array _ _) expErrors -> let DataChecker dimension errors = getDeclarationDimension environment arrays in 
-      case (getArrayDimension types, dimension) of
-        (arrayDim, callDim) -> if arrayDim >= callDim 
-          then let typeFound = getSubarrayDimension types callDim in if null errors
-            then DataChecker typeFound []
-            else DataChecker typeFound (errors ++ expErrors)
-          else DataChecker Error ([ErrorChecker (l,c) $ ErrorWrongDimensionArray arrayDim callDim identifier] ++ errors ++ expErrors)
-    DataChecker types expErrors -> DataChecker Error $ ErrorChecker (getStartExpPos exp) (ErrorDeclarationBoundNotCorrectType types identifier):expErrors
+typeCheckerDeclarationArray environment exp ardecl@(ArrayInit _ arrays _ ) = case exp of
+  InnerExp _ e _ -> typeCheckerDeclarationArray environment e ardecl
+  Epreop preop@(Indirection _) _ -> typeCheckerDeclarationArray' "indirection" (getEpreopPos preop) (typeCheckerExpression environment exp) 
+  Evar (PIdent (loc, identifier)) -> typeCheckerDeclarationArray' identifier loc (typeCheckerExpression environment exp) 
   _ -> DataChecker Error [ErrorChecker (getStartExpPos exp) $ ErrorArrayCallExpression exp]
+  where 
+    typeCheckerDeclarationArray' identifier loc dataChecker  = case dataChecker of
+      DataChecker types@(Array _ _) expErrors -> let DataChecker dimension errors = getDeclarationDimension environment arrays in 
+        case (getArrayDimension types, dimension) of
+          (arrayDim, callDim) -> if arrayDim >= callDim 
+            then let typeFound = getSubarrayDimension types callDim in if null errors
+              then DataChecker typeFound expErrors
+              else DataChecker typeFound (errors ++ expErrors)
+            else DataChecker Error ([ErrorChecker loc $ ErrorWrongDimensionArray arrayDim callDim identifier] ++ errors ++ expErrors)
+      DataChecker types expErrors -> DataChecker Error $ ErrorChecker (getStartExpPos exp) (ErrorDeclarationBoundNotCorrectType types identifier):expErrors
+    
 
 getDeclarationDimension _ [] = DataChecker 0 [] 
 getDeclarationDimension environment (array:arrays) = let DataChecker dimension errors = getDeclarationDimension environment arrays in 

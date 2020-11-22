@@ -42,11 +42,12 @@ getStartExpPos exp = case exp of
     Eplus e1 _ _ -> getStartExpPos e1
     Eminus e1 _ _ -> getStartExpPos e1
     Etimes e1 _ _ -> getStartExpPos e1
+    Epow e1 _ _ -> getStartExpPos e1
     Ediv e1 _ _ -> getStartExpPos e1
     Emod e1 _ _ -> getStartExpPos e1
     Epreop _ e1 -> getStartExpPos e1
     Earray e1 _ -> getStartExpPos e1
-    InnerExp _ e1 _ -> getStartExpPos e1
+    InnerExp (POpenParenthesis (loc,_)) _ _ -> loc
     EFun (PIdent ((l,c),_)) _ _ _ -> (l,c)
 
 getEndExpPos exp = case exp of
@@ -69,11 +70,12 @@ getEndExpPos exp = case exp of
     Eplus _ _ e2 -> getEndExpPos e2
     Eminus _ _ e2 -> getEndExpPos e2
     Etimes _ _ e2 -> getEndExpPos e2
+    Epow _ _ e2 -> getEndExpPos e2
     Ediv _ _ e2 -> getEndExpPos e2
     Emod _ _ e2 -> getEndExpPos e2
     Epreop _ e1 -> getEndExpPos e1
-    Earray e1 _ -> getEndExpPos e1
-    InnerExp _ e1 _ -> getEndExpPos e1
+    Earray _ (ArrayInit _ _ (PCloseBracket (loc,_)) ) -> loc
+    InnerExp _ _ (PCloseParenthesis (loc,_)) -> loc
     EFun (PIdent ((l,c),_)) _ _ _ -> (l,c)
 
 getAssignPos assgn = case assgn of 
