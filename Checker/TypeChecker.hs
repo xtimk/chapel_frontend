@@ -346,7 +346,7 @@ typeCheckerExpression environment exp = case exp of
     EAss e1 assign e2 -> typeCheckerAssignment environment e1 assign e2
     Eplus e1 (PEplus (loc,_)) e2 -> typeCheckerExpression' environment SupPlus loc e1 e2
     Emod e1 (PEmod (loc,_)) e2 -> typeCheckerExpression' environment SupMod loc e1 e2
-    Epow e1 (PEpow (loc,_)) e2 -> typeCheckerExpression' environment SupPlus loc e1 e2
+    Epow e1 (PEpow (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
     Eminus e1 (PEminus (loc,_)) e2 -> typeCheckerExpression' environment SupMinus loc e1 e2
     Ediv e1 (PEdiv (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
     Etimes e1 (PEtimes (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
