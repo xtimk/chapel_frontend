@@ -1,10 +1,10 @@
 TODO
 
- - SEMI-OBBLIGATORIO: Vedere se mettere ++ o --
+ - Facoltativo: Vedere se mettere ++ o --
 
 
  - OBBLIGATORIO: Finire relazione 
-   - descrivere gli errori del typechecker.
+   - check descrizione degli errori nel typechecker.
 
  - Fare test vari
  - Controllare visualizzazione errori

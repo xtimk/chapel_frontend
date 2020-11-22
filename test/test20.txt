@@ -5,4 +5,5 @@ proc main()
     var e = 4.1^'a';
     var f = 1^2^3^4^5^6^7;
     var ar : [4] real = [e,d,c,f];
+    var ar2 : [3] real = [1,1.1,2];
 }
