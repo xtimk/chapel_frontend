@@ -392,7 +392,7 @@ instance Print AbsChapel.Type where
     AbsChapel.Tchar pchartype -> prPrec i 0 (concatD [prt 0 pchartype])
     AbsChapel.Tstring pstringtype -> prPrec i 0 (concatD [prt 0 pstringtype])
     AbsChapel.Tbool pbooltype -> prPrec i 0 (concatD [prt 0 pbooltype])
-    AbsChapel.TPointer petimes type_ -> prPrec i 0 (concatD [prt 0 petimes, prt 0 type_])
+    AbsChapel.TPointer petimes typespec -> prPrec i 0 (concatD [prt 0 petimes, prt 0 typespec])
 
 instance Print AbsChapel.AssgnmOp where
   prt i e = case e of

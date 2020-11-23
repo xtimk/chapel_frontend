@@ -28,4 +28,9 @@ getBasicType ty = case ty of
   Reference subType -> getBasicType subType
   Pointer subType -> getBasicType subType
   subType -> subType
+
+getBasicTacType ty = case ty of
+  Array subType _ -> getBasicType subType
+  Reference subType -> getBasicType subType
+  subType -> subType
    

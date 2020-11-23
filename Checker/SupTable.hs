@@ -29,6 +29,8 @@ sup mode point@(Pointer _p1) (Pointer _p2) = let (ty,compatibility) = sup mode _
   SupPlus -> (Pointer ty,compatibility)
   SupMinus -> (Pointer ty,compatibility)
   SupRet -> (Pointer ty,compatibility)
+  SupFun -> (Pointer ty,compatibility)
+  Sup -> (Pointer ty,compatibility)
   SupDecl -> (Pointer ty,compatibility)
   _ -> incompatible point
 sup mode point@(Pointer _p) Int = case mode of 
@@ -121,7 +123,7 @@ sup mode ty1@Bool Bool = case mode of
   SupArith -> incompatible ty1
   _ -> compatible Bool
 --Error
-sup _ Error Error = compatible Real
+sup _ Error Error = compatible Error
 sup _ Error _ =  compatible Error
 sup mode ty Error =  case mode of  
   SupDecl -> compatible ty 
@@ -143,12 +145,6 @@ sup _ ty1 (Array _ _) = incompatible ty1
 compatible ty = (ty,True)
 incompatible ty = (ty,False)
 
-convertTypeSpecToTypeInferred Tint {} = Int
-convertTypeSpecToTypeInferred Treal {} = Real
-convertTypeSpecToTypeInferred Tchar {} = Char
-convertTypeSpecToTypeInferred Tstring {} = String
-convertTypeSpecToTypeInferred Tbool {} = Bool
-convertTypeSpecToTypeInferred (TPointer _ ty) = Pointer $ convertTypeSpecToTypeInferred ty
 
 convertMode (RefMode (PRef _) ) = Utils.Type.Ref
 

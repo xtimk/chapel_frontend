@@ -245,7 +245,7 @@ data Type
     | Tchar PCharType
     | Tstring PStringType
     | Tbool PBoolType
-    | TPointer PEtimes Type
+    | TPointer PEtimes TypeSpec
   deriving (Eq, Ord, Show, Read)
 
 data AssgnmOp = AssgnEq PAssignmEq | AssgnPlEq PAssignmPlus

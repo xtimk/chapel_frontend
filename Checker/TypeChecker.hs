@@ -62,12 +62,25 @@ typeCheckerDeclaration x = do
 typeCheckerConvertIdsToVariable = map (\(PIdent (loc,id)) -> (id,(id, Variable loc Infered)))
 
 typeCheckerTypeSpecification tySpec = case tySpec of
-  TypeSpecNorm ty -> return (convertTypeSpecToTypeInferred ty)
+  TypeSpecNorm ty -> convertTypeSpecToTypeInferred ty
   TypeSpecAr ar ty -> do
     environment <- get
-    let DataChecker typeArray errors = typeCheckerBuildArrayType environment ar (convertTypeSpecToTypeInferred ty)
+    tyFound <- convertTypeSpecToTypeInferred ty
+    let DataChecker typeArray errors = typeCheckerBuildArrayType environment ar tyFound
     modify (addErrorsCurrentNode errors)
     return typeArray
+
+
+
+convertTypeSpecToTypeInferred Tint {} = return Int
+convertTypeSpecToTypeInferred Treal {} = return Real
+convertTypeSpecToTypeInferred Tchar {} = return Char
+convertTypeSpecToTypeInferred Tstring {} =  return String
+convertTypeSpecToTypeInferred Tbool {} =  return Bool
+convertTypeSpecToTypeInferred (TPointer _ ty) = do
+  tyFound <- typeCheckerTypeSpecification ty
+  return (Pointer tyFound)
+
 
 typeCheckerIdentifiers identifiers assgn typeLeft typeRight exp = do
   mapM_ (typeCheckerIdentifier assgn typeLeft typeRight exp) identifiers

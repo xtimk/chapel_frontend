@@ -21,7 +21,7 @@ printTacEq tye = " =" ++ printTacEqAux tye ++ " "
 printTacEqAux tye = 
     case tye of
         (Pointer _) -> "_addr"
-        (Array t _) -> map toLower $ '_' : printTyAux (getBasicType t)
+        (Array t _) -> map toLower $ '_' : printTyAux  t
         Real -> "_float"
         Reference ty -> map toLower $ '_' : printTyAux ty
         _ -> map toLower $ '_' : printTyAux tye
@@ -88,11 +88,11 @@ printTacBop bop ty =
             Plus -> " plus_int "
             Minus -> " minus_int "
     (Array t _) -> case bop of
-        Plus -> " plus_" ++ map toLower (printTyAux (getBasicType t)) ++ " "
-        Minus -> " minus_" ++ map toLower (printTyAux (getBasicType t)) ++ " "
-        Times -> " mul_" ++ map toLower (printTyAux (getBasicType t)) ++ " "
-        Div -> " div_" ++ map toLower (printTyAux (getBasicType t)) ++ " "
-        Modul -> " mod_" ++ map toLower (printTyAux (getBasicType t)) ++ " "
+        Plus -> " plus_" ++ map toLower (printTyAux (getBasicTacType t)) ++ " "
+        Minus -> " minus_" ++ map toLower (printTyAux (getBasicTacType t)) ++ " "
+        Times -> " mul_" ++ map toLower (printTyAux (getBasicTacType t)) ++ " "
+        Div -> " div_" ++ map toLower (printTyAux (getBasicTacType t)) ++ " "
+        Modul -> " mod_" ++ map toLower (printTyAux (getBasicTacType t)) ++ " "
         Pow -> " pow_" ++ map toLower (printTyAux ty) ++ " "
 
     _ -> case bop of
@@ -105,7 +105,8 @@ printTacBop bop ty =
 
 -- la uso per stampare float invece che real nel TAC
 printTyAux ty = case ty of
-    Real -> "Float"
+    Real -> "float"
+    Pointer ty -> "addr"
     _ -> show ty
 
 getTacTempTye (Temp _ _ _ tye) = tye
