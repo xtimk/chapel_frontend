@@ -31,7 +31,6 @@ data DefinedError =
   ErrorDimensionArray Int Loc Int | 
   ErrorWrongDimensionArray Int Int String |
   ErrorArrayExpressionRequest ExprDecl|
-  ErrorWrongOperationAddress |
   ErrorCantAddressAnExpression Exp|
   ErrorReturnNotInsideAProcedure |
   ErrorBreakNotInsideAProcedure |
@@ -46,8 +45,7 @@ data DefinedError =
   ErrorOverloadingIncompatibleReturnType Loc Loc String Type Type |
   NoDecucibleType String |
   ErrorFunctionWithNotEnoughReturns String |
-  IncompatibleArrayDimension Int Int |
-  ErrorCantUseExprInARefPassedVar | 
+  ErrorCantUseExprInARefPassedVar Exp | 
   ErrorCyclicDeclaration Loc String |
   ErrorMissingInitialization String 
   deriving (Show)
@@ -97,14 +95,12 @@ printDefinedError tokens error = case error of
   ErrorOverloadingIncompatibleReturnType locStart (l,c) id ty1 ty2 -> "Overloading signature for function " ++ id ++ " must be of type " ++ prettyPrinterType ty1 ++ " but was found type " ++ prettyPrinterType ty2 ++ " in " ++ printTokens (getTokens tokens locStart (l,c - 1)) ++ "."
   ErrorBreakNotInsideAProcedure -> "Break command must be inside a while or dowhile."
   ErrorContinueNotInsideAProcedure -> "Continue command must be inside a while or dowhile."
-  ErrorOnlyRightExpression _exp -> "Statement must be an assignment or left expression"
+  ErrorOnlyRightExpression exp -> "Statement must be an assignment or left expression but was found " ++  printExpression tokens exp ++ "."
   NoDecucibleType id -> "Impossible infered type from expression for variable " ++ show id ++ "."
   ErrorFunctionWithNotEnoughReturns funname -> "In function " ++ show funname ++ ": there is a possible path in the code with no returns."
-  IncompatibleArrayDimension dim1 dim2 -> "Incompatible array dimension. First is "++ show dim1 ++ " and second is " ++  show dim2 ++"."
-  ErrorCantUseExprInARefPassedVar -> "You can't pass an expr by ref, but only a variable."
-  ErrorWrongOperationAddress -> "Only permitted operation with pointer are plus or minus"
+  ErrorCantUseExprInARefPassedVar exp -> "You can't pass an expr by ref, but only a variable. Instead was found " ++  printExpression tokens exp ++ "."
   ErrorCyclicDeclaration (l,c) id -> "Cyclic declaration with variable " ++ id ++ " in line " ++ show l ++ " and column " ++ show c ++ "." 
-  ErrorMissingInitialization id -> "Missing initialization for variable " ++ id
+  ErrorMissingInitialization id -> "Missing initialization for variable " ++ id ++ "."
 
 prettyPrinterTypeParams ty = case ty of
   Reference ty -> prettyPrinterType ty ++ " in reference modality"
