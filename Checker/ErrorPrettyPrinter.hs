@@ -22,6 +22,7 @@ data DefinedError =
   ErrorVarAlreadyDeclared Loc String |
   ErrorSignatureAlreadyDeclared  (Loc,Loc)  Loc String |
   ErrorGuardNotBoolean Exp Type|
+  ErrorDeclarationCallWithZero |
   ErrorDeclarationBoundOnlyConst String |
   ErrorDeclarationBoundNotCorrectType Type String |
   ErrorArrayCallExpression Exp|
@@ -75,6 +76,7 @@ printDefinedError tokens error = case error of
   ErrorVarAlreadyDeclared (l,c) id -> "Variable " ++ id ++" already declared in line " ++ show l ++ " and column " ++ show c ++ "."
   ErrorGuardNotBoolean exp ty -> "Guard must be boolean but type " ++ prettyPrinterType ty ++ " was found in expression " ++ printExpression tokens exp
   ErrorDeclarationBoundNotCorrectType ty id -> "Variable " ++ id ++ " is of type " ++ prettyPrinterType ty ++ " instead of type array."
+  ErrorDeclarationCallWithZero-> "Bound can be only a constant greater than 0"
   ErrorDeclarationBoundOnlyConst id -> "Bound can be only a constant but variable " ++ id ++ " was found."
   ErrorArrayCallExpression exp -> "Only a variable can index like an array but was found expression " ++ printExpression tokens exp ++ "."
   ErrorDeclarationBoundArray ty const -> "Bound of array must be an Int but was found " ++ show const ++ " of type " ++ prettyPrinterType ty ++ "."
@@ -107,13 +109,19 @@ prettyPrinterTypeParams ty = case ty of
   _ -> prettyPrinterType ty
 
 prettyPrinterType ty  = case ty of
-  tyAr@(Array ty _) -> "array of dimension [" ++ show (getArrayLenght tyAr) ++ prettyPrinterTypeArray ty
+  tyAr@(Array ty _) -> if checkArraywithNotGoodDimension tyAr 
+    then "array of dimension [" ++ show (getArrayLenght tyAr) ++ prettyPrinterTypeArray ty
+    else "array of dimension not possible to calculate (check for other errors )"
   Reference ty ->  prettyPrinterType ty
   Pointer ty -> "*" ++ prettyPrinterType ty
   Error -> "impossible to infered from context ( check for other errors )"
   _ -> show ty
 
-prettyPrinterTypeArray tyAr@(Array ty _) = "," ++ show (getArrayLenght tyAr) ++ prettyPrinterTypeArray ty
+checkArraywithNotGoodDimension tyAr@(Array ty _) = let length = getArrayLenght tyAr in length /= (-1) && checkArraywithNotGoodDimension ty
+checkArraywithNotGoodDimension _ = True  
+
+prettyPrinterTypeArray tyAr@(Array ty _) = let length = getArrayLenght tyAr in
+   "," ++ show length ++ prettyPrinterTypeArray ty
 prettyPrinterTypeArray ty = "] of type " ++ prettyPrinterType ty
 
   
