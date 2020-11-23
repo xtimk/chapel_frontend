@@ -7,11 +7,14 @@
 proc main(ref gg:bool) : int
 {
   var b = "ciao";
-  var c : ['a'] *string= [&b, &b, &b];
+  var c : [3] *string= [&b, &b, &b];
   var pippo : [3] *string= [&b, &b, &b];
   var klkk = &c;
   var mamma: **[3] *string= &klkk;
   var oppla:[1] **[3] *string = [mamma];
+  var ooppla: *[1] **[2..4] *string = &oppla;
+
+  var altro: string = *((**(*ooppla)[1 + 10])[2]);
 
   //(b) = "bella";
 
