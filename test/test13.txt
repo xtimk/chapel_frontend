@@ -9,9 +9,10 @@ var ar2 : [3] real = ['r',1.1,2];
 proc main(ref gg:bool) : int
 {
   var klkk = &ar2;
+  var mamma = &klkk;
   //(b) = "bella";
 
-  (*klkk)[2] += 4;
+  (*mamma) = klkk;
 
  // var owefkjoekjfowefkj: string =  (*klkk)[2];
 

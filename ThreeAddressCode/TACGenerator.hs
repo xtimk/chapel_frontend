@@ -340,8 +340,11 @@ tacGeneratorAddress expType loc e = case e of
           return (defTac:tacs,defTemp)
 
 tacGeneratorPointer expType loc e = case e of
-  InnerExp _ e _ -> tacGeneratorExpression expType e
-  Epreop (Address _ ) e1 -> tacGeneratorExpression expType e1
+  InnerExp _ e _ -> tacGeneratorPointer expType  loc e
+  Epreop (Address _ ) e1 -> do
+    (tacs, Temp mode id loc ty) <- tacGeneratorExpression expType e1
+    let Pointer tyfound = ty
+    return (tacs, Temp mode id loc tyfound)
   _ -> do
     (tacs, temp@(Temp mod id l ty)) <- tacGeneratorExpression expType e
     case ty of 
@@ -671,7 +674,7 @@ tacGeneratorLeftExpression leftExp assgn rightExp = do
           (tacsAdd, temp) <- tacGeneratorArrayIndexing' (loc,ty) arDeclaration
           return (tacsAdd ++ tacLeft, IndexLeft tempLeft temp, tempLeft)
         Epreop (Indirection _) e1 -> do
-          (tacs, tempLeft) <- tacGeneratorExpression LeftExp e1
+          (tacs, tempLeft) <- tacGeneratorExpression LeftExp leftExp
           return (tacs, ReferenceLeft tempLeft, tempLeft)
       tacGeneratorRightExpression' rightExp tyLeft = case tyLeft of
         Bool -> tacGeneratorBooleanStatement (getAssignOpPos assgn) rightExp
