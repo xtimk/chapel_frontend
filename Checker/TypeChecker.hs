@@ -336,11 +336,13 @@ typeCheckerBuildArrayParameter array = case array of
   ArrayDimBound elements -> typeCheckerBuildArrayBound True (ArratBoundConst $ Eint $ PInteger ((-1,-1), "0") ) elements 
 
 typeCheckerBuildArrayBound isNotBounded  lBound rBound = 
-  let DataChecker (leftBound,loc1) leftErrors = typeCheckerBuildArrayBound' False lBound; 
+  let DataChecker (leftBound,loc1) leftErrors = typeCheckerBuildArrayBound' False lBound
       DataChecker (rightBound,_) rightErrors = typeCheckerBuildArrayBound' True rBound in  
-        if leftBound > rightBound
-          then DataChecker (leftBound, rightBound) (ErrorChecker loc1 (ErrorBoundsArray leftBound rightBound) :leftErrors ++ rightErrors)
-          else DataChecker (leftBound, rightBound) (leftErrors ++ rightErrors)
+        if leftBound == (-1) ||  rightBound == (-1) 
+          then DataChecker (-1, -3) (leftErrors ++ rightErrors)
+          else if leftBound > rightBound 
+            then DataChecker (leftBound, rightBound) (ErrorChecker loc1 (ErrorBoundsArray leftBound rightBound) :leftErrors ++ rightErrors)
+            else DataChecker (leftBound, rightBound) (leftErrors ++ rightErrors)
             where
               typeCheckerBuildArrayBound' isEnd bound = case bound of 
                 ArrayBoundIdent (PIdent (loc,name)) -> DataChecker (-1,loc) [ErrorChecker loc $ ErrorDeclarationBoundOnlyConst name]
@@ -351,9 +353,11 @@ typeCheckerBuildArrayBound isNotBounded  lBound rBound =
                   EFalse (PFalse (loc,id)) -> DataChecker (-1,loc) [ErrorChecker loc $ ErrorDeclarationBoundArray  Bool id]
                   Estring (PString (loc,id)) -> DataChecker (-1,loc) [ErrorChecker loc $ ErrorDeclarationBoundArray  String id]
                   Eint (PInteger (loc,dimension)) -> 
-                    if isEnd && isNotBounded 
-                    then DataChecker (read dimension - 1,loc) [] 
-                    else DataChecker (read dimension,loc) []
+                    if read dimension == 0  && isNotBounded  &&  isEnd
+                      then DataChecker (-1,loc) [ErrorChecker loc ErrorDeclarationCallWithZero]
+                      else if isEnd && isNotBounded 
+                        then DataChecker (read dimension - 1,loc) [] 
+                        else DataChecker (read dimension,loc) []
 
 typeCheckerExpression environment exp = case exp of
     EAss e1 assign e2 -> typeCheckerAssignment environment e1 assign e2
