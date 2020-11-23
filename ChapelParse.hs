@@ -45,7 +45,7 @@ run v p s = let ts = myLLexer s in case p ts of
                           putStrV v $ show ts
                           putStrLn s
                           exitFailure
-           Ok  tree -> do putStrLn "\nParse Successful!"
+           Ok  tree -> do putStrLn "Parse Successful!"
                           showTree v tree
                           exitSuccess
 
@@ -54,7 +54,7 @@ showTree :: (Show a, Print a) => Int -> a -> IO ()
 showTree v tree
  = do
       -- putStrV v $ "\n[Abstract Syntax]\n\n" ++ show tree
-      putStrV v $ "\n[Linearized tree]\n\n" ++ printTree tree
+      putStrV v $ "\n\n" ++ printTree tree
 
 usage :: IO ()
 usage = do
@@ -74,7 +74,7 @@ main = do
     ["--help"] -> usage
     [] -> getContents >>= run 2 pProgram
     "-s":fs -> mapM_ (runFile 0 pProgram) fs
-    fs -> mapM_ (parseTest) fs
+    fs -> mapM_ parseTest fs
 
     
 parseTest filepath = do
@@ -83,7 +83,7 @@ parseTest filepath = do
     Bad s    -> do putStrLn s
                    exitFailure
     Ok  tree -> do putStrLn "\n\nParse Successful!"
-                   print tree
+                  --  print tree
                    putStrLn "\n\nPretty Print of Code"
                    showTree 2 tree
 
@@ -93,38 +93,38 @@ parseTest filepath = do
                    let bpTree = evalState (typeChecker tree) startState
                        errors = getTreeErrors $ getTree bpTree in do
 
-                    putStrLn "\n\n ** SYMBOL TABLE **"
-                    print $ getSymTable bpTree
+                    -- putStrLn "\n\n ** SYMBOL TABLE **"
+                    -- print $ getSymTable bpTree
 
-                    putStrLn "\n\n ** TREE **"
-                    print $ getTree bpTree
+                    -- putStrLn "\n\n ** TREE **"
+                    -- print $ getTree bpTree
 
-                    putStrLn "\n\n ** ERRORS **\n"
                     let bp2 = typeCheckerReturns (getTree bpTree)
-                    printErrors (tokens s) (errors ++ bp2)
 
                     if null (errors ++ bp2)
                     then let tac = evalState (tacGenerator tree) (startTacState (getTree bpTree))
                              maxlenlabeltac = findMaxLenOfLabels (getTac tac)
                              enrichedcasttac = tacCastGenerator (getTac tac) 
                              maxlenenrichedlabeltac = findMaxLenOfLabels enrichedcasttac in do
-                     -- putStrLn "\n\n ** TAC **"
-                      --putStrLn $ show tac
-                      putStrLn "\n\n ** Show TAC **"
-                      printTacEntriesRaw (getTac tac)
-                      putStrLn "\n\n ** Pretty TAC **"
-                      printTacEntries maxlenlabeltac (getTac tac)
-                      putStrLn "\n\n ** ENRICHED TAC **"
-                      printTacEntriesRaw enrichedcasttac
-                      putStrLn "\n\n ** Pretty TAC With CASTS **"
-                      printTacEntries maxlenenrichedlabeltac enrichedcasttac
-                      exitSuccess
-                    else 
+                      -- putStrLn "\n\n ** TAC **"
+                      -- putStrLn $ show tac
+                      -- putStrLn "\n\n ** Show TAC **"
+                      -- printTacEntriesRaw (getTac tac)
+                      -- putStrLn "\n\n ** Pretty TAC **"
+                      -- printTacEntries maxlenlabeltac (getTac tac)
+                      -- putStrLn "\n\n ** ENRICHED TAC **"
+                      -- printTacEntriesRaw enrichedcasttac
+                        putStrLn "\n\n ** Pretty Print of TAC **"
+                        printTacEntries maxlenenrichedlabeltac enrichedcasttac
+                        exitSuccess
+                    else do
+                      putStrLn "\n\n ** Can't generate TAC: There are some typechecking errors **\n"
+                      printErrors (tokens s) (errors ++ bp2)
                       exitSuccess
 
 printTacEntriesRaw [] =  putStrLn "\n"
 printTacEntriesRaw (tac:tacs) = do
-  putStrLn (show tac)
+  putStrLn $ show tac
   printTacEntriesRaw tacs
 
 getSymTable (x,_,_) = x

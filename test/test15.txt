@@ -8,7 +8,7 @@ proc main(kk:int) : string
 
    var rkrfrko:real = 'c' + 3;
    var z = &*&a;
-   var ddd = *&a;
+   var afk = *&a;
    var m = **&z;
    var h = &*&z;
    var kkkkk = ***&h;

@@ -14,7 +14,7 @@ import qualified GHC.Exts as Happy_GHC_Exts
 import Control.Applicative(Applicative(..))
 import Control.Monad (ap)
 
--- parser produced by Happy Version 1.19.12
+-- parser produced by Happy Version 1.20.0
 
 newtype HappyAbsSyn  = HappyAbsSyn HappyAny
 #if __GLASGOW_HASKELL__ >= 607
@@ -695,14 +695,14 @@ happyExpList = HappyA# "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00
 happyExpListPerState st =
     token_strs_expected
   where token_strs = ["error","%dummy","%start_pProgram","POpenGraph","PCloseGraph","POpenParenthesis","PCloseParenthesis","POpenBracket","PCloseBracket","PSemicolon","PColon","PPoint","PIf","PThen","PElse","Pdo","PWhile","PIntType","PRealType","PCharType","PBoolType","PStringType","PBreak","PContinue","PAssignmEq","PRef","PVar","PProc","PReturn","PTrue","PFalse","PEpow","PElthen","PEgrthen","PEplus","PEminus","PEtimes","PEdiv","PEmod","PDef","PNeg","PElor","PEland","PEeq","PEneq","PEle","PEge","PAssignmPlus","PIdent","PString","PChar","PDouble","PInteger","Program","Module","ListExt","Ext","Declaration","ListDeclList","DeclList","TypeSpec","ExprDecl","ArInit","ListExprDecl","ArDecl","ArDim","ListArDim","ArBound","ListPIdent","DecMode","Function","Signature","FunctionParams","ListParam","Param","ListPassedParam","PassedParam","Body","ListBodyStatement","BodyStatement","Statement","Guard","Type","AssgnmOp","Mode","Exp","Exp1","Exp2","Exp3","Exp4","Exp5","Exp6","Exp7","Exp8","Exp9","UnaryOperator","Constant","','","L_POpenGraph","L_PCloseGraph","L_POpenParenthesis","L_PCloseParenthesis","L_POpenBracket","L_PCloseBracket","L_PSemicolon","L_PColon","L_PPoint","L_PIf","L_PThen","L_PElse","L_Pdo","L_PWhile","L_PIntType","L_PRealType","L_PCharType","L_PBoolType","L_PStringType","L_PBreak","L_PContinue","L_PAssignmEq","L_PRef","L_PVar","L_PProc","L_PReturn","L_PTrue","L_PFalse","L_PEpow","L_PElthen","L_PEgrthen","L_PEplus","L_PEminus","L_PEtimes","L_PEdiv","L_PEmod","L_PDef","L_PNeg","L_PElor","L_PEland","L_PEeq","L_PEneq","L_PEle","L_PEge","L_PAssignmPlus","L_PIdent","L_PString","L_PChar","L_PDouble","L_PInteger","%eof"]
-        bit_start = st * 149
-        bit_end = (st + 1) * 149
+        bit_start = st Prelude.* 149
+        bit_end = (st Prelude.+ 1) Prelude.* 149
         read_bit = readArrayBit happyExpList
-        bits = map read_bit [bit_start..bit_end - 1]
-        bits_indexed = zip bits [0..148]
-        token_strs_expected = concatMap f bits_indexed
-        f (False, _) = []
-        f (True, nr) = [token_strs !! nr]
+        bits = Prelude.map read_bit [bit_start..bit_end Prelude.- 1]
+        bits_indexed = Prelude.zip bits [0..148]
+        token_strs_expected = Prelude.concatMap f bits_indexed
+        f (Prelude.False, _) = []
+        f (Prelude.True, nr) = [token_strs Prelude.!! nr]
 
 happyActOffsets :: HappyAddr
 happyActOffsets = HappyA# "\x00\x00\x0d\x00\x00\x00\xdf\xff\x00\x00\xee\xff\x00\x00\xfd\xff\x00\x00\x00\x00\xfd\xff\x00\x00\x00\x00\x00\x00\x28\x00\x34\x00\x47\x00\xcc\x00\x00\x00\x6b\x00\x6a\x00\x00\x00\x00\x00\xf1\xff\x72\x00\x00\x00\xef\x01\x00\x00\x00\x00\x15\x05\x00\x00\x00\x00\x00\x00\x55\x00\x00\x00\x00\x00\x55\x00\x00\x00\x00\x00\xb7\x05\x15\x05\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xd8\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xfa\xff\xa8\x00\xb5\x00\xec\xff\x24\x01\x12\x00\x16\x00\x00\x00\xc2\x00\xed\x00\xb7\x05\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x29\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xef\x01\xfa\xff\x27\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xef\x01\x00\x00\xf0\x00\x05\x01\x0a\x01\xdf\x00\x00\x00\xfa\x04\x00\x00\x08\x01\x06\x01\x10\x01\x0e\x01\x0e\x01\x31\x05\x00\x00\x0e\x01\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x1c\x01\x4a\x00\x00\x00\x00\x00\xef\x01\x00\x00\x00\x00\x4b\x05\x00\x00\x00\x00\x27\x01\x2e\x01\x2d\x01\x00\x00\x00\x00\x00\x00\x87\x01\x00\x00\xb7\x05\xb7\x05\xb7\x05\x00\x00\x00\x00\xb7\x05\xb7\x05\x00\x00\xb7\x05\xb7\x05\xb7\x05\xb7\x05\x00\x00\x00\x00\x00\x00\x00\x00\xb7\x05\xb7\x05\x00\x00\x00\x00\xb7\x05\x00\x00\xb7\x05\x00\x00\xb7\x05\x67\x05\x37\x01\x32\x01\xda\x00\x00\x00\x00\x00\x00\x00\x81\x05\x35\x01\x55\x01\xb7\x05\x4c\x00\x2b\x01\x34\x01\x1b\x00\x24\x01\x24\x01\x85\x00\x85\x00\x85\x00\x85\x00\x16\x00\x16\x00\x00\x00\x00\x00\x00\x00\x00\x00\x4a\x01\x00\x00\x00\x00\x29\x01\x00\x00\x00\x00\x00\x00\xef\x01\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\x00\x00\xb7\x05\x5d\x01\x5d\x01\x54\x01\x70\x01\x00\x00\x75\x01\x00\x00\xda\x00\x00\x00\x00\x00\x00\x00\x29\x01\x4c\x00\x9d\x05\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x6e\x01\x7c\x01\x00\x00\x00\x00\x00\x00"#
@@ -884,8 +884,8 @@ happyReduceArr = Happy_Data_Array.array (1, 159) [
 	(159 , happyReduce_159)
 	]
 
-happy_n_terms = 53 :: Int
-happy_n_nonterms = 94 :: Int
+happy_n_terms = 53 :: Prelude.Int
+happy_n_nonterms = 94 :: Prelude.Int
 
 happyReduce_1 = happySpecReduce_1  0# happyReduction_1
 happyReduction_1 happy_x_1
@@ -2280,7 +2280,7 @@ happyReturn = (returnM)
 happyThen1 m k tks = (thenM) m (\a -> k a tks)
 happyReturn1 :: () => a -> b -> Err a
 happyReturn1 = \a tks -> (returnM) a
-happyError' :: () => ([(Token)], [String]) -> Err a
+happyError' :: () => ([(Token)], [Prelude.String]) -> Err a
 happyError' = (\(tokens, _) -> happyError tokens)
 pProgram tks = happySomeParser where
  happySomeParser = happyThen (happyParse 0# tks) (\x -> happyReturn (let {(HappyWrap54 x') = happyOut54 x} in x'))
@@ -2320,9 +2320,9 @@ myLexer = tokens
 
 -- Do not remove this comment. Required to fix CPP parsing when using GCC and a clang-compiled alex.
 #if __GLASGOW_HASKELL__ > 706
-#define LT(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.<# m)) :: Bool)
-#define GTE(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.>=# m)) :: Bool)
-#define EQ(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.==# m)) :: Bool)
+#define LT(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.<# m)) :: Prelude.Bool)
+#define GTE(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.>=# m)) :: Prelude.Bool)
+#define EQ(n,m) ((Happy_GHC_Exts.tagToEnum# (n Happy_GHC_Exts.==# m)) :: Prelude.Bool)
 #else
 #define LT(n,m) (n Happy_GHC_Exts.<# m)
 #define GTE(n,m) (n Happy_GHC_Exts.>=# m)
@@ -2416,7 +2416,7 @@ happyDoAction i tk st
         = {- nothing -}
           case action of
                 0#           -> {- nothing -}
-                                     happyFail (happyExpListPerState ((Happy_GHC_Exts.I# (st)) :: Int)) i tk st
+                                     happyFail (happyExpListPerState ((Happy_GHC_Exts.I# (st)) :: Prelude.Int)) i tk st
                 -1#          -> {- nothing -}
                                      happyAccept i tk st
                 n | LT(n,(0# :: Happy_GHC_Exts.Int#)) -> {- nothing -}
@@ -2429,10 +2429,10 @@ happyDoAction i tk st
          off_i  = (off Happy_GHC_Exts.+# i)
          check  = if GTE(off_i,(0# :: Happy_GHC_Exts.Int#))
                   then EQ(indexShortOffAddr happyCheck off_i, i)
-                  else False
+                  else Prelude.False
          action
           | check     = indexShortOffAddr happyTable off_i
-          | otherwise = indexShortOffAddr happyDefActions st
+          | Prelude.otherwise = indexShortOffAddr happyDefActions st
 
 
 
@@ -2453,7 +2453,7 @@ happyLt x y = LT(x,y)
 
 
 readArrayBit arr bit =
-    Bits.testBit (Happy_GHC_Exts.I# (indexShortOffAddr arr ((unbox_int bit) `Happy_GHC_Exts.iShiftRA#` 4#))) (bit `mod` 16)
+    Bits.testBit (Happy_GHC_Exts.I# (indexShortOffAddr arr ((unbox_int bit) `Happy_GHC_Exts.iShiftRA#` 4#))) (bit `Prelude.mod` 16)
   where unbox_int (Happy_GHC_Exts.I# x) = x
 
 
@@ -2597,7 +2597,7 @@ happyFail explist i tk (action) sts stk =
 -- Internal happy errors:
 
 notHappyAtAll :: a
-notHappyAtAll = error "Internal Happy error\n"
+notHappyAtAll = Prelude.error "Internal Happy error\n"
 
 -----------------------------------------------------------------------------
 -- Hack to get the typechecker to accept our action functions
@@ -2615,7 +2615,7 @@ happyTcHack x y = y
 --      happySeq = happyDontSeq
 
 happyDoSeq, happyDontSeq :: a -> b -> b
-happyDoSeq   a b = a `seq` b
+happyDoSeq   a b = a `Prelude.seq` b
 happyDontSeq a b = b
 
 -----------------------------------------------------------------------------

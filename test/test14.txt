@@ -11,7 +11,7 @@ proc main(l: int,ref z:int)
 
 
     var i : *bool = &c;
-    var gggg = [true, false];
+    var gg = [true, false];
     *i = 4 > 5 && 5 <8;
     u = (5< 8 == 4 > 5) && (5< 8 == 5 <9);
 
@@ -26,7 +26,7 @@ proc main(l: int,ref z:int)
         
     }((((6 < 8 || 6 < 8) && 6 < 8) || 6 < 8) && 6 < 8)
 
-    gggg[1] =  4 > 5;
+    gg[1] =  4 > 5;
 
 
 }

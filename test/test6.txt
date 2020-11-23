@@ -1,15 +1,14 @@
 
 proc pile(x : int, j : string)  :string
 {
-if(cazzo)
-then
-{
- return "ciao";  
-}
-else
-{
+   if(lockdown) then
+   {
+   return "acasa";  
+   }
+   else
+   {
 
-}
+   }
 }
 
 
