@@ -250,7 +250,7 @@ transType x = case x of
   Tchar pchartype -> failure x
   Tstring pstringtype -> failure x
   Tbool pbooltype -> failure x
-  TPointer petimes type_ -> failure x
+  TPointer petimes typespec -> failure x
 transAssgnmOp :: AssgnmOp -> Result
 transAssgnmOp x = case x of
   AssgnEq passignmeq -> failure x

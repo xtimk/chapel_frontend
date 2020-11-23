@@ -1,21 +1,24 @@
 //var a :int = 5.8 * 9 + "ciao";
-var b = "ciao";
 
-var c : [3] string= ["ddd", "piipo", "ffefew"];
 //var u : bool;
 //var k : bool;
-var ar2 : [3] real = ['r',1.1,2];
+//var ar2 : [3] real = ['r',1.1,2];
 
 proc main(ref gg:bool) : int
 {
-  var klkk = &ar2;
-  var mamma = &klkk;
+  var b = "ciao";
+  var c : ['a'] *string= [&b, &b, &b];
+  var pippo : [3] *string= [&b, &b, &b];
+  var klkk = &c;
+  var mamma: **[3] *string= &klkk;
+  var oppla:[1] **[3] *string = [mamma];
+
   //(b) = "bella";
 
-a - b = 5;
-  a + b;
+//a - b = 5;
+ // a + b;
 
-  (*mamma) = klkk;
+  //(*mamma) = klkk;
 
  // var owefkjoekjfowefkj: string =  (*klkk)[2];
 

@@ -111,16 +111,21 @@ parseTest filepath = do
                      -- putStrLn "\n\n ** TAC **"
                       --putStrLn $ show tac
                       putStrLn "\n\n ** Show TAC **"
-                      print (getTac tac)
+                      printTacEntriesRaw (getTac tac)
                       putStrLn "\n\n ** Pretty TAC **"
                       printTacEntries maxlenlabeltac (getTac tac)
                       putStrLn "\n\n ** ENRICHED TAC **"
-                      print enrichedcasttac
+                      printTacEntriesRaw enrichedcasttac
                       putStrLn "\n\n ** Pretty TAC With CASTS **"
                       printTacEntries maxlenenrichedlabeltac enrichedcasttac
                       exitSuccess
                     else 
                       exitSuccess
+
+printTacEntriesRaw [] =  putStrLn "\n"
+printTacEntriesRaw (tac:tacs) = do
+  putStrLn (show tac)
+  printTacEntriesRaw tacs
 
 getSymTable (x,_,_) = x
 getTree (_,x,_) = x

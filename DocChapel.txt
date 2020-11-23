@@ -298,7 +298,7 @@ All other symbols are terminals.
   |  |  **|**  | //PCharType//
   |  |  **|**  | //PStringType//
   |  |  **|**  | //PBoolType//
-  |  |  **|**  | //PEtimes// //Type//
+  |  |  **|**  | //PEtimes// //TypeSpec//
   | //AssgnmOp// | -> | //PAssignmEq//
   |  |  **|**  | //PAssignmPlus//
   | //Mode// | -> | //PRef//

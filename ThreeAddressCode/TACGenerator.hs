@@ -328,7 +328,9 @@ tacGeneratorVariable expType identifier@(PIdent (_, id)) = do
 
 tacGeneratorAddress expType loc e = case e of
     InnerExp _ e _ -> tacGeneratorExpression expType e
-    Epreop (Indirection _) e1 -> tacGeneratorExpression expType e1 
+    Epreop (Indirection _)e1 -> do
+      (tacs, Temp mode id  loc ty) <- tacGeneratorExpression expType e1 
+      return (tacs,Temp mode id loc (Pointer ty))
     _ -> do
       (tacs, temp@(Temp mod id l ty)) <- tacGeneratorExpression LeftExp e
       case ty of 
@@ -854,9 +856,8 @@ tacCastGeneratorAux ent@(TACEntry label optype) = -- tac
             (tac1,newtemp1) <- genCast temp1 suptype 
             (tac2,newtemp2) <- genCast temp2 suptype
             return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2 suptype
-    IndexLeft temp1 temp2 temp3 -> 
-      let ty1 = getBasicType (getTacTempTye temp1)
-          ty3 = getTacTempTye temp3 in
+    IndexLeft (Temp _ _ _ (Array ty1 _)) _ temp3 -> 
+      let ty3 = getTacTempTye temp3 in
         if ty1 == ty3
           then return [ent]
           else

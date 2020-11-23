@@ -188,7 +188,7 @@ Treal.     Type ::= PRealType ;
 Tchar.     Type ::= PCharType ;
 Tstring.   Type ::= PStringType ;
 Tbool.     Type ::= PBoolType ;
-TPointer.  Type ::= PEtimes Type;
+TPointer.  Type ::= PEtimes TypeSpec;
 
 AssgnEq.   AssgnmOp ::= PAssignmEq ;
 AssgnPlEq. AssgnmOp ::= PAssignmPlus ;
@@ -231,7 +231,7 @@ Address.      UnaryOperator ::= PDef ;
 Indirection.  UnaryOperator ::= PEtimes ;
 
 EFun.        Exp9 ::= PIdent POpenParenthesis [PassedParam] PCloseParenthesis ;
-Evar.        Exp9 ::= PIdent;
+Evar.        Exp9 ::= PIdent; 
 Econst.      Exp9 ::= Constant;
 
 Estring.       Constant ::= PString;
