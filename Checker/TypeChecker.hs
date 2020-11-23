@@ -428,6 +428,11 @@ typeCheckerAddress environment exp = case exp of
 
 typeCheckerIndirection environment e1 = 
   let newLoc = getStartExpPos e1 in case e1 of
+    Earray expIdentifier arDeclaration -> 
+      let DataChecker ty errs = typeCheckerDeclarationArray  environment expIdentifier arDeclaration in
+        case ty of
+          (Pointer ty) -> DataChecker ty errs
+          _ -> DataChecker ty (ErrorChecker newLoc (ErrorNoPointerAddress ty e1):errs)
     InnerExp _ e _ -> typeCheckerIndirection environment e
     Epreop (Address _) eAddr -> let DataChecker ty errors = typeCheckerAddress environment eAddr in case ty of
       Pointer tyPoint -> DataChecker tyPoint errors
