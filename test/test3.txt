@@ -14,7 +14,7 @@ proc pluto (ref x : int, y, z: real) : int {
 
 
     {
-        var maledetto = 10;
+        var lockdown = 10;
     }
     
 
@@ -28,4 +28,4 @@ proc pluto (ref x : int, y, z: real) : int {
     return x + 4;
 }
 
-var merda : real;
+var orange : real;

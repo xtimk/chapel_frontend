@@ -2,7 +2,7 @@ var a = 4 + 3;
 var c : int = 'k';
 var f : [10] int;
 
-proc main(asdasd : int) : int {
+proc main(mc : int) : int {
     a = 'k';
 
     var d : real = main(3);

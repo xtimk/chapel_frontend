@@ -15,7 +15,7 @@ proc pippo (l:int) : char
    var ji: real += 3.4;
    proc bella (m:string) : string
    {
-      var bellaregazio:***int;
+      var xd:***int;
       return 4;
    };
    var hiu:char;
