@@ -660,17 +660,16 @@ tacGeneratorLeftExpression leftExp assgn rightExp = do
   return (tacRight ++ tacLeft, opWithoutTempRight tempRight, tempLeft, labelExit)
     where
       tacGeneratorLeftExpression' leftExp = case leftExp of
+        InnerExp _ e _ -> tacGeneratorLeftExpression'  e
         Evar {} -> do
           (_, varTemp@(Temp _ _ _ ty)) <- tacGeneratorExpression LeftExp leftExp
           case ty of
             Reference _ty -> return ([], ReferenceLeft varTemp, varTemp)
             _ ->  return ([], Nullary varTemp, varTemp)
-        Earray expIdentifier@(Evar id@(PIdent _)) arDeclaration -> do
-          tacEnv <- get
-          let Checker.SymbolTable.Variable loc ty = getVarTypeTAC id tacEnv
-          (_, tempLeft) <- tacGeneratorExpression LeftExp expIdentifier
+        Earray expIdentifier arDeclaration -> do
+          (tacLeft, tempLeft@(Temp _ _ loc ty)) <- tacGeneratorExpression LeftExp expIdentifier
           (tacsAdd, temp) <- tacGeneratorArrayIndexing' (loc,ty) arDeclaration
-          return (tacsAdd, IndexLeft tempLeft temp, tempLeft)
+          return (tacsAdd ++ tacLeft, IndexLeft tempLeft temp, tempLeft)
         Epreop (Indirection _) e1 -> do
           (tacs, tempLeft) <- tacGeneratorExpression LeftExp e1
           return (tacs, ReferenceLeft tempLeft, tempLeft)

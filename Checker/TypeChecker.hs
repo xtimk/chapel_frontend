@@ -389,7 +389,6 @@ typeCheckerAssignment environment e1 assign e2 =
       DataChecker tyRight errRight = typeCheckerExpression environment e2 in 
         case assign of
           AssgnEq (PAssignmEq (_,_)) -> 
-            
             let (ty,compatibility) = sup SupDecl tyLeft tyRight
                 equalError = createNewError (errorIncompatibleBinaryType assOp e1 e2 tyLeft tyRight) compatibility  in 
                   DataChecker ty (errLeft ++ errRight ++ equalError)
@@ -401,6 +400,7 @@ typeCheckerAssignment environment e1 assign e2 =
                   DataChecker ty (errLeft ++ errRight ++ plusError ++ equalError)
 
 typeCheckerLeftExpression assign enviroment exp = case exp of
+  InnerExp _ exp _ -> typeCheckerExpression enviroment exp
   Evar {} -> typeCheckerExpression enviroment exp
   Earray {} -> typeCheckerExpression enviroment exp
   Epreop {} -> typeCheckerExpression enviroment exp
