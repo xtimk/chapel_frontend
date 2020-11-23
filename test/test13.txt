@@ -12,6 +12,9 @@ proc main(ref gg:bool) : int
   var mamma = &klkk;
   //(b) = "bella";
 
+a - b = 5;
+  a + b;
+
   (*mamma) = klkk;
 
  // var owefkjoekjfowefkj: string =  (*klkk)[2];
