@@ -30,6 +30,10 @@ ChapelParse : ChapelParse.hs Checker/TypeChecker.hs ErrM.hs LexChapel.hs ParChap
 
 clean :
 	-rm -f *.hi *.o *.log *.aux *.dvi
+	-rm -f Checker/*.hi Checker/*.o Checker/*.log Checker/*.aux Checker/*.dvi
+	-rm -f ThreeAddressCode/*.hi ThreeAddressCode/*.o ThreeAddressCode/*.log ThreeAddressCode/*.aux ThreeAddressCode/*.dvi
+	-rm -f Utils/*.hi Utils/*.o Utils/*.log Utils/*.aux Utils/*.dvi
+	-rm -f ChapelParse TestChapel
 
 distclean : clean
 	-rm -f AbsChapel.hs AbsChapel.hs.bak ComposOp.hs ComposOp.hs.bak DocChapel.txt DocChapel.txt.bak ErrM.hs ErrM.hs.bak LayoutChapel.hs LayoutChapel.hs.bak LexChapel.x LexChapel.x.bak ParChapel.y ParChapel.y.bak PrintChapel.hs PrintChapel.hs.bak SharedString.hs SharedString.hs.bak SkelChapel.hs SkelChapel.hs.bak TestChapel.hs TestChapel.hs.bak XMLChapel.hs XMLChapel.hs.bak ASTChapel.agda ASTChapel.agda.bak ParserChapel.agda ParserChapel.agda.bak IOLib.agda IOLib.agda.bak Main.agda Main.agda.bak chapel.dtd chapel.dtd.bak TestChapel LexChapel.hs ParChapel.hs ParChapel.info ParDataChapel.hs Makefile
