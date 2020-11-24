@@ -79,8 +79,8 @@ sizeof ty = case ty of
     Array ty _ -> sizeof ty
     Pointer ty -> sizeof ty
     Reference ty -> sizeof ty
-    Int -> 2
-    Real -> 4 
+    Int -> 4
+    Real -> 8 
     Char -> 1
     Bool -> 1
     String -> 8

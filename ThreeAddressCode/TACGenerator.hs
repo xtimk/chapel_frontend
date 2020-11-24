@@ -56,7 +56,7 @@ tacGeneratorDeclExpression' assgn lengths temps decExp =
         else do
           resFirst <- tacGeneratorArrayIdentifier labelExit temp  (getStartExpPos exp) lengths firstTemp
           res <- mapM (tacGeneratorArrayIdentifier Nothing temp (getStartExpPos exp) lengths ) (tail temps)
-          return $ reverse tacEntry ++ [resFirst] ++ res
+          return $ reverse tacEntry ++ resFirst ++ concat res
         where
           tacGeneratorRightExpression' _ ty = case ty of 
             Bool -> tacGeneratorBooleanStatement (getAssignOpPos assgn) exp
@@ -80,13 +80,40 @@ tacGeneratorIdentifierTemp id@(PIdent (_, identifier)) = do
 tacGeneratorIdentifier labelExit tempRight tempLeft =
   return $ TACEntry labelExit  $ Nullary tempLeft tempRight
 
-tacGeneratorArrayIdentifier labelExit temp _ lenghts tempLeft@(Temp _ idVar locVar ty) = do
+tacGeneratorArrayIdentifier labelExit temp@(Temp _ _ _ tyTemp) _ lenghts (Temp _ idVar locVar _) = do
   tacEnv <- get
-  let Checker.SymbolTable.Variable loc ty = getVarTypeTACDirect locVar idVar tacEnv
-  let arrayPos = arrayCalculatePosition ty lenghts
-  let temp1 = Temp ThreeAddressCode.TAC.Variable idVar loc ty
-  let temp2 = Temp ThreeAddressCode.TAC.Fixed (show arrayPos) loc Int
-  return $ TACEntry labelExit $ IndexLeft temp1 temp2 temp
+  let Checker.SymbolTable.Variable loc tyVar = getVarTypeTACDirect locVar idVar tacEnv
+  let arrayPos = arrayCalculatePosition tyVar lenghts
+  let temp1 = Temp ThreeAddressCode.TAC.Variable idVar loc (getBasicType tyVar)
+  let indexLeft = IndexLeft temp1
+  case tyTemp of
+    Array {} -> tacGeneratorArrayIdentifierArray temp indexLeft arrayPos loc
+    _ -> tacgeneratorArrayIdentifierNormal indexLeft temp arrayPos loc
+  where
+    tacgeneratorArrayIdentifierNormal indexLeft temp arrayPos loc  = do
+      let temp2 = Temp ThreeAddressCode.TAC.Fixed (show arrayPos) loc Int
+      let tacArray = TACEntry labelExit $ indexLeft temp2 temp
+      return [tacArray]
+    tacGeneratorArrayIdentifierArray temp@(Temp _ _ _ ar@Array {}) indexLeft arrayPos loc = do
+      let totElements = calculateTotalDim ar
+      let sizeElement = sizeof ar
+      let actualDim = totElements * (arrayPos + sizeElement - 1)
+      generateDimArray indexLeft temp actualDim totElements sizeElement loc
+    calculateTotalDim ar@(Array ty _) = getArrayLenght ar * calculateTotalDim ty
+    calculateTotalDim _ = 1
+    generateDimArray _ _ _ 0 _ _ = return []
+    generateDimArray indexLeft temp@(Temp _ _ _ ty) act totalElement sizeElement loc = do
+      idTemp <- newtemp
+      let tempArray = Temp Temporary idTemp loc (getBasicType ty)
+      let tempPosRight = Temp ThreeAddressCode.TAC.Fixed (show ((totalElement - 1 )* sizeElement)) loc Int
+      let tempPosLeft = Temp ThreeAddressCode.TAC.Fixed (show act ) loc Int
+      let tacPos = TACEntry Nothing $ IndexRight tempArray temp tempPosRight
+      let tacValue =  TACEntry labelExit $ indexLeft tempPosLeft tempArray
+      tacs <- generateDimArray indexLeft temp (act - sizeElement) (totalElement - 1) sizeElement loc
+      return (tacPos:tacValue:tacs)
+ 
+      
+
 
 arrayCalculatePosition ty lengths = sizeof ty * arrayCalculatePosition' (reverse (getArrayDimensions ty)) lengths
   where
