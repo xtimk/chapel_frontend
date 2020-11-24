@@ -404,7 +404,7 @@ genLazyTacAND vtype loc e1 _op e2 _ltrue lfalse =
         modify $ addIfSimpleLabels l1true l1false l1false
         (tac1,_) <- tacGeneratorExpression vtype e1
 
-        modify $ addIfSimpleLabels l1true l1false l1false
+        modify $ addIfSimpleLabels _ltrue lfalse l1false
 
         label <- popLabel
         (tac2',temp2') <- tacGeneratorExpression vtype e2
