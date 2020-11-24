@@ -21,7 +21,7 @@ sup mode (Reference ty1Ref) (Reference ty2Ref) = sup mode ty1Ref ty2Ref
 sup mode ty1@(Reference ty1Ref) ty2 = case mode of 
   SupFun -> incompatible ty1
   _ -> sup mode ty1Ref ty2
-sup mode ty1 (Reference ty2Ref) = case mode of 
+sup mode ty1 ty2@(Reference ty2Ref) = case mode of 
   SupFun -> incompatible ty1
   _ -> sup mode ty1 ty2Ref
 --Pointer
