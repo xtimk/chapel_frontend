@@ -395,7 +395,7 @@ tacCheckerBinaryBoolean vtype loc e1 op e2 = do
         (tacRel, _temp) <- genLazyTacREL label2 temp1 op temp2 ltrue lfalse
         return (tacs ++ tacRel, fakeTemp)
     
-genLazyTacAND vtype loc e1 _op e2 _ltrue lfalse = 
+genLazyTacAND vtype loc e1 _op e2 ltrue lfalse = 
   if isLabelFALL lfalse
     then do
         l1true <- newlabelFALL loc VoidLb -- TrueBoolStmLb
@@ -404,7 +404,9 @@ genLazyTacAND vtype loc e1 _op e2 _ltrue lfalse =
         modify $ addIfSimpleLabels l1true l1false l1false
         (tac1,_) <- tacGeneratorExpression vtype e1
 
-        modify $ addIfSimpleLabels _ltrue lfalse l1false
+        let l2true = ltrue
+        let l2false = lfalse
+        modify $ addIfSimpleLabels l2true l2false l1false
 
         label <- popLabel
         (tac2',temp2') <- tacGeneratorExpression vtype e2
@@ -422,7 +424,10 @@ genLazyTacAND vtype loc e1 _op e2 _ltrue lfalse =
         modify $ addIfSimpleLabels l1true l1false l1false
         (tac1,_) <- tacGeneratorExpression vtype e1
 
-        modify $ addIfSimpleLabels l1true l1false l1false
+        let l2true = ltrue
+        let l2false = lfalse
+        modify $ addIfSimpleLabels l2true l2false l1false
+        
         label <- popLabel
         (tac2',temp2') <- tacGeneratorExpression vtype e2
         (tac2, temp2) <- return (attachLabelToFirstElem label tac2', temp2')
@@ -443,9 +448,9 @@ genLazyTacOR vtype loc e1 _op e2 ltrue lfalse =
         modify $ addIfSimpleLabels l1true l1false l1false
         (tac1,_) <- tacGeneratorExpression vtype e1
 
-        let _l2false = lfalse
-        let _l2true = ltrue
-        modify $ addIfSimpleLabels l1true l1false l1false
+        let l2true = ltrue
+        let l2false = lfalse
+        modify $ addIfSimpleLabels l2true l2false l1false
         label <- popLabel
         (tac2',temp2') <- tacGeneratorExpression vtype e2
         (tac2, temp2) <- return (attachLabelToFirstElem label tac2', temp2')
@@ -463,8 +468,8 @@ genLazyTacOR vtype loc e1 _op e2 ltrue lfalse =
         modify $ addIfSimpleLabels l1true l1false l1false
         (tac1,_) <- tacGeneratorExpression vtype e1
 
-        let l2false = lfalse
         let l2true = ltrue
+        let l2false = lfalse
         modify $ addIfSimpleLabels l2true l2false l1false
         label <- popLabel
         (tac2',temp2') <- tacGeneratorExpression vtype e2
