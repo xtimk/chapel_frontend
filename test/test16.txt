@@ -11,3 +11,13 @@ proc main(kk:real)
       return;
    }
 }
+
+proc pluto()
+{
+   var c = a + b;
+   var d = b + a;
+   main(a + b);
+   if (a < b) then {
+      return;
+   }
+}

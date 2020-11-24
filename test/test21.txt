@@ -4,5 +4,6 @@ proc main()
 
 
     b = b && (b == b) ||  b;
+    var c = -1;
 
 }
