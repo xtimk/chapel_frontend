@@ -87,7 +87,7 @@ tacGeneratorArrayIdentifier labelExit temp@(Temp _ _ _ tyTemp) _ lenghts (Temp _
   tacEnv <- get
   let Checker.SymbolTable.Variable loc tyVar = getVarTypeTACDirect locVar idVar tacEnv
   let arrayPos = arrayCalculatePosition tyVar lenghts
-  let temp1 = Temp ThreeAddressCode.TAC.Variable idVar loc (getBasicType tyVar)
+  let temp1 = Temp ThreeAddressCode.TAC.Variable idVar loc (getBasicTacType tyVar)
   let indexLeft = IndexLeft temp1
   case tyTemp of
     Array {} -> tacGeneratorArrayIdentifierArray labelExit temp indexLeft arrayPos loc
@@ -108,7 +108,7 @@ tacGeneratorArrayIdentifierArray labelExit temp@(Temp _ _ _ ar@Array {}) indexLe
       generateDimArray _ _ _ 0 _ _ = return []
       generateDimArray indexLeft temp@(Temp _ _ _ ty) act totalElement sizeElement loc = do
         idTemp <- newtemp
-        let tempArray = Temp Temporary idTemp loc (getBasicType ty)
+        let tempArray = Temp Temporary idTemp loc (getBasicTacType ty)
         let tempPosRight = Temp ThreeAddressCode.TAC.Fixed (show ((totalElement - 1 )* sizeElement)) loc Int
         let tempPosLeft = Temp ThreeAddressCode.TAC.Fixed (show act ) loc Int
         let tacPos = TACEntry Nothing (IndexRight tempArray temp tempPosRight) noComment
@@ -355,14 +355,12 @@ tacGeneratorVariable expType identifier@(PIdent ((l,c), id)) = do
 
 
 tacGeneratorAddress expType loc e = case e of
-    InnerExp _ e _ -> tacGeneratorExpression expType e
-    Epreop (Indirection _)e1 -> do
-      (tacs, Temp mode id  loc ty) <- tacGeneratorExpression expType e1 
-      return (tacs,Temp mode id loc (Pointer ty))
+    InnerExp _ e _ -> tacGeneratorAddress expType loc e
+    Epreop (Indirection _) e1 -> tacGeneratorExpression expType e1
     _ -> do
       (tacs, temp@(Temp mod id l ty)) <- tacGeneratorExpression LeftExp e
       case ty of 
-        Reference ty -> return (tacs, Temp mod id l ty)
+        Reference ty -> return (tacs, Temp mod id l (Pointer ty))
         _ -> do
           defId <- newtemp
           let defTemp = Temp ThreeAddressCode.TAC.Temporary defId loc (Pointer ty)
@@ -371,14 +369,11 @@ tacGeneratorAddress expType loc e = case e of
 
 tacGeneratorPointer expType loc e = case e of
   InnerExp _ e _ -> tacGeneratorPointer expType  loc e
-  Epreop (Address _ ) e1 -> do
-    (tacs, Temp mode id loc ty) <- tacGeneratorExpression expType e1
-    let Pointer tyfound = ty
-    return (tacs, Temp mode id loc tyfound)
+  Epreop (Address _ ) e1 -> tacGeneratorExpression expType e1
   _ -> do
     (tacs, temp@(Temp mod id l ty)) <- tacGeneratorExpression expType e
     case ty of 
-      Reference ty -> return (tacs, Temp mod id l ty)
+      Reference (Pointer ty) -> return (tacs, Temp mod id l ty)
       Pointer ty -> do
         refId <- newtemp
         let refTemp = Temp ThreeAddressCode.TAC.Temporary refId loc ty

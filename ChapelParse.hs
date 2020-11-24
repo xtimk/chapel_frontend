@@ -96,8 +96,8 @@ parseTest filepath = do
                     -- putStrLn "\n\n ** SYMBOL TABLE **"
                     -- print $ getSymTable bpTree
 
-                    -- putStrLn "\n\n ** TREE **"
-                    -- print $ getTree bpTree
+                    putStrLn "\n\n ** TREE **"
+                    print $ getTree bpTree
 
                     let bp2 = typeCheckerReturns (getTree bpTree)
 
