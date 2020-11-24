@@ -8,13 +8,16 @@ printTacEntries m = mapM_ (printTacEntry m)
 
 findMaxLenOfLabels xs = maximum (map getLabelLenFromTACEntry xs)
 
-getLabelLenFromTACEntry (TACEntry label _) = case label of
+getLabelLenFromTACEntry (TACEntry label _ _) = case label of
     Nothing -> 0
-    Just (lab,pos,ty) -> length lab + length (show pos)
+    Just (lab,pos,ty) -> length lab + length (show pos) + getLabelTypeLen ty
 
-printTacEntry m (TACEntry label operation) = case operation of
-    CommentOp _-> putStrLn $ printTacEntry' operation
-    _ -> putStrLn $ printLabel m label ++ printTacEntry' operation
+printTacEntry m (TACEntry label operation comment) = case operation of
+    CommentOp _-> putStrLn $ printTacEntry' operation ++ printTacComment comment
+    _ -> putStrLn $ printLabel m label ++ printTacEntry' operation ++ printTacComment comment
+
+printTacComment Nothing = ""
+printTacComment (Just c) = ' ':'#':' ':c
 
 printTacEq tye = " =" ++ printTacEqAux tye ++ " "
 
@@ -66,7 +69,7 @@ printTacEntry' operation = case operation of
 
 
 printLabel m (Just ("FALL",_, _)) = replicate (m+1) ' '
-printLabel m (Just (lab,pos@(l,c),ty)) = lab ++ printLabelType ty ++ "@" ++ show l ++ "," ++ show c ++ replicate (m - (length lab + length (show pos))) ' ' ++ ": "
+printLabel m (Just (lab,pos@(l,c),ty)) = lab ++ printLabelType ty ++ "@" ++ show l ++ "," ++ show c ++ replicate (m - (length lab + length (show pos) + getLabelTypeLen ty )) ' ' ++ ": "
 printLabel m Nothing = replicate (m+1) ' '
 
 printLabelType ty = case ty of
@@ -74,6 +77,12 @@ printLabelType ty = case ty of
     FalseBoolStmLb -> "false"
     ExitBoolStmLb -> "exit"
     _ -> ""
+
+getLabelTypeLen ty = case ty of
+    TrueBoolStmLb -> 4
+    FalseBoolStmLb -> 5
+    ExitBoolStmLb -> 4
+    _ -> 0
 
 printLabelGoto (lab,(l,c),ty) = lab ++ printLabelType ty ++ "@" ++ show l ++ "," ++ show c 
 

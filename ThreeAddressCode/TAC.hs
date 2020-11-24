@@ -17,9 +17,12 @@ data LabelType =
     StringLb
     deriving (Show)
 
+type TACComment = Maybe String
+
 data TACEntry = TACEntry {
     label :: Maybe Label,
-    operationType :: TACOperation
+    operationType :: TACOperation,
+    comment :: TACComment
 } deriving (Show)
 
 data TACOperation =
@@ -73,7 +76,9 @@ data SequenceLazyEvalLabels = SequenceLazyEvalLabels {
 } deriving (Show)
 
 addLabelToEntry :: Maybe Label -> TACEntry -> TACEntry
-addLabelToEntry label (TACEntry _  operationType) = TACEntry label operationType
+addLabelToEntry label (TACEntry _  operationType _comment) = TACEntry label operationType _comment
+
+noComment = Nothing
 
 sizeof ty = case ty of
     Array ty _ -> sizeof ty
