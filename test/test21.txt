@@ -1,13 +1,8 @@
 proc main()
 {   
     var b = true;
-    while ( ((1 < 2) && (2 < 3)))
-    {
-        var a = 1;
-    }
 
-    while ( b && (b == b) || b )
-    {
-        var a = 1;
-    }
+
+    b = b && (b == b) ||  b;
+
 }
