@@ -11,9 +11,14 @@ proc pluto(x : int)
    }
 }
 
-proc pluto(x : int, ref y : char) : real
+proc paperino(x : char, ref y : [5] real) : *char
 {
+    return &x;
+}
 
+proc gambadilegno_id(a : [5] real) : [5] real
+{
+    return a;
 }
 
 proc main(k:real)
@@ -22,7 +27,11 @@ proc main(k:real)
    var d = b + a;
    pluto(b);
    var asd = 'c';
-   pluto(5, ref asd);
+
+   var ar : [5] real = [1,2,3,4,5];
+   var z = paperino('c', ref ar);
+   var ar2 = gambadilegno_id(ar);
+   var el3 = ar2[3];
    if (a < b) then {
       return;
    }

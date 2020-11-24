@@ -68,9 +68,9 @@ printTacEntry' operation = case operation of
     CommentOp id -> "## " ++ id
 
 
-printLabel m (Just ("FALL",_, _)) = replicate (m+1) ' '
-printLabel m (Just (lab,pos@(l,c),ty)) = lab ++ printLabelType ty ++ "@" ++ show l ++ "," ++ show c ++ replicate (m - (length lab + length (show pos) + getLabelTypeLen ty )) ' ' ++ ": "
-printLabel m Nothing = replicate (m+1) ' '
+printLabel m (Just ("FALL",_, _)) = replicate (m+4) ' '
+printLabel m (Just (lab,pos@(l,c),ty)) = lab ++ printLabelType ty ++ "@" ++ show l ++ "," ++ show c ++ ":    " ++ replicate (m - (length lab + length (show pos) + getLabelTypeLen ty )) ' '
+printLabel m Nothing = replicate (m+4) ' '
 
 printLabelType ty = case ty of
     TrueBoolStmLb -> "true"
@@ -136,9 +136,9 @@ printTacRel rel ty =
             ThreeAddressCode.TAC.NEQ -> " neq_int "
     _ ->
         case rel of
-            ThreeAddressCode.TAC.LT -> " lt_" ++ map toLower (show ty) ++ " "
-            ThreeAddressCode.TAC.GT -> " gt_" ++ map toLower (show ty) ++ " "
-            ThreeAddressCode.TAC.LTE -> " lte_" ++ map toLower (show ty) ++ " "
-            ThreeAddressCode.TAC.GTE -> " gte_" ++ map toLower (show ty) ++ " "
-            ThreeAddressCode.TAC.EQ -> " eq_" ++ map toLower (show ty) ++ " "
-            ThreeAddressCode.TAC.NEQ -> " neq_" ++ map toLower (show ty) ++ " "
+            ThreeAddressCode.TAC.LT -> " lt_" ++ map toLower (printTyAux ty) ++ " "
+            ThreeAddressCode.TAC.GT -> " gt_" ++ map toLower (printTyAux ty) ++ " "
+            ThreeAddressCode.TAC.LTE -> " lte_" ++ map toLower (printTyAux ty) ++ " "
+            ThreeAddressCode.TAC.GTE -> " gte_" ++ map toLower (printTyAux ty) ++ " "
+            ThreeAddressCode.TAC.EQ -> " eq_" ++ map toLower (printTyAux ty) ++ " "
+            ThreeAddressCode.TAC.NEQ -> " neq_" ++ map toLower (printTyAux ty) ++ " "
