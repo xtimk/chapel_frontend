@@ -100,7 +100,7 @@ tacGeneratorFunction (FunDec _ signature body) = do
   envTac <-get
   tacs <- tacGeneratorBody body 
   let ident@(PIdent (loc,id)) = getFunNamePident signature
-  let tacVoid = TACEntry Nothing VoidOp noComment
+  let tacVoid = TACEntry Nothing VoidOp (Just ("code of function " ++ id))
   let Function _ retTy = getVarTypeTAC ident envTac
   case retTy of
     Utils.Type.Void -> do
