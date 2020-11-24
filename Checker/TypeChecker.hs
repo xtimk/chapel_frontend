@@ -483,7 +483,7 @@ checkCorrectTypeOfParam actual (PIdent (_, identifier)) passedParam (Variable _ 
             Evar (PIdent (_, identifier)) ->
               let DataChecker tyExp errorsExp = typeCheckerExpression environment exp
                   (ty1,compatibility) = sup SupFun tyVar (convertTyMode mode tyExp) 
-                  errorsVar = createNewError (errorIncompatibleTypesChangeToFun (getStartExpPos exp) actual identifier ty1 tyExp) compatibility in 
+                  errorsVar = createNewError (errorIncompatibleTypesChangeToFun (getStartExpPos exp) actual identifier ty1 (Reference tyExp)) compatibility in 
                     errorsVar ++ errorsExp
             _ -> [ErrorChecker (getStartExpPos exp) $ ErrorCantUseExprInARefPassedVar exp]
         Utils.Type.Normal ->
