@@ -602,11 +602,11 @@ tacGeneratorFunctionParameter expType paramPassed = case paramPassed of
         Evar identifier@(PIdent (_, id)) -> do
           tacEnv <- get
           let Checker.SymbolTable.Variable loc ty= getVarTypeTAC identifier tacEnv
-          let varTemp =  Temp ThreeAddressCode.TAC.Variable id loc (convertTyMode mode ty) 
+          let varTemp =  Temp ThreeAddressCode.TAC.Variable id loc ty
           return ([], varTemp)
         _ -> do
           (tacs, Temp m id loc ty) <- tacGeneratorExpression expType exp
-          return (tacs, Temp m id loc (convertTyMode mode ty))
+          return (tacs, Temp m id loc ty)
 
 tacGenerationEntryParameter temp = TACEntry Nothing (SetParam temp) noComment
 

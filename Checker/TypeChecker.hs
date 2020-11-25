@@ -393,9 +393,7 @@ typeCheckerExpression environment exp = case exp of
 typeCheckerVariableIdentifiers identifier environment@(ids,_t,_a) = 
   let errors = concatMap (typeCheckerVariableIdentifier identifier) ids in
     if null errors
-    then let DataChecker ty errors = getVarType identifier environment in case ty of
-      Reference ty -> DataChecker ty errors
-      _ -> DataChecker ty errors
+    then getVarType identifier environment 
     else DataChecker Error errors
 
 typeCheckerVariableIdentifier (PIdent (locExp,idExp)) (_, (idDecl,Variable locDecl _ )) =
@@ -514,15 +512,16 @@ typeCheckerDeclarationArray environment exp ardecl@(ArrayInit _ arrays _ ) = cas
   _ -> DataChecker Error [ErrorChecker (getStartExpPos exp) $ ErrorArrayCallExpression exp]
   where 
     typeCheckerDeclarationArray' identifier loc dataChecker  = case dataChecker of
-      DataChecker types@(Array _ _) expErrors -> let DataChecker dimension errors = getDeclarationDimension environment arrays in 
+      DataChecker types@(Array _ _) expErrors -> typeCheckerDeclarationArrayAux identifier loc expErrors types
+      DataChecker types@(Reference (Array _ _)) expErrors -> typeCheckerDeclarationArrayAux identifier loc expErrors types
+      DataChecker types expErrors -> DataChecker Error $ ErrorChecker (getStartExpPos exp) (ErrorDeclarationBoundNotCorrectType types identifier):expErrors
+    typeCheckerDeclarationArrayAux identifier loc expErrors types=  let DataChecker dimension errors = getDeclarationDimension environment arrays in 
         case (getArrayDimension types, dimension) of
           (arrayDim, callDim) -> if arrayDim >= callDim 
             then let typeFound = getSubarrayDimension types callDim in if null errors
               then DataChecker typeFound expErrors
               else DataChecker typeFound (errors ++ expErrors)
             else DataChecker Error ([ErrorChecker loc $ ErrorWrongDimensionArray arrayDim callDim identifier] ++ errors ++ expErrors)
-      DataChecker types expErrors -> DataChecker Error $ ErrorChecker (getStartExpPos exp) (ErrorDeclarationBoundNotCorrectType types identifier):expErrors
-    
 
 getDeclarationDimension _ [] = DataChecker 0 [] 
 getDeclarationDimension environment (array:arrays) = let DataChecker dimension errors = getDeclarationDimension environment arrays in 
