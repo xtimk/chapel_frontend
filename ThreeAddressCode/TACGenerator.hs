@@ -327,8 +327,6 @@ tacGeneratorBooleanStatement loc rightExp = do
     (Fixed, Bool) -> return ([], temp, Nothing)
     _ -> return (resg, temp, Nothing)
            
-
-
 tacGeneratorVariable expType identifier@(PIdent ((l,c), id)) = do
   tacEnv <- get
   let Checker.SymbolTable.Variable loc ty = getVarTypeTAC identifier tacEnv
@@ -657,10 +655,12 @@ tacGeneratorArrayIndexing' (loc,ty) arrayDecl = do
   return (tacsAdd ++ tacsPos, temp)
 
 tacGeneratorAssignment leftExp assign rightExp = do
-  (tacs, operation, (Temp _ _ locLeft tyLeft), labelExit) <- tacGeneratorLeftExpression leftExp assign rightExp
+  (tacs, operation, Temp _ _ locLeft tyLeft, labelExit) <- tacGeneratorLeftExpression leftExp assign rightExp
   idTemp <- newtemp
   let temp = Temp ThreeAddressCode.TAC.Temporary idTemp locLeft tyLeft
   case operation of 
+    --In case if is assignment array = array
+    VoidOp -> return (tacs, temp)
     Nullary temp1 temp2 -> case assign of
       AssgnEq (PAssignmEq _) -> return (TACEntry labelExit operation noComment:tacs, temp)
       AssgnPlEq (PAssignmPlus _) -> do
@@ -688,9 +688,15 @@ tacGeneratorAssignment leftExp assign rightExp = do
         return (entryPointerAdd:entryadd:entryPointerValue:tacs, temp)
 
 tacGeneratorLeftExpression leftExp assgn rightExp = do
-  (tacLeft, opWithoutTempRight, tempLeft@(Temp _ _ _ ty)) <- tacGeneratorLeftExpression' leftExp
+  (tacLeft, opWithoutTempRight, tempLeft@(Temp _ _ loc ty)) <- tacGeneratorLeftExpression' leftExp
   (tacRight, tempRight, labelExit) <- tacGeneratorRightExpression' rightExp (getBasicType ty)
-  return (tacRight ++ tacLeft, opWithoutTempRight tempRight, tempLeft, labelExit)
+  let operation = opWithoutTempRight tempRight
+  case ty of
+    Array {} -> do
+      let indexLeft = IndexLeft tempLeft
+      tacsArray <- tacGeneratorArrayIdentifierArray labelExit tempRight indexLeft 0 loc
+      return (reverse tacsArray ++ tacRight ++ tacLeft, VoidOp, tempLeft,  labelExit)
+    _ ->  return (tacRight ++ tacLeft, operation, tempLeft, labelExit)
     where
       tacGeneratorLeftExpression' leftExp = case leftExp of
         InnerExp _ e _ -> tacGeneratorLeftExpression'  e
