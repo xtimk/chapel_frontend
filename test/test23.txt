@@ -13,7 +13,26 @@ proc pluto(x : int)
 
 proc paperino(x : char, ref y : [5] real) : *char
 {
-    return &x;
+   // y[1] = 99;
+   return &x;
+}
+
+proc gigibagigi(ref x : char) : *char
+{
+   x = 'b';
+   return &x;
+}
+
+proc barbagianni(ref x : *char) : *char
+{
+   var xx = 'b';
+   x = &xx;
+   return x;
+}
+
+proc mysidefx(ref x : char)
+{
+   x = 'a';
 }
 
 proc gambadilegno_id(a : [5] real) : [5] real
@@ -30,8 +49,12 @@ proc main(k:real)
 
    var ar : [5] real = [1,2,3,4,5];
    var z = paperino('c', ref ar);
+   ar[4] = 2;
    var ar2 = gambadilegno_id(ar);
    var el3 = ar2[3];
+
+   var ll = 'c';
+   mysidefx(ref ll);
    if (a < b) then {
       return;
    }
