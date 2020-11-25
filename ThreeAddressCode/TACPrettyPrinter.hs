@@ -24,7 +24,7 @@ printTacEq tye = " =" ++ printTacEqAux tye ++ " "
 printTacEqAux tye = 
     case tye of
         (Pointer _) -> "_addr"
-        (Array t _) -> map toLower $ '_' : printTyAux  t
+        (Array _ _) -> "_addr" --map toLower $ '_' : printTyAux  t
         Real -> "_float"
         Reference ty -> map toLower $ '_' : printTyAux ty
         _ -> map toLower $ '_' : printTyAux tye
