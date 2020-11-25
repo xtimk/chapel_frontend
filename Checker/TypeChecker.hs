@@ -393,7 +393,9 @@ typeCheckerExpression environment exp = case exp of
 typeCheckerVariableIdentifiers identifier environment@(ids,_t,_a) = 
   let errors = concatMap (typeCheckerVariableIdentifier identifier) ids in
     if null errors
-    then getVarType identifier environment
+    then let DataChecker ty errors = getVarType identifier environment in case ty of
+      Reference ty -> DataChecker ty errors
+      _ -> DataChecker ty errors
     else DataChecker Error errors
 
 typeCheckerVariableIdentifier (PIdent (locExp,idExp)) (_, (idDecl,Variable locDecl _ )) =
