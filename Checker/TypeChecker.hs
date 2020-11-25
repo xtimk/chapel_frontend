@@ -173,6 +173,7 @@ typeCheckerParam x = case x of
     mapM_ (typeCheckerParam' (convertMode mode) types) identifiers
     get
 
+
 typeCheckerParam' mode tySpec identifier = do 
     ty <- typeCheckerTypeSpecification tySpec
     modify (typeCheckerParam'' identifier mode ty)
@@ -511,10 +512,9 @@ typeCheckerDeclarationArray environment exp ardecl@(ArrayInit _ arrays _ ) = cas
   Evar (PIdent (loc, identifier)) -> typeCheckerDeclarationArray' identifier loc (typeCheckerExpression environment exp) 
   _ -> DataChecker Error [ErrorChecker (getStartExpPos exp) $ ErrorArrayCallExpression exp]
   where 
-    typeCheckerDeclarationArray' identifier loc dataChecker  = case dataChecker of
-      DataChecker types@(Array _ _) expErrors -> typeCheckerDeclarationArrayAux identifier loc expErrors types
-      DataChecker types@(Reference (Array _ _)) expErrors -> typeCheckerDeclarationArrayAux identifier loc expErrors types
-      DataChecker types expErrors -> DataChecker Error $ ErrorChecker (getStartExpPos exp) (ErrorDeclarationBoundNotCorrectType types identifier):expErrors
+    typeCheckerDeclarationArray' identifier loc (DataChecker tyFound expErrors)  = case getNoModeType tyFound of
+      types@(Array _ _) -> typeCheckerDeclarationArrayAux identifier loc expErrors types
+      types -> DataChecker Error $ ErrorChecker (getStartExpPos exp) (ErrorDeclarationBoundNotCorrectType types identifier):expErrors
     typeCheckerDeclarationArrayAux identifier loc expErrors types=  let DataChecker dimension errors = getDeclarationDimension environment arrays in 
         case (getArrayDimension types, dimension) of
           (arrayDim, callDim) -> if arrayDim >= callDim 

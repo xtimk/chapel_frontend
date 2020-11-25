@@ -23,6 +23,11 @@ getArrayLenght (Array _ (boundLeft, boundRight)) = boundRight - boundLeft + 1
 
 getArrayOffset (Array _ (boundLeft, _)) = boundLeft
 
+
+getNoModeType ty = case ty of
+  Reference ty -> ty
+  _ -> ty
+
 getBasicType ty = case ty of
   Array subType _ -> getBasicType subType
   Reference subType -> getBasicType subType

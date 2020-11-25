@@ -13,7 +13,7 @@ proc pluto(x : int)
 
 proc paperino(x : char, ref y : [5] real) : *char
 {
-   // y[1] = 99;
+    y[1] = 99;
    return &x;
 }
 
@@ -51,7 +51,7 @@ proc main(k:real)
    var z = paperino('c', ref ar);
    ar[4] = 2;
    var ar2 = gambadilegno_id(ar);
-   var el3 = ar2[3];
+  var el3 = ar2[3];
 
    var ll = 'c';
    mysidefx(ref ll);
