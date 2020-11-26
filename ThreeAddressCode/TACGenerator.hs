@@ -711,7 +711,7 @@ tacGeneratorLeftExpression leftExp assgn rightExp = do
           (tacsAdd, temp) <- tacGeneratorArrayIndexing' (loc,ty) arDeclaration
           return (tacsAdd ++ tacLeft, IndexLeft tempLeft temp, tempLeft)
         Epreop (Indirection _) _ -> do
-          (tacs, tempLeft) <- tacGeneratorExpression LeftExp leftExp
+          (tacs, tempLeft) <- tacGeneratorExpression RightExp leftExp
           return (tacs, ReferenceLeft tempLeft, tempLeft)
       tacGeneratorRightExpression' rightExp tyLeft = case tyLeft of
         Bool -> tacGeneratorBooleanStatement (getAssignOpPos assgn) rightExp
