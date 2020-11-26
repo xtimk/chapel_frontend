@@ -83,7 +83,6 @@ noComment = Nothing
 sizeof ty = case ty of
     Array ty _ -> sizeof ty
     Pointer ty -> sizeof ty
-    Reference ty -> sizeof ty
     Int -> 4
     Real -> 8 
     Char -> 1

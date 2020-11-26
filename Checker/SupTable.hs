@@ -1,6 +1,5 @@
 module Checker.SupTable where
 
-import AbsChapel
 import Utils.Type
 
 data SupMode = SupDecl | SupFun | SupBool | SupPlus | SupMinus |  SupArith | SupMod | Sup | SupRet
@@ -20,14 +19,6 @@ sup _ ty1 Void = incompatible ty1
 --Infered
 sup _ Infered ty = compatible ty
 sup _ ty Infered = compatible ty
---Reference
-sup mode (Reference ty1Ref) (Reference ty2Ref) = sup mode ty1Ref ty2Ref
-sup mode ty1@(Reference ty1Ref) ty2
-  | mode == SupFun = incompatible ty1
-  | otherwise = sup mode ty1Ref ty2
-sup mode ty1 (Reference ty2Ref) 
-  | mode == SupFun = incompatible ty1
-  | otherwise = sup mode ty1 ty2Ref
 --Pointer
 sup mode point@(Pointer _p1) (Pointer _p2) = 
   let (ty,compatibility) = sup mode _p1 _p2 in 
@@ -128,7 +119,7 @@ sup _ ty1 (Array _ _) = incompatible ty1
 compatible ty = (ty,True)
 incompatible ty = (ty,False)
 
-convertMode (RefMode (PRef _) ) = Utils.Type.Ref
+
 
 
 

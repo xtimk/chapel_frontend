@@ -26,7 +26,6 @@ printTacEqAux tye =
         (Pointer _) -> "_addr"
         (Array _ _) -> "_addr" --map toLower $ '_' : printTyAux  t
         Real -> "_float"
-        Reference ty -> map toLower $ '_' : printTyAux ty
         _ -> map toLower $ '_' : printTyAux tye
 
 

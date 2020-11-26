@@ -16,10 +16,10 @@ startState = ([], Checker.BPTree.Node {Checker.BPTree.id = ("0", ((0::Int,0::Int
 typeChecker (Progr p) = typeCheckerModule p
 
 typeCheckerModule (Mod m) = do
-  modify (addFunctionOnCurrentNode "writeInt" (-1,-1) [Variable (-1,-1) Int] Utils.Type.Void)
-  modify (addFunctionOnCurrentNode "writeReal" (-1,-1) [Variable (-1,-1) Real] Utils.Type.Void)
-  modify (addFunctionOnCurrentNode "writeChar" (-1,-1) [Variable  (-1,-1) Char] Utils.Type.Void)
-  modify (addFunctionOnCurrentNode "writeString" (-1,-1) [Variable  (-1,-1) String] Utils.Type.Void)
+  modify (addFunctionOnCurrentNode "writeInt" (-1,-1) [Variable (-1,-1) Int Checker.SymbolTable.Normal] Utils.Type.Void)
+  modify (addFunctionOnCurrentNode "writeReal" (-1,-1) [Variable (-1,-1) Real Checker.SymbolTable.Normal] Utils.Type.Void)
+  modify (addFunctionOnCurrentNode "writeChar" (-1,-1) [Variable  (-1,-1) Char Checker.SymbolTable.Normal] Utils.Type.Void)
+  modify (addFunctionOnCurrentNode "writeString" (-1,-1) [Variable  (-1,-1) String Checker.SymbolTable.Normal] Utils.Type.Void)
   modify (addFunctionOnCurrentNode "readInt" (-1,-1) [] Utils.Type.Int)
   modify (addFunctionOnCurrentNode "readReal" (-1,-1) [] Utils.Type.Real)
   modify (addFunctionOnCurrentNode "readChar" (-1,-1) [] Utils.Type.Char)
@@ -59,7 +59,7 @@ typeCheckerDeclaration x = do
       typeCheckerIdentifiers ids (Just assignment) Infered ty (Just exp)
       get
 
-typeCheckerConvertIdsToVariable = map (\(PIdent (loc,id)) -> (id,(id, Variable loc Infered)))
+typeCheckerConvertIdsToVariable = map (\(PIdent (loc,id)) -> (id,(id, Variable loc Infered Checker.SymbolTable.Normal)))
 
 typeCheckerTypeSpecification tySpec = case tySpec of
   TypeSpecNorm ty -> convertTypeSpecToTypeInferred ty
@@ -70,6 +70,8 @@ typeCheckerTypeSpecification tySpec = case tySpec of
     modify (addErrorsCurrentNode errors)
     return typeArray
 
+
+convertMode (RefMode (PRef _) ) = Checker.SymbolTable.Ref
 
 
 convertTypeSpecToTypeInferred Tint {} = return Int
@@ -128,7 +130,7 @@ typeCheckerSignature' locstart locEnd locParamStart locParamEnd ident@(PIdent (l
           put (symtable, updateTree (addEntryNode identifier (Function [(loc,variables)] types) node) tree, currentIdNode )
           get
         Just entryFound -> case entryFound of 
-          Variable locVar _ -> do
+          Variable locVar _ _-> do
             modify $ addErrorsCurrentNode [ErrorChecker loc $ ErrorVarAlreadyDeclared locVar identifier]
             get
           Function varOfvar t -> do
@@ -156,7 +158,7 @@ typeCheckerSignatureOverloading  (locstart,locEnd) identifier loc var ((locFun,x
 typeCheckerSignatureOverloading' (locstart,locEnd) identifier loc locFun [] [] = [ErrorChecker loc $ ErrorSignatureAlreadyDeclared (locstart,locEnd) locFun identifier]
 typeCheckerSignatureOverloading' _ _ _ _ [] _ = []
 typeCheckerSignatureOverloading' _ _ _ _ _ [] = []
-typeCheckerSignatureOverloading'  (locstart,locEnd) identifier loc locFun ((Variable _ ty1):xs) ((Variable _ ty2):ys) = 
+typeCheckerSignatureOverloading'  (locstart,locEnd) identifier loc locFun ((Variable _ ty1 modeVar1):xs) ((Variable _ ty2 modeVar2):ys) = 
   if show ty1 == show ty2
   then typeCheckerSignatureOverloading' (locstart,locEnd) identifier loc locFun xs ys
   else []
@@ -180,19 +182,15 @@ typeCheckerParam' mode tySpec identifier = do
     get
 
 typeCheckerParam'' (PIdent (loc,identifier)) mode ty env@(sym,_t,_i) = case typeCheckerParam''' sym identifier of
-  Just (_,(_, Variable (varAlreadyDecLine,varAlreadyDecColumn) _ )) -> 
+  Just (_,(_, Variable (varAlreadyDecLine,varAlreadyDecColumn) _ _)) -> 
     addErrorsCurrentNode [ErrorChecker (varAlreadyDecLine,varAlreadyDecColumn) $ ErrorVarAlreadyDeclared loc identifier] env
-  Nothing -> ((identifier, (identifier, Variable loc (typeCheckerModeParameter mode ty))):sym,_t,_i)
+  Nothing -> ((identifier, (identifier, Variable loc  ty mode)):sym,_t,_i)
 
 typeCheckerParam''' [] _ = Nothing;
 typeCheckerParam''' (x@(id,_):xs) identifier = 
   if id == identifier
     then Just x
     else typeCheckerParam''' xs identifier
-
-typeCheckerModeParameter mode ty = case mode of
-  Ref -> Reference ty
-  _ -> ty
   
 typeCheckerBody blkType identifier (BodyBlock  (POpenGraph (locStart,_)) xs (PCloseGraph (locEnd,_))  ) = do
   (sym, tree, current_id) <- get
@@ -277,7 +275,7 @@ typeCheckerReturn (PReturn (pos, _ret)) tyret exp = do
   (_s,tree,current_id) <- get
   case findProcedureGetBlkType tree current_id of
     ProcedureBlk _ -> do
-      let DataChecker tyfun errs1 = getFunRetType (_s,tree,current_id);
+      let DataChecker (tyfun,_) errs1 = getFunRetType (_s,tree,current_id);
       let (_,compatibility) = sup SupRet tyret tyfun 
       let returnError = createNewError (errorIncompatibleReturnType pos (getFunNameFromEnv (_s,tree,current_id)) tyfun tyret exp) compatibility
       let errors = errs1 ++ returnError
@@ -318,9 +316,9 @@ typeCheckerVariable (PIdent ((l,c), identifier)) tree types currentIdNode =
   let node = findNodeById currentIdNode tree in case types of
     Infered ->  updateTree (addErrorsNode node [ErrorChecker (l,c) $ NoDecucibleType identifier]) tree
     _ -> case DMap.lookup identifier (getSymbolTable node) of
-              Just (_, Variable (varAlreadyDecLine,varAlreadyDecColumn) _ ) -> 
+              Just (_, Variable (varAlreadyDecLine,varAlreadyDecColumn) _ _) -> 
                 updateTree (addErrorsNode node [ErrorChecker (varAlreadyDecLine,varAlreadyDecColumn) $ ErrorVarAlreadyDeclared (l,c) identifier]) tree
-              Nothing -> updateTree (addEntryNode identifier (Variable (l,c) types) node) tree
+              Nothing -> updateTree (addEntryNode identifier (Variable (l,c) types Checker.SymbolTable.Normal) node) tree
 
 typeCheckerDeclExpression environment decExp = case decExp of
   ExprDecArray (ArrayInit _ expression _) -> foldl (typeCheckerDeclArrayExp environment) (DataChecker (Array Infered (0, -1)) []) expression
@@ -394,11 +392,11 @@ typeCheckerExpression environment exp = case exp of
 typeCheckerVariableIdentifiers identifier environment@(ids,_t,_a) = 
   let errors = concatMap (typeCheckerVariableIdentifier identifier) ids in
     if null errors
-    then let DataChecker ty error = getVarType identifier environment in 
-      DataChecker (getNoModeType ty) error 
+    then let DataChecker (ty,_) error = getVarType identifier environment in 
+      DataChecker ty error 
     else DataChecker Error errors
 
-typeCheckerVariableIdentifier (PIdent (locExp,idExp)) (_, (idDecl,Variable locDecl _ )) =
+typeCheckerVariableIdentifier (PIdent (locExp,idExp)) (_, (idDecl,Variable locDecl _ _)) =
   [ErrorChecker locExp  $ ErrorCyclicDeclaration locDecl idDecl | idDecl == idExp]
 
 
@@ -455,7 +453,7 @@ typeCheckerIndirection environment e1 =
 eFunTypeChecker funidentifier@(PIdent (loc,identifier)) passedparams environment = 
   case getEntry funidentifier environment of
     DataChecker Nothing errors -> DataChecker Error errors
-    DataChecker (Just (Variable _ _ )) _-> DataChecker Error [ErrorChecker loc $ ErrorCalledProcWithVariable identifier]
+    DataChecker (Just Variable {}) _-> DataChecker Error [ErrorChecker loc $ ErrorCalledProcWithVariable identifier]
     DataChecker (Just (Function paramss ty)) _-> 
       let errorss = map (checkPassedParams funidentifier environment (DataChecker 0 []) passedparams) paramss; 
           errors = checkSignatureWithLessError errorss in DataChecker ty errors
@@ -474,24 +472,24 @@ checkPassedParams funidentifier environment (DataChecker actual errors) (p:passe
   let err = checkCorrectTypeOfParam (actual + 1) funidentifier p e environment in 
     checkPassedParams funidentifier environment (DataChecker (actual + 1) (errors ++ err)) passedParams (locOver,expectedParams)
 
-checkCorrectTypeOfParam actual (PIdent (_, identifier)) passedParam (Variable _ tyVar ) environment = case passedParam of
+checkCorrectTypeOfParam actual (PIdent (_, identifier)) passedParam (Variable _ tyVar modeVar) environment = case passedParam of
   PassedParWMode mode exp -> checkCorrectTypeOfParamAux (convertMode mode) exp
-  PassedPar exp -> checkCorrectTypeOfParamAux Utils.Type.Normal exp
+  PassedPar exp -> checkCorrectTypeOfParamAux Checker.SymbolTable.Normal exp
   where
     checkCorrectTypeOfParamAux mode exp = 
       case mode of
-        Utils.Type.Ref -> 
+        Checker.SymbolTable.Ref -> 
           case exp of
-            Evar (PIdent (_, identifier)) ->
-              let DataChecker tyExp errorsExp = typeCheckerExpression environment exp
-                  (ty1,compatibility) = sup SupFun tyVar (convertTyMode mode tyExp) 
-                  errorsVar = createNewError (errorIncompatibleTypesChangeToFun (getStartExpPos exp) actual identifier ty1 (Reference tyExp)) compatibility in 
+            Evar  id@(PIdent(_, identifier)) ->
+              let DataChecker (tyExp,_) errorsExp = getVarType id environment
+                  (ty1,compatibility) = sup SupFun tyVar tyExp
+                  errorsVar = createNewError (errorIncompatibleTypesChangeToFun (getStartExpPos exp) actual identifier ty1 modeVar tyExp mode) compatibility in 
                     errorsVar ++ errorsExp
             _ -> [ErrorChecker (getStartExpPos exp) $ ErrorCantUseExprInARefPassedVar exp]
-        Utils.Type.Normal ->
+        Checker.SymbolTable.Normal ->
           let DataChecker tyExp errorsExp = typeCheckerExpression environment exp
-              (ty1, compatibility) = sup SupFun tyVar (convertTyMode mode tyExp) 
-              errorsVar = createNewError (errorIncompatibleTypesChangeToFun (getStartExpPos exp) actual identifier ty1 tyExp) compatibility in 
+              (ty1, compatibility) = sup SupFun tyVar tyExp
+              errorsVar = createNewError (errorIncompatibleTypesChangeToFun (getStartExpPos exp) actual identifier ty1 modeVar tyExp mode) compatibility in 
                 errorsVar ++ errorsExp
 
 typeCheckerExpression' environment supMode loc e1 e2 =

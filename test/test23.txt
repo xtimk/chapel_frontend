@@ -75,3 +75,15 @@ proc main(k:real)
       return;
    }
 }
+
+
+proc pape(ref x : bool)
+{
+   x = x;
+}
+
+proc ggggin()
+{
+   var a = 3 < 2;
+   pape(ref a); 
+}

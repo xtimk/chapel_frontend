@@ -2,6 +2,7 @@ module Checker.ErrorPrettyPrinter where
 import LexChapel
 import Utils.AbsUtils
 import Utils.Type
+import Checker.SymbolTable
 import AbsChapel hiding (Type, Mode)
 
 data DataChecker a = DataChecker {
@@ -36,7 +37,7 @@ data DefinedError =
   ErrorReturnNotInsideAProcedure |
   ErrorBreakNotInsideAProcedure |
   ErrorContinueNotInsideAProcedure |
-  ErrorCalledProcWithWrongTypeParam Int Type Type String|
+  ErrorCalledProcWithWrongTypeParam Int Type Mode Type Mode String|
   ErrorCalledProcWrongArgs Int Int String |
   ErrorCalledProcWithVariable String |
   ErrorNoPointerAddress Type Exp|
@@ -85,7 +86,8 @@ printDefinedError tokens error = case error of
   ErrorArrayExpressionRequest expDecl-> "Must be call an array indexing like \" a[2,3] \" but was found an array declaration " ++ printDeclExpression tokens expDecl ++ "."
   ErrorCantAddressAnExpression exp -> "An expression cannot address in " ++ printExpression tokens exp ++ "."
   ErrorReturnNotInsideAProcedure -> "Return can be write only in a procedure"
-  ErrorCalledProcWithWrongTypeParam pos ty1 ty2 id-> "On call function \"" ++ id ++ "\" parameter in position " ++ show pos ++ " must be of type " ++ prettyPrinterTypeParams ty1 ++ " but was found type "++ prettyPrinterTypeParams ty2 ++ "."
+  ErrorCalledProcWithWrongTypeParam pos ty1 mode1 ty2 mode2 id-> "On call function \"" ++ id ++ "\" parameter in position " ++ show pos ++ " must be of type " ++ prettyPrinterType ty1 ++ "in " ++ show mode1 ++ " modality," ++ 
+    "but was found type " ++ prettyPrinterType ty2 ++ " in " ++ show mode2 ++ "modality."
   ErrorCalledProcWrongArgs dim1 dim2 id-> "Function " ++ id ++ " expect " ++ show dim1 ++ " arguments but found " ++ show dim2 ++ " arguments."
   ErrorCalledProcWithVariable id -> "Variable " ++ id ++ " is not a procedure."
   ErrorNoPointerAddress ty exp -> "Can only addressed a pointer but was found expression " ++ printExpression tokens exp ++ " of type " ++ prettyPrinterType ty ++ "."
@@ -104,15 +106,10 @@ printDefinedError tokens error = case error of
   ErrorCyclicDeclaration (l,c) id -> "Cyclic declaration with variable " ++ id ++ " in line " ++ show l ++ " and column " ++ show c ++ "." 
   ErrorMissingInitialization id -> "Missing initialization for variable " ++ id ++ "."
 
-prettyPrinterTypeParams ty = case ty of
-  Reference ty -> prettyPrinterType ty ++ " in reference modality"
-  _ -> prettyPrinterType ty
-
 prettyPrinterType ty  = case ty of
   tyAr@(Array ty _) -> if checkArraywithNotGoodDimension tyAr 
     then "array of dimension [" ++ show (getArrayLenght tyAr) ++ prettyPrinterTypeArray ty
     else "array of dimension not possible to calculate (check for other errors )"
-  Reference ty ->  prettyPrinterType ty
   Pointer ty -> "*" ++ prettyPrinterType ty
   Error -> "impossible to infered from context ( check for other errors )"
   _ -> show ty
@@ -136,7 +133,7 @@ errorIncompatibleDeclarationType loc idVar ty tyexp exp = ErrorChecker loc $ Err
 errorIncompatibleReturnType loc idFun tyFun tyExp exp = ErrorChecker loc $ ErrorIncompatibleReturnType idFun tyFun tyExp exp
 errorIncompatibleUnaryType loc e ty1 ty2 = ErrorChecker loc $ ErrorIncompatibleUnaryOpType loc ty1 ty2 e
 errorIncompatibleBinaryType loc e1 e2 ty1 ty2  = ErrorChecker loc $ ErrorIncompatibleBinaryOpType loc ty1 ty2 e1 e2
-errorIncompatibleTypesChangeToFun loc pos id ty1 ty2 = ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam pos ty1 ty2 id
+errorIncompatibleTypesChangeToFun loc pos id ty1 mode1 ty2 mode2= ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam pos ty1 mode1 ty2 mode2 id 
 
 
 
