@@ -120,7 +120,7 @@ typeCheckerSignature' locstart locEnd locParamStart locParamEnd ident@(PIdent (l
       typeCheckerParams params
       (symtable, tree, currentIdNode) <- get
       let node = findNodeById currentIdNode tree
-      let DataChecker entry errors = getEntry ident (symtable, tree, currentIdNode)
+      let DataChecker entry errors = getEntryForFun ident (symtable, tree, currentIdNode)
       let variables = reverse $ map (snd.snd) symtable
       case entry of
         Nothing -> do

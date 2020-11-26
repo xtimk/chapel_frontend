@@ -20,8 +20,21 @@ proc superpippo(a : string) : [5] string
     return res;
 }
 
+
+proc paperoga(ref b : *[5] string){
+    var z = (*b)[1];
+}
+
+var qwerty = 5;
+
 proc main()
 {
+    var qwerty = 6;
+    proc paperoga(ref b : *[5] string){
+        var z = (*b)[3];
+    };
+
+
     var k = 5;
     sidefx(ref k);
     var j = [1.2,2,3,4,5];
@@ -38,5 +51,7 @@ proc main()
 
     var lux = superpippo("vola");
 
-    var papar = [1,2];
+    var luxAddr = &lux;
+
+    paperoga(ref luxAddr);
 }
