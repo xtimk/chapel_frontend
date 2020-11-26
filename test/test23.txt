@@ -23,6 +23,7 @@ proc paperino(x : char, ref y : [5] real,ref z : *int) : *char
 
 proc gigibagigi(ref x : char) : *char
 {
+   //gigibagigi(x);
    x = 'b';
    return &x;
 }
