@@ -102,7 +102,7 @@ sup mode ty Error =  case mode of
   _ -> compatible Error
 --Array
 sup mode ar1@(Array typesFirst firstDim) ar2@(Array typesSecond _)
-  | mode `elem` [SupDecl, SupRet, SupFun] = 
+  | mode `elem` [SupDecl, SupRet, SupFun, Sup] = 
       let lenghtFirst = getArrayLenght ar1
           lenghSecond = getArrayLenght ar2 in 
       if lenghtFirst ==  lenghSecond
