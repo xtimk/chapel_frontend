@@ -3,6 +3,23 @@ proc sidefx(ref x : int)
     x = 5;
 }
 
+proc astronaut(x : int) : int
+{
+    return x;
+}
+
+proc astronaut(ref x : int) : int
+{
+    return x;
+}
+
+
+proc superpippo(a : string) : [5] string
+{
+    var res = [a,a,a,a,a];
+    return res;
+}
+
 proc main()
 {
     var k = 5;
@@ -15,5 +32,11 @@ proc main()
     // a = j;
 
     j = *addr_a;
-    
+
+    astronaut(k);
+    astronaut(ref k);
+
+    var lux = superpippo("vola");
+
+    var papar = [1,2];
 }
