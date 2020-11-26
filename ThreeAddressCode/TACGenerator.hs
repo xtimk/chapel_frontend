@@ -634,11 +634,8 @@ tacGeneratorArrayIndexing expType exp arrayDecl = case exp of
     (tacsPoint, tempPoint) <- tacGeneratorPointer expType loc e1 
     (tacsGen, tempGen) <- tacGeneratorArrayIndexingAux tempPoint
     return (tacsGen ++ tacsPoint,tempGen)
-  (Evar identifier@(PIdent (_, id))) -> do
-    (tacs,tempId) <- tacGeneratorExpression RightExp exp
-    --tacEnv <- get
-    --let Checker.SymbolTable.Variable loc ty = getVarTypeTAC identifier tacEnv
-    --let tempId = Temp ThreeAddressCode.TAC.Variable id loc ty
+  Evar {} -> do
+    (tacs,tempId) <- tacGeneratorExpression expType exp
     (tacsArray,temp) <- tacGeneratorArrayIndexingAux tempId
     return (tacsArray ++ tacs, temp)
   where
@@ -710,15 +707,10 @@ tacGeneratorLeftExpression leftExp assgn rightExp = do
             Reference _ty -> return ([], ReferenceLeft varTemp, varTemp)
             _ ->  return ([], Nullary varTemp, varTemp)
         Earray expIdentifier arDeclaration -> do
-          (_, varTemp@(Temp _ _ _ ty)) <- tacGeneratorExpression LeftExp leftExp
-          case ty of
-            Reference _ty -> 
-              return ([], ReferenceLeft varTemp, varTemp)
-            _ -> do
-              (tacLeft, tempLeft@(Temp _ _ loc ty)) <- tacGeneratorExpression LeftExp expIdentifier
-              (tacsAdd, temp) <- tacGeneratorArrayIndexing' (loc,ty) arDeclaration
-              return (tacsAdd ++ tacLeft, IndexLeft tempLeft temp, tempLeft)
-        Epreop (Indirection _) e1 -> do
+          (tacLeft, tempLeft@(Temp _ _ loc ty)) <- tacGeneratorExpression RightExp expIdentifier
+          (tacsAdd, temp) <- tacGeneratorArrayIndexing' (loc,ty) arDeclaration
+          return (tacsAdd ++ tacLeft, IndexLeft tempLeft temp, tempLeft)
+        Epreop (Indirection _) _ -> do
           (tacs, tempLeft) <- tacGeneratorExpression LeftExp leftExp
           return (tacs, ReferenceLeft tempLeft, tempLeft)
       tacGeneratorRightExpression' rightExp tyLeft = case tyLeft of
@@ -737,8 +729,7 @@ tacGenerationArrayPosition (ArrayInit _ expressions _ ) = tacGenerationArrayPosi
       (tacOther, tempOthers) <- tacGenerationArrayPosition' xs
       return (tacExp ++ tacOther, tempExp:tempOthers)
 
-tacGenerationArrayPosAdd (loc,tyMode) temps = do
-  let ty = getNoModeType tyMode
+tacGenerationArrayPosAdd (loc,ty) temps = do
   (tacs, temp) <- tacGenerationArrayPosAdd' ty(tail (reverse ( getArrayDimensions ty))) (reverse temps)
   idSize <- newtemp
   let size = sizeof ty

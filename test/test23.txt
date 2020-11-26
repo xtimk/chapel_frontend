@@ -13,7 +13,8 @@ proc pluto(x : int)
 
 proc paperino(x : char, ref y : [5] real) : *char
 {
-   y[1] = 1.1;
+
+   y[1] = y[1];
    return &x;
 }
 
