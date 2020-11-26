@@ -3,8 +3,38 @@ proc sidefx(ref x : int)
     x = 5;
 }
 
+proc astronaut(x : int) : int
+{
+    return x;
+}
+
+proc astronaut(ref x : int) : int
+{
+    return x;
+}
+
+
+proc superpippo(a : string) : [5] string
+{
+    var res = [a,a,a,a,a];
+    return res;
+}
+
+
+proc paperoga(ref b : *[5] string){
+    var z = (*b)[1];
+}
+
+var qwerty = 5;
+
 proc main()
 {
+    var qwerty = 6;
+    proc paperoga(ref b : *[5] string){
+        var z = (*b)[3];
+    };
+
+
     var k = 5;
     sidefx(ref k);
     var j = [1.2,2,3,4,5];
@@ -15,5 +45,13 @@ proc main()
     // a = j;
 
     j = *addr_a;
-    
+
+    astronaut(k);
+    astronaut(ref k);
+
+    var lux = superpippo("vola");
+
+    var luxAddr = &lux;
+
+    paperoga(ref luxAddr);
 }

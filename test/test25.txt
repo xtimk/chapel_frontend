@@ -1,0 +1,13 @@
+proc paperoga(x : int){
+    var z = x;
+}
+proc main()
+{
+   proc paperoga(x : char){
+       var z = x;
+   };
+
+   paperoga('a');
+   paperoga(2);
+   
+}

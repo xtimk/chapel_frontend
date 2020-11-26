@@ -644,11 +644,12 @@ tacGenerationTempParameter (Checker.SymbolTable.Variable locMode tyPar modeVar,(
         return ([valEntry],valTemp )
       (Ref, _) -> do
         idRef <- newtemp
-        let refTemp = Temp ThreeAddressCode.TAC.Temporary idRef locMode tyPar
+        let refTemp = Temp ThreeAddressCode.TAC.Temporary idRef locMode (Pointer tyPar)
         let refEntry = TACEntry Nothing (DeferenceRight refTemp temp) Nothing 
         return ([refEntry], refTemp)
       _ -> return ([], temp)
 
+-- modifyTempType (Temp mode id loc _tyTemp) newTy = (Temp mode id loc newTy)
 
 tacGeneratorArrayIndexing expType exp arrayDecl = case exp of
   InnerExp _ e _ -> tacGeneratorArrayIndexing expType e arrayDecl

@@ -176,6 +176,14 @@ getEntry (PIdent ((l,c), identifier)) (_,tree,currentNode) =
         case DMap.lookup identifier symtable of
             Just (_, entry) -> DataChecker (Just entry) []
             Nothing -> DataChecker Nothing [ErrorChecker (l,c) $ ErrorVarNotDeclared identifier]
+
+getEntryForFun (PIdent ((l,c), identifier)) (_sym,tree,currentNode) = 
+    -- let symtable = uniteSymTables $ bpPathToList currentNode tree in
+        let (Node _id bp a b) = findNodeById currentNode tree
+            (BP sym _ _ _) = bp in
+        case DMap.lookup identifier sym of
+            Just (_, entry) -> DataChecker (Just entry) []
+            Nothing -> DataChecker Nothing [ErrorChecker (l,c) $ ErrorVarNotDeclared identifier]
             
 getVarType (PIdent ((l,c), identifier)) (_,tree,currentNode) = 
     let symtable = uniteSymTables $ bpPathToList currentNode tree in
