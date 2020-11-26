@@ -5,13 +5,15 @@ proc sidefx(ref x : int)
 
 proc main()
 {
-    var d = ["1","2"];
-
-    var q = d;
-
-    var c = q[0];
-
     var k = 5;
-
     sidefx(ref k);
+    var j = [1.2,2,3,4,5];
+    var a = [6,7.2,8,9,10];
+
+    var addr_a = &a;
+
+    // a = j;
+
+    j = *addr_a;
+    
 }

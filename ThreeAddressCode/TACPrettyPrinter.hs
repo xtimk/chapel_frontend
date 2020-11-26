@@ -49,7 +49,7 @@ printTacEntry' operation = case operation of
         let tye1 = getTacTempTye temp1
             _tye2 = getTacTempTye temp2 in
         "if " ++ printTacTemp temp1 ++ printTacRel rel tye1 ++ printTacTemp temp2 ++ " goto " ++ printLabelGoto label
-    IndexLeft temp1 temp2 temp3 ->  printTacTemp temp1 ++ "[" ++ printTacTemp temp2 ++ "]" ++ printTacEq (getTacTempTye temp1) ++ printTacTemp temp3
+    IndexLeft temp1 temp2 temp3 ->  printTacTemp temp1 ++ "[" ++ printTacTemp temp2 ++ "]" ++ printTacEq (getArrayPrimaryType (getTacTempTye temp1)) ++ printTacTemp temp3
     IndexRight temp1 temp2 temp3 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++  printTacTemp temp2 ++  "[" ++ printTacTemp temp3 ++ "]"
     DeferenceRight temp1 temp2 -> printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++ "&" ++  printTacTemp temp2
     ReferenceLeft temp1 temp2 -> "*" ++ printTacTemp temp1 ++ printTacEq (getTacTempTye temp1) ++  printTacTemp temp2

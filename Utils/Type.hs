@@ -38,4 +38,7 @@ getBasicTacType ty = case ty of
   Array subType _ -> getBasicType subType
   Reference subType -> getBasicType subType
   subType -> subType
+
+getArrayPrimaryType (Array subType _) = subType
+getArrayPrimaryType g = g
    

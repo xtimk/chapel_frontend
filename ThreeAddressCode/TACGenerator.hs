@@ -710,9 +710,14 @@ tacGeneratorLeftExpression leftExp assgn rightExp = do
             Reference _ty -> return ([], ReferenceLeft varTemp, varTemp)
             _ ->  return ([], Nullary varTemp, varTemp)
         Earray expIdentifier arDeclaration -> do
-          (tacLeft, tempLeft@(Temp _ _ loc ty)) <- tacGeneratorExpression LeftExp expIdentifier
-          (tacsAdd, temp) <- tacGeneratorArrayIndexing' (loc,ty) arDeclaration
-          return (tacsAdd ++ tacLeft, IndexLeft tempLeft temp, tempLeft)
+          (_, varTemp@(Temp _ _ _ ty)) <- tacGeneratorExpression LeftExp leftExp
+          case ty of
+            Reference _ty -> 
+              return ([], ReferenceLeft varTemp, varTemp)
+            _ -> do
+              (tacLeft, tempLeft@(Temp _ _ loc ty)) <- tacGeneratorExpression LeftExp expIdentifier
+              (tacsAdd, temp) <- tacGeneratorArrayIndexing' (loc,ty) arDeclaration
+              return (tacsAdd ++ tacLeft, IndexLeft tempLeft temp, tempLeft)
         Epreop (Indirection _) e1 -> do
           (tacs, tempLeft) <- tacGeneratorExpression LeftExp leftExp
           return (tacs, ReferenceLeft tempLeft, tempLeft)

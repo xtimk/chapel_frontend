@@ -112,8 +112,8 @@ parseTest filepath = do
                       -- printTacEntriesRaw (getTac tac)
                       -- putStrLn "\n\n ** Pretty TAC **"
                       -- printTacEntries maxlenlabeltac (getTac tac)
-                      -- putStrLn "\n\n ** ENRICHED TAC **"
-                      -- printTacEntriesRaw enrichedcasttac
+                        putStrLn "\n\n ** ENRICHED TAC **"
+                        printTacEntriesRaw enrichedcasttac
                         putStrLn "\n\n ** Pretty Print of TAC **"
                         printTacEntries maxlenenrichedlabeltac enrichedcasttac
                         exitSuccess
