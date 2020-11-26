@@ -574,12 +574,22 @@ tacCheckerReverBooleanLabel = do
 
 tacGeneratorFunctionCall expType identifier@(PIdent (_, id)) paramsPassed = do
   tacEnv <- get
+  --Valuto e genero i tac per le espressioni di ogni argomento della funzione
   tacParameters <- mapM (tacGeneratorFunctionParameter expType) paramsPassed
-  let tacExp = concatMap fst tacParameters
-  let tempPars =  map snd tacParameters
-  let (loc,funParams) = getFunctionParams identifier tempPars tacEnv 
+  --Estrapolo i tacs degli argomenti da aggiungere al finale
+  let tacExp = concatMap (fst.fst) tacParameters
+  --Estrapolo i tipi ricavati da ogni espressione, mi serviranno a identificare la funzione di overload da utilizzare
+  let tempPars =  map (snd.fst) tacParameters
+  --Estrapolo le eventuali modalità con cui i parametri sono passati, insieme a tipi in precendenza
+  --Verranno usati per identificate la funzione di overload
+  let modes = map snd tacParameters
+  --Ricavo l'overload designato  
+  let (loc,funParams) = getFunctionParams identifier tempPars tacEnv modes
+  --Ricavo il tipo di ritorno della funzione
   let Function _ retTy = getVarTypeTAC identifier tacEnv
   let parameterLenght = length paramsPassed
+  --Faccio il confronto dei parametri che vengono passati per riferimento e sono già identificati per riferimento
+  -- elaborando tutti i casi possibili
   tacPar <- mapM tacGenerationTempParameter $ zip funParams tempPars
   let funTemp = Temp ThreeAddressCode.TAC.Variable id loc retTy
   let tacsTemp = reverse $ map (tacGenerationEntryParameter.snd) tacPar
@@ -604,28 +614,28 @@ tacGeneratorFunctionParameter expType paramPassed = case paramPassed of
         Evar identifier@(PIdent (_, id)) -> do
           tacEnv <- get 
           let Checker.SymbolTable.Variable loc ty= getVarTypeTAC identifier tacEnv
-          let varTemp =  Temp ThreeAddressCode.TAC.Variable id loc (convertTyMode mode ty)
-          return ([], varTemp)
+          let varTemp =  Temp ThreeAddressCode.TAC.Variable id loc  ty
+          return (([], varTemp), mode)
         _ -> do
           (tacs, Temp m id loc ty) <- tacGeneratorExpression expType exp
-          return (tacs, Temp m id loc (convertTyMode mode ty))
+          return ((tacs, Temp m id loc  ty), mode)
 
 tacGenerationEntryParameter temp = TACEntry Nothing (SetParam temp) noComment
 
 tacGenerationTempParameter (Checker.SymbolTable.Variable locMode tyPar,temp@(Temp mode id loc tyTemp)) = 
-    case (tyPar, getNoModeType tyTemp) of
-      (Reference _, Reference tyFound)  -> return ([], Temp mode id loc tyFound)
-      (_, Reference tyFound) -> do
+    case (tyPar, tyTemp) of
+      (Reference tyFunParFound, Reference tyParFound)  -> return ([TACEntry Nothing VoidOp (Just ( "Caso 1: " ++ show tyFunParFound ++ " e " ++ show tyParFound))], Temp mode id loc tyParFound)
+      (tyFunParFound, Reference tyParFound) -> do
         idVal <- newtemp 
-        let valTemp = Temp ThreeAddressCode.TAC.Temporary idVal locMode tyFound
-        let valEntry = TACEntry Nothing (ReferenceRight valTemp temp) noComment
+        let valTemp = Temp ThreeAddressCode.TAC.Temporary idVal locMode tyFunParFound
+        let valEntry = TACEntry Nothing (ReferenceRight valTemp temp) (Just ( "Caso 2: " ++ show tyFunParFound ++ " e " ++ show tyParFound))
         return ([valEntry],valTemp )
-      (Reference tyFound, _) -> do
+      (Reference tyFunParFound, tyParFound) -> do
         idRef <- newtemp
-        let refTemp = Temp ThreeAddressCode.TAC.Temporary idRef locMode tyFound
-        let refEntry = TACEntry Nothing (DeferenceRight refTemp temp) noComment
+        let refTemp = Temp ThreeAddressCode.TAC.Temporary idRef locMode tyParFound
+        let refEntry = TACEntry Nothing (DeferenceRight refTemp temp)  (Just ( "Caso 3: " ++ show tyFunParFound ++ " e " ++ show tyParFound))
         return ([refEntry], refTemp)
-      _ -> return ([], temp)
+      _ -> return ([TACEntry Nothing VoidOp (Just ( "Caso 4: " ++ show tyPar ++ " e " ++ show (getNoModeType tyTemp)))], temp)
 
 
 tacGeneratorArrayIndexing expType exp arrayDecl = case exp of

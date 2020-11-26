@@ -21,12 +21,22 @@ proc paperino(x : char, ref y : [5] real,ref z : *int) : *char
    return &x;
 }
 
+proc panino(x:char)
+{
+
+}
+
 proc gigibagigi(ref x : char) : *char
 {
-   //gigibagigi(x);
+   var pippo = 'f';
+   panino(pippo);
+   panino(x);
+   gigibagigi(ref x);
+   gigibagigi(ref pippo);
    x = 'b';
    return &x;
 }
+
 
 proc barbagianni(ref x : *char) : *char
 {

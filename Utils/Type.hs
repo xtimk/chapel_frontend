@@ -13,6 +13,12 @@ instance Eq Type where
       (Array ty1 _, Array ty2 _) -> ty1 == ty2
       (_,_) -> show x == show y
 
+
+      
+convertTyMode mode ty = case mode of
+  Ref -> Reference ty
+  _ -> ty
+
 getSubarrayDimension types 0 = types
 getSubarrayDimension (Array subtype _) i = getSubarrayDimension subtype (i - 1)
 

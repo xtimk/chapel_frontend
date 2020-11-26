@@ -193,14 +193,14 @@ getVarTypeTACDirect loc identifier (_,_,tree,_,_,_) =
         case DMap.lookup identifier symtable of
             Just (_,var) -> var
 
-getFunctionParams identifier paramsPassed env = 
+getFunctionParams identifier paramsPassed env modes = 
     let Function params _ = getVarTypeTAC identifier env in 
-        head $ filter (matchParams paramsPassed) params
+        head $ filter (matchParams paramsPassed modes) params
 
-matchParams [] (_,[]) = True
-matchParams _ (_,[]) = False
-matchParams [] _ = False
-matchParams  ((Temp _ _ _ y):ys) (loc,Checker.SymbolTable.Variable _ ty:xs) = y == ty && matchParams ys (loc,xs) 
+matchParams [] _ (_,[]) = True
+matchParams _ _ (_,[]) = False
+matchParams [] _ _ = False
+matchParams  ((Temp _ _ _ y):ys) (mode:modes) (loc,Checker.SymbolTable.Variable _ ty:xs)  = convertTyMode mode (getNoModeType y) == ty && matchParams ys modes (loc,xs) 
 
 getFunParams (PIdent (_, identifier)) (_,tree,currentNode) = 
     let symtable = uniteSymTables $ bpPathToList currentNode tree in
