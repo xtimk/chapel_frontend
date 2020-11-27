@@ -287,7 +287,9 @@ typeCheckerReturn (PReturn (pos, _ret)) tyret exp = do
       get
   get
 
-typeCheckerGuard (SGuard _ expression _) = do
+typeCheckerGuard (SGuard _ expression _) = typeCheckerGuardExpr expression
+
+typeCheckerGuardExpr expression = do
   (_s,tree,current_id) <- get
   let DataChecker ty errors = typeCheckerExpression (_s,tree,current_id) expression
   modify $ addErrorsCurrentNode errors
@@ -381,6 +383,15 @@ typeCheckerExpression environment exp = case exp of
     Epreop op@(MinusUnary (PEminus _)) e1 -> typeCheckerExpressionUnary' environment SupMinus (getEpreopPos op) e1 Int
     Earray expIdentifier arDeclaration -> typeCheckerDeclarationArray  environment expIdentifier arDeclaration
     EFun funidentifier _ passedparams _ -> eFunTypeChecker funidentifier passedparams environment
+    EifExp expguard _pquest e1 _pcolon e2 -> 
+      let DataChecker tyGuard temperrors = typeCheckerExpression environment expguard in
+      let guardErrors = if tyGuard == Bool then temperrors else ErrorChecker (getStartExpPos expguard) (ErrorGuardNotBoolean expguard tyGuard):temperrors
+          DataChecker tye1 errs1 = typeCheckerExpression environment e1
+          DataChecker tye2 errs2 = typeCheckerExpression environment e2
+          (tyf,compatibility) = sup Sup tye1 tye2
+          errorstyf = createNewError (errorIncompatibleBinaryType (getStartExpPos e1) e1 e2 tye1 tye2) compatibility in
+          DataChecker tyf (guardErrors ++ errs1 ++ errs2 ++ errorstyf)
+
     Evar identifier -> typeCheckerVariableIdentifiers identifier environment
     Econst (Estring _) -> DataChecker String []
     Econst (Eint _) -> DataChecker Int []

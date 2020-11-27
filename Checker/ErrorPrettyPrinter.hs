@@ -212,5 +212,6 @@ printTokens' (x@(PT (Pn _ l c ) token ):xs) = " " ++ case token of
   T_PChar id -> id ++ printTokens' xs
   T_PDouble id -> id ++ printTokens' xs
   T_PInteger id -> id ++ printTokens' xs
+  T_PQuestion id -> id ++ printTokens' xs
 
 
