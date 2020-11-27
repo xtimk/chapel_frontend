@@ -72,7 +72,7 @@ proc main(k:real)
    var ll = 'c';
    mysidefx(ref ll);
    
-   var x = (4 < 5) ? "asd" : 3 ;
+   var x = (4 < 5) ? "asd" : "ff" ;
 
 }
 
