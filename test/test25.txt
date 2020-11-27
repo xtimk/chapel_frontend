@@ -9,5 +9,11 @@ proc main()
 
    paperoga('a');
    paperoga(2);
+
+  
+
+
+   if (if 1 then 1) then 1 
+   if 1 + if 3 then 4
    
 }

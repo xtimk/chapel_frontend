@@ -12,7 +12,7 @@ position token PCloseBracket (']');
 position token PQuestion ({"?"});
 position token PSemicolon (';');
 position token PColon (':');
-position token PPoint ('.');
+position token PPoint ('.'); 
 -- position token PComma (',');
 
 
