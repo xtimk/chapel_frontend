@@ -371,7 +371,7 @@ instance Print AbsChapel.BodyStatement where
 
 instance Print AbsChapel.Statement where
   prt i e = case e of
-    AbsChapel.DoWhile pdo pwhile body guard -> prPrec i 0 (concatD [prt 0 pdo, prt 0 pwhile, prt 0 body, prt 0 guard])
+    AbsChapel.DoWhile pdo body pwhile guard -> prPrec i 0 (concatD [prt 0 pdo, prt 0 body, prt 0 pwhile, prt 0 guard])
     AbsChapel.While pwhile guard body -> prPrec i 0 (concatD [prt 0 pwhile, prt 0 guard, prt 0 body])
     AbsChapel.If pif guard pthen body -> prPrec i 0 (concatD [prt 0 pif, prt 0 guard, prt 0 pthen, prt 0 body])
     AbsChapel.IfElse pif guard pthen body1 pelse body2 -> prPrec i 0 (concatD [prt 0 pif, prt 0 guard, prt 0 pthen, prt 0 body1, prt 0 pelse, prt 0 body2])

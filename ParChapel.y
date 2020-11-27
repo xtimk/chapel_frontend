@@ -293,7 +293,7 @@ BodyStatement : Statement { AbsChapel.Stm $1 }
               | Declaration { AbsChapel.DeclStm $1 }
               | Body { AbsChapel.Block $1 }
 Statement :: { Statement }
-Statement : Pdo PWhile Body Guard { AbsChapel.DoWhile $1 $2 $3 $4 }
+Statement : Pdo Body PWhile Guard { AbsChapel.DoWhile $1 $2 $3 $4 }
           | PWhile Guard Body { AbsChapel.While $1 $2 $3 }
           | PIf Guard PThen Body { AbsChapel.If $1 $2 $3 $4 }
           | PIf Guard PThen Body PElse Body { AbsChapel.IfElse $1 $2 $3 $4 $5 $6 }

@@ -283,7 +283,7 @@ All other symbols are terminals.
   |  |  **|**  | //Function// //PSemicolon//
   |  |  **|**  | //Declaration//
   |  |  **|**  | //Body//
-  | //Statement// | -> | //Pdo// //PWhile// //Body// //Guard//
+  | //Statement// | -> | //Pdo// //Body// //PWhile// //Guard//
   |  |  **|**  | //PWhile// //Guard// //Body//
   |  |  **|**  | //PIf// //Guard// //PThen// //Body//
   |  |  **|**  | //PIf// //Guard// //PThen// //Body// //PElse// //Body//

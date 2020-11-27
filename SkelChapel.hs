@@ -231,7 +231,7 @@ transBodyStatement x = case x of
   Block body -> failure x
 transStatement :: Statement -> Result
 transStatement x = case x of
-  DoWhile pdo pwhile body guard -> failure x
+  DoWhile pdo body pwhile guard -> failure x
   While pwhile guard body -> failure x
   If pif guard pthen body -> failure x
   IfElse pif guard pthen body1 pelse body2 -> failure x

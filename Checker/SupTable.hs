@@ -2,7 +2,7 @@ module Checker.SupTable where
 
 import Utils.Type
 
-data SupMode = SupDecl | SupFun | SupBool | SupPlus | SupMinus |  SupArith | SupMod | Sup | SupRet
+data SupMode = SupDecl | SupFun | SupBool | SupPlus | SupMinus | SupArith | SupMod | Sup | SupRet
   deriving Show
 
 instance Eq SupMode where
@@ -84,6 +84,7 @@ sup _ ty1@String Real = incompatible ty1
 sup _ ty1@String Char = incompatible ty1 
 sup mode ty1@String String 
  | mode `elem` [SupFun, SupRet, SupDecl, Sup] = compatible String
+ | mode == SupBool = compatible Bool
  | otherwise = incompatible ty1 
 sup _ ty1@String Bool = incompatible ty1 
 --Bool

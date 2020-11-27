@@ -226,7 +226,7 @@ typeCheckerStatement statement = case statement of
   Continue (PContinue (pos, _)) _semicolon -> do
     typeCheckerSequenceStatement pos
     get 
-  DoWhile (Pdo ((l,c),name)) _while body guard -> do
+  DoWhile (Pdo ((l,c),name)) body _while guard -> do
     typeCheckerBody DoWhileBlk (createId l c name) body
     typeCheckerGuard guard
     get

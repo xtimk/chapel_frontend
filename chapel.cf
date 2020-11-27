@@ -167,7 +167,7 @@ Fun.       BodyStatement  ::= Function PSemicolon ;
 DeclStm.   BodyStatement  ::= Declaration ;
 Block.     BodyStatement  ::= Body ;
 
-DoWhile.   Statement      ::= Pdo PWhile Body Guard ;
+DoWhile.   Statement      ::= Pdo Body PWhile Guard ;
 While.     Statement      ::= PWhile Guard Body ;
 
 If.        Statement      ::= PIf Guard PThen Body ;

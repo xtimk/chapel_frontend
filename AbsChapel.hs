@@ -225,7 +225,7 @@ data BodyStatement
   deriving (Eq, Ord, Show, Read)
 
 data Statement
-    = DoWhile Pdo PWhile Body Guard
+    = DoWhile Pdo Body PWhile Guard
     | While PWhile Guard Body
     | If PIf Guard PThen Body
     | IfElse PIf Guard PThen Body PElse Body
