@@ -173,7 +173,7 @@ tacGeneratorStatement statement = case statement of
     label <- newlabel (getBpStartPos node) ContinueLb
     let continueEntry = TACEntry Nothing (UnconJump label) noComment
     return [continueEntry]
-  DoWhile (Pdo (loc,_)) _while body (SGuard _ guard _) -> do
+  DoWhile (Pdo (loc,_)) body _while (SGuard _ guard _) -> do
     labelJump <- newlabel loc VoidLb
     let entryJump = TACEntry Nothing (UnconJump labelJump) noComment
 

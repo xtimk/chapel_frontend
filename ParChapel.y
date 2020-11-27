@@ -293,7 +293,7 @@ BodyStatement : Statement { AbsChapel.Stm $1 }
               | Declaration { AbsChapel.DeclStm $1 }
               | Body { AbsChapel.Block $1 }
 Statement :: { Statement }
-Statement : Pdo PWhile Body Guard { AbsChapel.DoWhile $1 $2 $3 $4 }
+Statement : Pdo Body PWhile Guard { AbsChapel.DoWhile $1 $2 $3 $4 }
           | PWhile Guard Body { AbsChapel.While $1 $2 $3 }
           | PIf Guard PThen Body { AbsChapel.If $1 $2 $3 $4 }
           | PIf Guard PThen Body PElse Body { AbsChapel.IfElse $1 $2 $3 $4 $5 $6 }
@@ -348,10 +348,13 @@ Exp8 : Exp8 PEpow Exp9 { AbsChapel.Epow $1 $2 $3 }
      | Exp9 ArInit { AbsChapel.Earray $1 $2 }
      | Exp9 { $1 }
 Exp9 :: { Exp }
-Exp9 : POpenParenthesis Exp PCloseParenthesis { AbsChapel.InnerExp $1 $2 $3 }
-     | PIdent POpenParenthesis ListPassedParam PCloseParenthesis { AbsChapel.EFun $1 $2 $3 $4 }
-     | PIdent { AbsChapel.Evar $1 }
-     | Constant { AbsChapel.Econst $1 }
+Exp9 : PIf Guard PThen Exp9 PElse Exp9 { AbsChapel.EifExp $1 $2 $3 $4 $5 $6 }
+     | Exp10 { $1 }
+Exp10 :: { Exp }
+Exp10 : POpenParenthesis Exp PCloseParenthesis { AbsChapel.InnerExp $1 $2 $3 }
+      | PIdent POpenParenthesis ListPassedParam PCloseParenthesis { AbsChapel.EFun $1 $2 $3 $4 }
+      | PIdent { AbsChapel.Evar $1 }
+      | Constant { AbsChapel.Econst $1 }
 UnaryOperator :: { UnaryOperator }
 UnaryOperator : PNeg { AbsChapel.Negation $1 }
               | PEminus { AbsChapel.MinusUnary $1 }

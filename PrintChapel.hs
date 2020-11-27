@@ -371,7 +371,7 @@ instance Print AbsChapel.BodyStatement where
 
 instance Print AbsChapel.Statement where
   prt i e = case e of
-    AbsChapel.DoWhile pdo pwhile body guard -> prPrec i 0 (concatD [prt 0 pdo, prt 0 pwhile, prt 0 body, prt 0 guard])
+    AbsChapel.DoWhile pdo body pwhile guard -> prPrec i 0 (concatD [prt 0 pdo, prt 0 body, prt 0 pwhile, prt 0 guard])
     AbsChapel.While pwhile guard body -> prPrec i 0 (concatD [prt 0 pwhile, prt 0 guard, prt 0 body])
     AbsChapel.If pif guard pthen body -> prPrec i 0 (concatD [prt 0 pif, prt 0 guard, prt 0 pthen, prt 0 body])
     AbsChapel.IfElse pif guard pthen body1 pelse body2 -> prPrec i 0 (concatD [prt 0 pif, prt 0 guard, prt 0 pthen, prt 0 body1, prt 0 pelse, prt 0 body2])
@@ -422,10 +422,11 @@ instance Print AbsChapel.Exp where
     AbsChapel.Epreop unaryoperator exp -> prPrec i 7 (concatD [prt 0 unaryoperator, prt 7 exp])
     AbsChapel.Epow exp1 pepow exp2 -> prPrec i 8 (concatD [prt 8 exp1, prt 0 pepow, prt 9 exp2])
     AbsChapel.Earray exp arinit -> prPrec i 8 (concatD [prt 9 exp, prt 0 arinit])
-    AbsChapel.InnerExp popenparenthesis exp pcloseparenthesis -> prPrec i 9 (concatD [prt 0 popenparenthesis, prt 0 exp, prt 0 pcloseparenthesis])
-    AbsChapel.EFun pident popenparenthesis passedparams pcloseparenthesis -> prPrec i 9 (concatD [prt 0 pident, prt 0 popenparenthesis, prt 0 passedparams, prt 0 pcloseparenthesis])
-    AbsChapel.Evar pident -> prPrec i 9 (concatD [prt 0 pident])
-    AbsChapel.Econst constant -> prPrec i 9 (concatD [prt 0 constant])
+    AbsChapel.EifExp pif guard pthen exp1 pelse exp2 -> prPrec i 9 (concatD [prt 0 pif, prt 0 guard, prt 0 pthen, prt 9 exp1, prt 0 pelse, prt 9 exp2])
+    AbsChapel.InnerExp popenparenthesis exp pcloseparenthesis -> prPrec i 10 (concatD [prt 0 popenparenthesis, prt 0 exp, prt 0 pcloseparenthesis])
+    AbsChapel.EFun pident popenparenthesis passedparams pcloseparenthesis -> prPrec i 10 (concatD [prt 0 pident, prt 0 popenparenthesis, prt 0 passedparams, prt 0 pcloseparenthesis])
+    AbsChapel.Evar pident -> prPrec i 10 (concatD [prt 0 pident])
+    AbsChapel.Econst constant -> prPrec i 10 (concatD [prt 0 constant])
 
 instance Print AbsChapel.UnaryOperator where
   prt i e = case e of

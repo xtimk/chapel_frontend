@@ -167,7 +167,7 @@ Fun.       BodyStatement  ::= Function PSemicolon ;
 DeclStm.   BodyStatement  ::= Declaration ;
 Block.     BodyStatement  ::= Body ;
 
-DoWhile.   Statement      ::= Pdo PWhile Body Guard ;
+DoWhile.   Statement      ::= Pdo Body PWhile Guard ;
 While.     Statement      ::= PWhile Guard Body ;
 
 If.        Statement      ::= PIf Guard PThen Body ;
@@ -213,6 +213,12 @@ Emod.        Exp6 ::= Exp6 PEmod Exp7;
 Epreop.      Exp7 ::= UnaryOperator Exp7;
 Epow.        Exp8 ::= Exp8 PEpow Exp9;
 Earray.      Exp8 ::= Exp9 ArInit ;
+EifExp.      Exp9 ::= PIf Guard PThen Exp9 PElse Exp9;
+
+--position token PIff ({"iff"});
+--position token PThenn ({"thenn"});
+--position token PElsee ({"elsee"});
+
 
 _. Exp  ::= Exp1 ;
 _. Exp1 ::= Exp2 ;
@@ -223,17 +229,20 @@ _. Exp5 ::= Exp6 ;
 _. Exp6 ::= Exp7 ;
 _. Exp7 ::= Exp8 ;
 _. Exp8 ::= Exp9 ;
-InnerExp. Exp9 ::= POpenParenthesis Exp PCloseParenthesis ;
+_. Exp9 ::= Exp10 ;
+-- _. Exp10 ::= Exp11 ;
+-- coercions Exp 9;
+InnerExp. Exp10 ::= POpenParenthesis Exp PCloseParenthesis ;
 
 Negation.      UnaryOperator ::= PNeg ;
 MinusUnary.         UnaryOperator ::= PEminus ;
 Address.      UnaryOperator ::= PDef ;
 Indirection.  UnaryOperator ::= PEtimes ;
 
-EFun.        Exp9 ::= PIdent POpenParenthesis [PassedParam] PCloseParenthesis ;
-Evar.        Exp9 ::= PIdent; 
-Econst.      Exp9 ::= Constant;
-
+EFun.        Exp10 ::= PIdent POpenParenthesis [PassedParam] PCloseParenthesis ;
+Evar.        Exp10 ::= PIdent; 
+Econst.      Exp10 ::= Constant;
+ 
 Estring.       Constant ::= PString;
 Efloat.        Constant ::= PDouble;
 Echar.         Constant ::= PChar;
