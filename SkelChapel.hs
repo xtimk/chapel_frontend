@@ -27,6 +27,9 @@ transPOpenBracket x = case x of
 transPCloseBracket :: PCloseBracket -> Result
 transPCloseBracket x = case x of
   PCloseBracket string -> failure x
+transPQuestion :: PQuestion -> Result
+transPQuestion x = case x of
+  PQuestion string -> failure x
 transPSemicolon :: PSemicolon -> Result
 transPSemicolon x = case x of
   PSemicolon string -> failure x
@@ -277,7 +280,7 @@ transExp x = case x of
   Epreop unaryoperator exp -> failure x
   Epow exp1 pepow exp2 -> failure x
   Earray exp arinit -> failure x
-  EifExp pif guard pthen exp1 pelse exp2 -> failure x
+  EifExp exp1 pquestion exp2 pcolon exp3 -> failure x
   InnerExp popenparenthesis exp pcloseparenthesis -> failure x
   EFun pident popenparenthesis passedparams pcloseparenthesis -> failure x
   Evar pident -> failure x

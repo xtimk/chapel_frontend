@@ -42,6 +42,8 @@ $white+ ;
     { tok (\p s -> PT p (eitherResIdent (T_POpenBracket . share) s)) }
 \]
     { tok (\p s -> PT p (eitherResIdent (T_PCloseBracket . share) s)) }
+\?
+    { tok (\p s -> PT p (eitherResIdent (T_PQuestion . share) s)) }
 \;
     { tok (\p s -> PT p (eitherResIdent (T_PSemicolon . share) s)) }
 \:
@@ -159,6 +161,7 @@ data Tok =
  | T_PCloseParenthesis !String
  | T_POpenBracket !String
  | T_PCloseBracket !String
+ | T_PQuestion !String
  | T_PSemicolon !String
  | T_PColon !String
  | T_PPoint !String
@@ -246,6 +249,7 @@ prToken t = case t of
   PT _ (T_PCloseParenthesis s) -> s
   PT _ (T_POpenBracket s) -> s
   PT _ (T_PCloseBracket s) -> s
+  PT _ (T_PQuestion s) -> s
   PT _ (T_PSemicolon s) -> s
   PT _ (T_PColon s) -> s
   PT _ (T_PPoint s) -> s

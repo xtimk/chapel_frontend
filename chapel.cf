@@ -9,6 +9,7 @@ position token PCloseParenthesis (')');
 position token POpenBracket ('[');
 position token PCloseBracket (']');
 
+position token PQuestion ({"?"});
 position token PSemicolon (';');
 position token PColon (':');
 position token PPoint ('.');
@@ -213,11 +214,10 @@ Emod.        Exp6 ::= Exp6 PEmod Exp7;
 Epreop.      Exp7 ::= UnaryOperator Exp7;
 Epow.        Exp8 ::= Exp8 PEpow Exp9;
 Earray.      Exp8 ::= Exp9 ArInit ;
-EifExp.      Exp9 ::= PIf Guard PThen Exp9 PElse Exp9;
+EifExp.      Exp9 ::= Exp10 PQuestion Exp10 PColon Exp10;
 
---position token PIff ({"iff"});
---position token PThenn ({"thenn"});
---position token PElsee ({"elsee"});
+-- position token PThenn ({"thenn"});
+-- position token PElsee ({"elsee"});
 
 
 _. Exp  ::= Exp1 ;

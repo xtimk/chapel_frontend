@@ -72,7 +72,7 @@ proc main(k:real)
    var ll = 'c';
    mysidefx(ref ll);
    
-   var x = if (a < b) then 1 else 2;
+   var x = 4 + true ? 1 : 3 ;
 
 }
 

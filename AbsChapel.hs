@@ -21,6 +21,9 @@ newtype POpenBracket = POpenBracket ((Int,Int),String)
 newtype PCloseBracket = PCloseBracket ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
+newtype PQuestion = PQuestion ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
 newtype PSemicolon = PSemicolon ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
@@ -272,7 +275,7 @@ data Exp
     | Epreop UnaryOperator Exp
     | Epow Exp PEpow Exp
     | Earray Exp ArInit
-    | EifExp PIf Guard PThen Exp PElse Exp
+    | EifExp Exp PQuestion Exp PColon Exp
     | InnerExp POpenParenthesis Exp PCloseParenthesis
     | EFun PIdent POpenParenthesis [PassedParam] PCloseParenthesis
     | Evar PIdent

@@ -106,6 +106,9 @@ instance Print AbsChapel.POpenBracket where
 instance Print AbsChapel.PCloseBracket where
   prt _ (AbsChapel.PCloseBracket (_,i)) = doc (showString i)
 
+instance Print AbsChapel.PQuestion where
+  prt _ (AbsChapel.PQuestion (_,i)) = doc (showString i)
+
 instance Print AbsChapel.PSemicolon where
   prt _ (AbsChapel.PSemicolon (_,i)) = doc (showString i)
 
@@ -422,7 +425,7 @@ instance Print AbsChapel.Exp where
     AbsChapel.Epreop unaryoperator exp -> prPrec i 7 (concatD [prt 0 unaryoperator, prt 7 exp])
     AbsChapel.Epow exp1 pepow exp2 -> prPrec i 8 (concatD [prt 8 exp1, prt 0 pepow, prt 9 exp2])
     AbsChapel.Earray exp arinit -> prPrec i 8 (concatD [prt 9 exp, prt 0 arinit])
-    AbsChapel.EifExp pif guard pthen exp1 pelse exp2 -> prPrec i 9 (concatD [prt 0 pif, prt 0 guard, prt 0 pthen, prt 9 exp1, prt 0 pelse, prt 9 exp2])
+    AbsChapel.EifExp exp1 pquestion exp2 pcolon exp3 -> prPrec i 9 (concatD [prt 10 exp1, prt 0 pquestion, prt 10 exp2, prt 0 pcolon, prt 10 exp3])
     AbsChapel.InnerExp popenparenthesis exp pcloseparenthesis -> prPrec i 10 (concatD [prt 0 popenparenthesis, prt 0 exp, prt 0 pcloseparenthesis])
     AbsChapel.EFun pident popenparenthesis passedparams pcloseparenthesis -> prPrec i 10 (concatD [prt 0 pident, prt 0 popenparenthesis, prt 0 passedparams, prt 0 pcloseparenthesis])
     AbsChapel.Evar pident -> prPrec i 10 (concatD [prt 0 pident])

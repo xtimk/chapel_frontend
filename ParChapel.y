@@ -20,6 +20,7 @@ import ErrM
   L_PCloseParenthesis { PT _ (T_PCloseParenthesis _) }
   L_POpenBracket { PT _ (T_POpenBracket _) }
   L_PCloseBracket { PT _ (T_PCloseBracket _) }
+  L_PQuestion { PT _ (T_PQuestion _) }
   L_PSemicolon { PT _ (T_PSemicolon _) }
   L_PColon { PT _ (T_PColon _) }
   L_PPoint { PT _ (T_PPoint _) }
@@ -84,6 +85,9 @@ POpenBracket  : L_POpenBracket { POpenBracket (mkPosToken $1)}
 
 PCloseBracket :: { PCloseBracket}
 PCloseBracket  : L_PCloseBracket { PCloseBracket (mkPosToken $1)}
+
+PQuestion :: { PQuestion}
+PQuestion  : L_PQuestion { PQuestion (mkPosToken $1)}
 
 PSemicolon :: { PSemicolon}
 PSemicolon  : L_PSemicolon { PSemicolon (mkPosToken $1)}
@@ -348,7 +352,7 @@ Exp8 : Exp8 PEpow Exp9 { AbsChapel.Epow $1 $2 $3 }
      | Exp9 ArInit { AbsChapel.Earray $1 $2 }
      | Exp9 { $1 }
 Exp9 :: { Exp }
-Exp9 : PIf Guard PThen Exp9 PElse Exp9 { AbsChapel.EifExp $1 $2 $3 $4 $5 $6 }
+Exp9 : Exp10 PQuestion Exp10 PColon Exp10 { AbsChapel.EifExp $1 $2 $3 $4 $5 }
      | Exp10 { $1 }
 Exp10 :: { Exp }
 Exp10 : POpenParenthesis Exp PCloseParenthesis { AbsChapel.InnerExp $1 $2 $3 }
