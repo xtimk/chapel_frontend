@@ -277,6 +277,7 @@ transExp x = case x of
   Epreop unaryoperator exp -> failure x
   Epow exp1 pepow exp2 -> failure x
   Earray exp arinit -> failure x
+  EifExp pif guard pthen exp1 pelse exp2 -> failure x
   InnerExp popenparenthesis exp pcloseparenthesis -> failure x
   EFun pident popenparenthesis passedparams pcloseparenthesis -> failure x
   Evar pident -> failure x

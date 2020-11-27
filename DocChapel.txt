@@ -328,7 +328,9 @@ All other symbols are terminals.
   | //Exp8// | -> | //Exp8// //PEpow// //Exp9//
   |  |  **|**  | //Exp9// //ArInit//
   |  |  **|**  | //Exp9//
-  | //Exp9// | -> | //POpenParenthesis// //Exp// //PCloseParenthesis//
+  | //Exp9// | -> | //PIf// //Guard// //PThen// //Exp9// //PElse// //Exp9//
+  |  |  **|**  | //Exp10//
+  | //Exp10// | -> | //POpenParenthesis// //Exp// //PCloseParenthesis//
   |  |  **|**  | //PIdent// //POpenParenthesis// //[PassedParam]// //PCloseParenthesis//
   |  |  **|**  | //PIdent//
   |  |  **|**  | //Constant//

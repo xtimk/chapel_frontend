@@ -272,6 +272,7 @@ data Exp
     | Epreop UnaryOperator Exp
     | Epow Exp PEpow Exp
     | Earray Exp ArInit
+    | EifExp PIf Guard PThen Exp PElse Exp
     | InnerExp POpenParenthesis Exp PCloseParenthesis
     | EFun PIdent POpenParenthesis [PassedParam] PCloseParenthesis
     | Evar PIdent
