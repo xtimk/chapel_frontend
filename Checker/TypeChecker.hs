@@ -614,10 +614,6 @@ typeCheckerReturnPresence [] funname (locstart, _locend) = [ErrorChecker locstar
 
 typeCheckerReturnPresence ((Node (_,(act_locstart, act_locend)) (BP _ rets _ blocktype) _ children):xs) funname (locstart, _locend) =
   case blocktype of
-    ForEachBlk -> 
-      if null xs
-        then [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
-        else typeCheckerReturnPresence xs funname (act_locstart, act_locend)
     IfSimpleBlk -> 
       if null xs
         then [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
@@ -676,6 +672,17 @@ typeCheckerReturnPresence ((Node (_,(act_locstart, act_locend)) (BP _ rets _ blo
       if null xs
         then [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
         else typeCheckerReturnPresence xs funname (act_locstart, act_locend)
+    ForEachBlk ->
+      if null rets
+        then
+          let errs = typeCheckerReturnPresence children funname (act_locstart, act_locend) in
+          case null errs of
+            True -> continueCheckerRetPresenceOnSubProcs children xs
+            _otherwhise ->
+              if null xs
+                then [ErrorChecker locstart $ ErrorFunctionWithNotEnoughReturns funname]
+                else typeCheckerReturnPresence xs funname (act_locstart, act_locend)
+        else continueCheckerRetPresenceOnSubProcs children xs
     DoWhileBlk -> 
       if null rets
         then

@@ -4,11 +4,17 @@ proc paperoga(x : int){
 proc main() : int
 {
     var jjj = "pippo";
-    // paperoga('a');
-    return 8;
+
+    var bucaniere = 8;
+    if (bucaniere == jjj) then {
+
+    }
     proc paperoga(x : char) : char {
         var z = x;
-        return 'c';
+
+        {
+            return 'c';
+        }
     };
 
     var hhhhh = [10,20];
@@ -17,5 +23,5 @@ proc main() : int
         jjj = 6;
         return 8;
     }
-    return 8;
+    // return 8;
 }
