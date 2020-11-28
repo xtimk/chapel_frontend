@@ -13,7 +13,9 @@ var jjj = "pippo";
 var hhhhh = [10,20];
   for jjj in hhhhh do
 {
+    break;
     jjj = 6;
+    continue;
 }
 
    

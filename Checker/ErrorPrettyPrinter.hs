@@ -35,8 +35,7 @@ data DefinedError =
   ErrorArrayExpressionRequest ExprDecl|
   ErrorCantAddressAnExpression Exp|
   ErrorReturnNotInsideAProcedure |
-  ErrorBreakNotInsideAProcedure |
-  ErrorContinueNotInsideAProcedure |
+  ErrorBreakNotInsideAProcedure String |
   ErrorCalledProcWithWrongTypeParam Int Type Mode Type Mode String|
   ErrorCalledProcWrongArgs Int Int String |
   ErrorCalledProcWithVariable String |
@@ -99,8 +98,7 @@ printDefinedError tokens error = case error of
   ErrorMissingReturn funname -> "In Function " ++ funname ++ ": Specify at least one return."
   ErrorSignatureAlreadyDeclared  locs (l,c) id -> "Signature with name " ++ id ++" and parameters type " ++ printTokensRange tokens locs ++ " already declared in line " ++ show l ++ " and column " ++ show c ++ "."
   ErrorOverloadingIncompatibleReturnType locStart (l,c) id ty1 ty2 -> "Overloading signature for function " ++ id ++ " must be of type " ++ prettyPrinterType ty1 ++ " but was found type " ++ prettyPrinterType ty2 ++ " in " ++ printTokens (getTokens tokens locStart (l,c - 1)) ++ "."
-  ErrorBreakNotInsideAProcedure -> "Break command must be inside a while or dowhile."
-  ErrorContinueNotInsideAProcedure -> "Continue command must be inside a while or dowhile."
+  ErrorBreakNotInsideAProcedure interuptTy -> interuptTy ++ " command must be inside a while or dowhile."
   ErrorOnlyRightExpression exp -> "Statement must be an assignment or left expression but was found " ++  printExpression tokens exp ++ "."
   NoDecucibleType id -> "Impossible infered type from expression for variable " ++ show id ++ "."
   ErrorFunctionWithNotEnoughReturns funname -> "In function " ++ show funname ++ ": there is a possible path in the code with no returns."

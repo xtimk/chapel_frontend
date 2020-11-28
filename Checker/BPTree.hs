@@ -42,8 +42,10 @@ instance Eq BlkType where
        x == y =  case (x,y) of
            (SequenceBlk, DoWhileBlk) -> True
            (SequenceBlk, WhileBlk) -> True
+           (SequenceBlk, ForEachBlk) -> True
            (DoWhileBlk, SequenceBlk) -> True
            (WhileBlk, SequenceBlk) -> True
+           (ForEachBlk, SequenceBlk) -> True
            _ -> show x == show y
 
 getTreeErrors tree = foldr (\tree errors -> getErrors tree ++ errors ) [] (bp2list tree)
@@ -97,7 +99,6 @@ findSequenceControlGetBlkType tree current_id =
     let node = findNodeById current_id tree in
         case getBlkTypeSimple node of
             WhileBlk -> WhileBlk
-            ForEachBlk -> ForEachBlk
             DoWhileBlk -> DoWhileBlk
             ProcedureBlk ty -> ProcedureBlk ty
             ExternalBlk -> ExternalBlk -- sono arrivato ricorsivamente fino al blocco esterno, lo restituisco, non vado in ricorsione

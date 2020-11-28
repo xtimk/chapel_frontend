@@ -211,21 +211,21 @@ typeCheckerBody' x = do
     Block body@(BodyBlock (POpenGraph ((l,c), name)) _ _) -> typeCheckerBody SimpleBlk (createId l c name) body
   get
 
-typeCheckerSequenceStatement pos = do
+typeCheckerSequenceStatement interuptTy pos = do
   (_,tree,current_id) <- get
   case findSequenceControlGetBlkType tree current_id of
     WhileBlk -> get
     DoWhileBlk -> get
     _otherwhise -> do
-      modify $ addErrorsCurrentNode [ErrorChecker pos ErrorBreakNotInsideAProcedure]
+      modify $ addErrorsCurrentNode [ErrorChecker pos $ ErrorBreakNotInsideAProcedure interuptTy]
       get
 
 typeCheckerStatement statement = case statement of
   Break (PBreak (pos, _)) _semicolon -> do
-    typeCheckerSequenceStatement pos
+    typeCheckerSequenceStatement "Break" pos
     get
   Continue (PContinue (pos, _)) _semicolon -> do
-    typeCheckerSequenceStatement pos
+    typeCheckerSequenceStatement "Continue" pos
     get 
   ForEach (PFor ((l,c),name)) var _in array _do body -> do
     typeCheckerForEach var array
