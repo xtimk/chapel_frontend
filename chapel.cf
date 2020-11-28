@@ -16,6 +16,10 @@ position token PPoint ('.');
 -- position token PComma (',');
 
 
+
+position token PFor ({"for"});
+position token PIn ({"in"});
+
 position token PIf ({"if"});
 position token PThen ({"then"});
 position token PElse ({"else"});
@@ -173,6 +177,8 @@ While.     Statement      ::= PWhile Guard Body ;
 
 If.        Statement      ::= PIf Guard PThen Body ;
 IfElse.    Statement      ::= PIf Guard PThen Body PElse Body;
+
+ForEach.   Statement      ::= PFor Exp PIn Exp Pdo Body;
 
 RetVal.    Statement  ::= PReturn Exp PSemicolon ;
 RetVoid.   Statement  ::= PReturn PSemicolon ;

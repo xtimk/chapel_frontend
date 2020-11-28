@@ -173,6 +173,39 @@ tacGeneratorStatement statement = case statement of
     label <- newlabel (getBpStartPos node) ContinueLb
     let continueEntry = TACEntry Nothing (UnconJump label) noComment
     return [continueEntry]
+  ForEach (PFor (locFor,_)) (Evar identifier@( PIdent (locVar,idVar))) _in expIterator _do body -> do
+    (tacEntry, temp@(Temp mode id loc tyAr)) <- tacGeneratorExpression LeftExp expIterator
+    let Array ty dim = tyAr
+    let length = getArrayLenght tyAr
+    actId <- newtemp
+
+    labelBegin <- newlabel (getBodyStartPos body) ForEachLb
+    labelExit <- newlabel (getBodyEndPos body) ForEachExitLb
+
+    let actTemp = Temp Temporary actId locFor Int
+    let initValTemp = Temp Fixed "0" (-1,-1) Int
+    let dimTemp = Temp Fixed (show length) (-1,-1) Int
+    let tacInitVal = TACEntry Nothing (Nullary actTemp initValTemp) noComment
+    let tacRelFor = TACEntry (Just labelBegin) (RelCondJump actTemp GTE dimTemp labelExit) noComment
+    idArPos <- newtemp
+    let tempArPos = Temp Temporary idArPos locFor Int
+    let actPos = getSubArrayLength ty
+    let tempActPos = Temp Fixed (show actPos) (-1,-1) Int
+    let tacEntryPos = TACEntry Nothing (Binary tempArPos actTemp Times tempActPos) noComment
+
+    tacEnv <- get  
+    let Checker.SymbolTable.Variable loc ty modeVar = getVarTypeTAC identifier tacEnv
+    let varTemp =  Temp ThreeAddressCode.TAC.Variable idVar locVar ty
+    let tacArrayRef = TACEntry Nothing (IndexRight varTemp temp tempArPos) noComment
+    res <- tacGeneratorBody body
+    let tempAdd = Temp Fixed "1" (-1,-1) Int
+    let tacActIncrease = TACEntry Nothing (Binary actTemp actTemp Plus tempAdd) noComment
+    let tacGoto = TACEntry Nothing (UnconJump labelBegin) noComment
+
+    pushLabel labelExit
+
+    return ([tacInitVal,tacRelFor,tacEntryPos,tacArrayRef] ++ res ++ [tacActIncrease,tacGoto])
+
   DoWhile (Pdo (loc,_)) body _while (SGuard _ guard _) -> do
     labelJump <- newlabel loc VoidLb
     let entryJump = TACEntry Nothing (UnconJump labelJump) noComment

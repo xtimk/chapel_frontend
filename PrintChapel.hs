@@ -118,6 +118,12 @@ instance Print AbsChapel.PColon where
 instance Print AbsChapel.PPoint where
   prt _ (AbsChapel.PPoint (_,i)) = doc (showString i)
 
+instance Print AbsChapel.PFor where
+  prt _ (AbsChapel.PFor (_,i)) = doc (showString i)
+
+instance Print AbsChapel.PIn where
+  prt _ (AbsChapel.PIn (_,i)) = doc (showString i)
+
 instance Print AbsChapel.PIf where
   prt _ (AbsChapel.PIf (_,i)) = doc (showString i)
 
@@ -378,6 +384,7 @@ instance Print AbsChapel.Statement where
     AbsChapel.While pwhile guard body -> prPrec i 0 (concatD [prt 0 pwhile, prt 0 guard, prt 0 body])
     AbsChapel.If pif guard pthen body -> prPrec i 0 (concatD [prt 0 pif, prt 0 guard, prt 0 pthen, prt 0 body])
     AbsChapel.IfElse pif guard pthen body1 pelse body2 -> prPrec i 0 (concatD [prt 0 pif, prt 0 guard, prt 0 pthen, prt 0 body1, prt 0 pelse, prt 0 body2])
+    AbsChapel.ForEach pfor exp1 pin exp2 pdo body -> prPrec i 0 (concatD [prt 0 pfor, prt 0 exp1, prt 0 pin, prt 0 exp2, prt 0 pdo, prt 0 body])
     AbsChapel.RetVal preturn exp psemicolon -> prPrec i 0 (concatD [prt 0 preturn, prt 0 exp, prt 0 psemicolon])
     AbsChapel.RetVoid preturn psemicolon -> prPrec i 0 (concatD [prt 0 preturn, prt 0 psemicolon])
     AbsChapel.Continue pcontinue psemicolon -> prPrec i 0 (concatD [prt 0 pcontinue, prt 0 psemicolon])

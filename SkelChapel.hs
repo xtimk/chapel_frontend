@@ -39,6 +39,12 @@ transPColon x = case x of
 transPPoint :: PPoint -> Result
 transPPoint x = case x of
   PPoint string -> failure x
+transPFor :: PFor -> Result
+transPFor x = case x of
+  PFor string -> failure x
+transPIn :: PIn -> Result
+transPIn x = case x of
+  PIn string -> failure x
 transPIf :: PIf -> Result
 transPIf x = case x of
   PIf string -> failure x
@@ -238,6 +244,7 @@ transStatement x = case x of
   While pwhile guard body -> failure x
   If pif guard pthen body -> failure x
   IfElse pif guard pthen body1 pelse body2 -> failure x
+  ForEach pfor exp1 pin exp2 pdo body -> failure x
   RetVal preturn exp psemicolon -> failure x
   RetVoid preturn psemicolon -> failure x
   Continue pcontinue psemicolon -> failure x

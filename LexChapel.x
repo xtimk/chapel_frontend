@@ -50,6 +50,10 @@ $white+ ;
     { tok (\p s -> PT p (eitherResIdent (T_PColon . share) s)) }
 \.
     { tok (\p s -> PT p (eitherResIdent (T_PPoint . share) s)) }
+f o r
+    { tok (\p s -> PT p (eitherResIdent (T_PFor . share) s)) }
+i n
+    { tok (\p s -> PT p (eitherResIdent (T_PIn . share) s)) }
 i f
     { tok (\p s -> PT p (eitherResIdent (T_PIf . share) s)) }
 t h e n
@@ -165,6 +169,8 @@ data Tok =
  | T_PSemicolon !String
  | T_PColon !String
  | T_PPoint !String
+ | T_PFor !String
+ | T_PIn !String
  | T_PIf !String
  | T_PThen !String
  | T_PElse !String
@@ -253,6 +259,8 @@ prToken t = case t of
   PT _ (T_PSemicolon s) -> s
   PT _ (T_PColon s) -> s
   PT _ (T_PPoint s) -> s
+  PT _ (T_PFor s) -> s
+  PT _ (T_PIn s) -> s
   PT _ (T_PIf s) -> s
   PT _ (T_PThen s) -> s
   PT _ (T_PElse s) -> s

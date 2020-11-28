@@ -49,7 +49,9 @@ data DefinedError =
   ErrorFunctionWithNotEnoughReturns String |
   ErrorCantUseExprInARefPassedVar Exp | 
   ErrorCyclicDeclaration Loc String |
-  ErrorMissingInitialization String 
+  ErrorMissingInitialization String |
+  ErrorForEachIteratorArray Type Exp |
+  ErrorForEachItem Exp 
   deriving (Show)
 
 data ErrorChecker =  ErrorChecker Loc DefinedError
@@ -105,6 +107,8 @@ printDefinedError tokens error = case error of
   ErrorCantUseExprInARefPassedVar exp -> "You can't pass an expr by ref, but only a variable. Instead was found " ++  printExpression tokens exp ++ "."
   ErrorCyclicDeclaration (l,c) id -> "Cyclic declaration with variable " ++ id ++ " in line " ++ show l ++ " and column " ++ show c ++ "." 
   ErrorMissingInitialization id -> "Missing initialization for variable " ++ id ++ "."
+  ErrorForEachIteratorArray ty exp -> "Iterator must be of type array but was found type " ++ prettyPrinterType ty ++ " in expression " ++ printExpression tokens exp ++ "." 
+  ErrorForEachItem exp -> "Item of iteration must be a variable but was found an expression " ++ printExpression tokens exp ++ "."
 
 prettyPrinterType ty  = case ty of
   tyAr@(Array ty _) -> if checkArraywithNotGoodDimension tyAr 

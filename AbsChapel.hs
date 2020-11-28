@@ -33,6 +33,12 @@ newtype PColon = PColon ((Int,Int),String)
 newtype PPoint = PPoint ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
+newtype PFor = PFor ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
+newtype PIn = PIn ((Int,Int),String)
+  deriving (Eq, Ord, Show, Read)
+
 newtype PIf = PIf ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 
@@ -232,6 +238,7 @@ data Statement
     | While PWhile Guard Body
     | If PIf Guard PThen Body
     | IfElse PIf Guard PThen Body PElse Body
+    | ForEach PFor Exp PIn Exp Pdo Body
     | RetVal PReturn Exp PSemicolon
     | RetVoid PReturn PSemicolon
     | Continue PContinue PSemicolon

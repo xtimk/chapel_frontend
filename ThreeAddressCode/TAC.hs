@@ -9,6 +9,7 @@ type Label = (String, Loc, LabelType)
 data LabelType = 
     TrueBoolStmLb | FalseBoolStmLb | ExitBoolStmLb | 
     DoWhileLb | DoWhileExitLb |
+    ForEachLb | ForEachExitLb |
     WhileLb | WhileExitLb |
     IfLb |  IfThenLb | ElseLb | 
     FunLb |
@@ -79,6 +80,9 @@ addLabelToEntry :: Maybe Label -> TACEntry -> TACEntry
 addLabelToEntry label (TACEntry _  operationType _comment) = TACEntry label operationType _comment
 
 noComment = Nothing
+
+getSubArrayLength arty@(Array ty _) = getArrayLenght arty * getSubArrayLength ty
+getSubArrayLength types = sizeof types
 
 sizeof ty = case ty of
     Array ty _ -> sizeof ty

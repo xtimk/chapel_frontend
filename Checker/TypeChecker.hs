@@ -59,7 +59,8 @@ typeCheckerDeclaration x = do
       typeCheckerIdentifiers ids (Just assignment) Infered ty (Just exp)
       get
 
-typeCheckerConvertIdsToVariable = map (\(PIdent (loc,id)) -> (id,(id, Variable loc Infered Checker.SymbolTable.Normal)))
+typeCheckerConvertIdsToVariable = typeCheckerConvertIdsToVariable' Infered
+typeCheckerConvertIdsToVariable' ty = map (\(PIdent (loc,id)) -> (id,(id, Variable loc ty Checker.SymbolTable.Normal)))
 
 typeCheckerTypeSpecification tySpec = case tySpec of
   TypeSpecNorm ty -> convertTypeSpecToTypeInferred ty
@@ -226,6 +227,10 @@ typeCheckerStatement statement = case statement of
   Continue (PContinue (pos, _)) _semicolon -> do
     typeCheckerSequenceStatement pos
     get 
+  ForEach (PFor ((l,c),name)) var _in array _do body -> do
+    typeCheckerForEach var array
+    typeCheckerBody ForEachBlk (createId l c name) body
+    get
   DoWhile (Pdo ((l,c),name)) body _while guard -> do
     typeCheckerBody DoWhileBlk (createId l c name) body
     typeCheckerGuard guard
@@ -270,6 +275,26 @@ typeCheckerStatement statement = case statement of
     typeCheckerReturn return Utils.Type.Void Nothing
     modify $ addStatementCurrentNode ret
     get
+
+typeCheckerForEach expItem expIterator = do
+  env <- get
+  let DataChecker ty errors = typeCheckerExpression env expIterator  
+  case ty of
+    Array ty _ ->
+      case expItem of
+        Evar identifier -> do
+            modify (\(_,_t,_c) -> (typeCheckerConvertIdsToVariable' ty [identifier], _t,_c))
+            modify $ addErrorsCurrentNode errors
+            get
+        _ -> do
+          let error = ErrorChecker (getStartExpPos expItem) $ ErrorForEachItem expItem  
+          modify $ addErrorsCurrentNode (error:errors)
+          get
+    _ -> do
+      let error = ErrorChecker (getStartExpPos expIterator) $ ErrorForEachIteratorArray ty expIterator
+      modify $ addErrorsCurrentNode (error:errors)
+      get
+    
 
 typeCheckerReturn (PReturn (pos, _ret)) tyret exp = do 
   (_s,tree,current_id) <- get

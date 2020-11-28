@@ -7,13 +7,14 @@ proc main()
        var z = x;
    };
 
+var jjj = "pippo";
    paperoga('a');
-   paperoga(2);
 
-  
+var hhhhh = [10,20];
+  for jjj in hhhhh do
+{
+    jjj = 6;
+}
 
-
-   if (if 1 then 1) then 1 
-   if 1 + if 3 then 4
    
 }

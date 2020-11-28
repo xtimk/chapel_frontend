@@ -11,6 +11,8 @@ instance Eq Type where
       (_,_) -> show x == show y
 
 
+
+
 getSubarrayDimension types 0 = types
 getSubarrayDimension (Array subtype _) i = getSubarrayDimension subtype (i - 1)
 

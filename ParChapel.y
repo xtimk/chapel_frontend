@@ -24,6 +24,8 @@ import ErrM
   L_PSemicolon { PT _ (T_PSemicolon _) }
   L_PColon { PT _ (T_PColon _) }
   L_PPoint { PT _ (T_PPoint _) }
+  L_PFor { PT _ (T_PFor _) }
+  L_PIn { PT _ (T_PIn _) }
   L_PIf { PT _ (T_PIf _) }
   L_PThen { PT _ (T_PThen _) }
   L_PElse { PT _ (T_PElse _) }
@@ -97,6 +99,12 @@ PColon  : L_PColon { PColon (mkPosToken $1)}
 
 PPoint :: { PPoint}
 PPoint  : L_PPoint { PPoint (mkPosToken $1)}
+
+PFor :: { PFor}
+PFor  : L_PFor { PFor (mkPosToken $1)}
+
+PIn :: { PIn}
+PIn  : L_PIn { PIn (mkPosToken $1)}
 
 PIf :: { PIf}
 PIf  : L_PIf { PIf (mkPosToken $1)}
@@ -301,6 +309,7 @@ Statement : Pdo Body PWhile Guard { AbsChapel.DoWhile $1 $2 $3 $4 }
           | PWhile Guard Body { AbsChapel.While $1 $2 $3 }
           | PIf Guard PThen Body { AbsChapel.If $1 $2 $3 $4 }
           | PIf Guard PThen Body PElse Body { AbsChapel.IfElse $1 $2 $3 $4 $5 $6 }
+          | PFor Exp PIn Exp Pdo Body { AbsChapel.ForEach $1 $2 $3 $4 $5 $6 }
           | PReturn Exp PSemicolon { AbsChapel.RetVal $1 $2 $3 }
           | PReturn PSemicolon { AbsChapel.RetVoid $1 $2 }
           | PContinue PSemicolon { AbsChapel.Continue $1 $2 }

@@ -25,6 +25,7 @@ data BP = BP {
 
 
 data BlkType = 
+  ForEachBlk |
   DoWhileBlk |
   WhileBlk |
   ProcedureBlk Utils.Type.Type|
@@ -96,6 +97,7 @@ findSequenceControlGetBlkType tree current_id =
     let node = findNodeById current_id tree in
         case getBlkTypeSimple node of
             WhileBlk -> WhileBlk
+            ForEachBlk -> ForEachBlk
             DoWhileBlk -> DoWhileBlk
             ProcedureBlk ty -> ProcedureBlk ty
             ExternalBlk -> ExternalBlk -- sono arrivato ricorsivamente fino al blocco esterno, lo restituisco, non vado in ricorsione
