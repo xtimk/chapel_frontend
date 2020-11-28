@@ -318,6 +318,15 @@ tacGeneratorExpression expType exp = case exp of
     EFun funidentifier _ passedparams _ -> do
         (tacs, temp) <- tacGeneratorFunctionCall expType funidentifier passedparams
         return (reverse tacs, temp)
+    EifExp expguard _pquest e1 _pcolon e2 -> do
+      (tac1, temp1) <- tacGeneratorExpression expType e1
+      (tac2, temp2) <- tacGeneratorExpression expType e2
+      -- let temp1 = Temp Fixed "true" (-1,-1) Bool
+      -- let temp2 = Temp Fixed "false" (-1,-1) Bool
+      (tacs,temp,label) <- tacGeneratorBooleanStatement' temp1 temp2 (getStartExpPos expguard) expguard
+      let void = TACEntry label VoidOp noComment
+      return (void:tacs ++ tac1 ++ tac2,temp)
+
     Evar identifier -> tacGeneratorVariable expType identifier
     Econst constant@(ETrue _) -> tacCheckExpressionConstantBoolean expType constant
     Econst constant@(EFalse _) ->  do
@@ -338,8 +347,13 @@ tacGeneratorConstant constant = case constant of
   Echar (PChar (loc,id)) -> return ([], Temp ThreeAddressCode.TAC.Fixed id loc Char)
   ETrue (PTrue (loc,id))-> return ([], Temp ThreeAddressCode.TAC.Fixed id loc Bool)
   EFalse (PFalse (loc,id)) -> return ([], Temp ThreeAddressCode.TAC.Fixed id loc Bool)
-    
+
 tacGeneratorBooleanStatement loc rightExp = do
+  let tempTrue = Temp Fixed "true" (-1,-1) Bool
+  let tempFalse = Temp Fixed "false" (-1,-1) Bool
+  tacGeneratorBooleanStatement' tempTrue tempFalse loc rightExp
+
+tacGeneratorBooleanStatement' tempTrue tempFalse loc rightExp = do
   labelTrue <- newlabelFALL loc TrueBoolStmLb
   labelFalse <- newlabel loc FalseBoolStmLb
   labelExit <- newlabel loc ExitBoolStmLb
@@ -350,8 +364,6 @@ tacGeneratorBooleanStatement loc rightExp = do
   case (mode,ty) of 
     (Temporary, Bool) -> do
       idTempRight <- newtemp
-      let tempTrue = Temp Fixed "true" (-1,-1) Bool
-      let tempFalse = Temp Fixed "false" (-1,-1) Bool
       let tempRight = Temp Temporary idTempRight loc Bool
       let tacTrue = TACEntry labelTrue' (Nullary tempRight tempTrue) noComment
       let tacGoToExit = TACEntry Nothing (UnconJump labelExit) noComment

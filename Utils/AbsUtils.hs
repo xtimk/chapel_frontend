@@ -49,6 +49,7 @@ getStartExpPos exp = case exp of
     Earray e1 _ -> getStartExpPos e1
     InnerExp (POpenParenthesis (loc,_)) _ _ -> loc
     EFun (PIdent ((l,c),_)) _ _ _ -> (l,c)
+    EifExp expguard _pquest _ _pcolon _ -> getStartExpPos expguard
 
 getEndExpPos exp = case exp of
     Evar (PIdent (loc,_)) -> loc
@@ -77,6 +78,7 @@ getEndExpPos exp = case exp of
     Earray _ (ArrayInit _ _ (PCloseBracket (loc,_)) ) -> loc
     InnerExp _ _ (PCloseParenthesis (loc,_)) -> loc
     EFun (PIdent ((l,c),_)) _ _ _ -> (l,c)
+    EifExp _ _pquest _ _pcolon e2 -> getStartExpPos e2
 
 getAssignPos assgn = case assgn of 
     AssgnEq (PAssignmEq (loc,_)) ->  loc
