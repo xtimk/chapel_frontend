@@ -253,19 +253,19 @@ typeCheckerStatement statement = case statement of
     let DataChecker _ errors = eFunTypeChecker funidentifier params environment
     modify $ addErrorsCurrentNode errors
     get
-  StExp exp _semicolon -> do
-    env <- get
+  StExp exp _semicolon ->
     case exp of 
-      EAss {} -> do
-        let DataChecker _ errors = typeCheckerExpression env exp
+      EAss e1 assign e2 -> do
+        environment <- get
+        let DataChecker _ errors =  typeCheckerAssignment environment e1 assign e2
         modify $ addErrorsCurrentNode errors
         get
       _ -> do 
-        modify $ addErrorsCurrentNode [ ErrorChecker (getStartExpPos exp) $ ErrorOnlyRightExpression exp]
+        modify $ addErrorsCurrentNode [ ErrorChecker (getStartExpPos exp) $ ErrorOnlyLeftExpression exp]
         get
   ret@(RetVal return exp _semicolon) -> do
     (_s,tree,current_id) <- get
-    let DataChecker tyret errs2 = typeCheckerExpression (_s,tree,current_id) exp 
+    let DataChecker tyret errs2 = typeCheckerRightExpression (_s,tree,current_id) exp 
     modify $ addErrorsCurrentNode errs2
     typeCheckerReturn return tyret (Just exp)
     modify $ addStatementCurrentNode ret
@@ -278,7 +278,7 @@ typeCheckerStatement statement = case statement of
 
 typeCheckerForEach expItem expIterator = do
   env <- get
-  let DataChecker ty errors = typeCheckerExpression env expIterator  
+  let DataChecker ty errors = typeCheckerRightExpression env expIterator  
   case ty of
     Array ty _ ->
       case expItem of
@@ -288,11 +288,11 @@ typeCheckerForEach expItem expIterator = do
             get
         _ -> do
           let error = ErrorChecker (getStartExpPos expItem) $ ErrorForEachItem expItem  
-          modify $ addErrorsCurrentNode (error:errors)
+          modify $ addErrorsCurrentNode (errors ++ [error])
           get
     _ -> do
       let error = ErrorChecker (getStartExpPos expIterator) $ ErrorForEachIteratorArray ty expIterator
-      modify $ addErrorsCurrentNode (error:errors)
+      modify $ addErrorsCurrentNode (errors ++ [error])
       get
     
 
@@ -316,13 +316,14 @@ typeCheckerGuard (SGuard _ expression _) = typeCheckerGuardExpr expression
 
 typeCheckerGuardExpr expression = do
   (_s,tree,current_id) <- get
-  let DataChecker ty errors = typeCheckerExpression (_s,tree,current_id) expression
-  modify $ addErrorsCurrentNode errors
+  let DataChecker ty errors = typeCheckerRightExpression (_s,tree,current_id) expression
   case ty of
     Bool -> get
     _otherwhise -> do
     modify $ addErrorsCurrentNode  [ErrorChecker (getStartExpPos expression) $ ErrorGuardNotBoolean expression ty]
     get
+  modify $ addErrorsCurrentNode errors
+  get
 
 
 typeCheckerBuildArrayType environment (ArrayDeclIndex _ array _) = typeCheckerBuildArrayType' environment array
@@ -349,7 +350,7 @@ typeCheckerVariable (PIdent ((l,c), identifier)) tree types currentIdNode =
 
 typeCheckerDeclExpression environment decExp = case decExp of
   ExprDecArray (ArrayInit _ expression _) -> foldl (typeCheckerDeclArrayExp environment) (DataChecker (Array Infered (0, -1)) []) expression
-  ExprDec exp -> typeCheckerExpression environment exp
+  ExprDec exp -> typeCheckerRightExpression environment exp
 
 typeCheckerDeclArrayExp environment types exp = case (typeCheckerDeclExpression environment exp, types) of
   (DataChecker typesFound errorsExp, DataChecker (Array typesInfered (first, n)) errorsTy) -> case sup Sup typesInfered typesFound of
@@ -384,39 +385,32 @@ typeCheckerBuildArrayBound isNotBounded  lBound rBound =
                       else if isEnd && isNotBounded 
                         then DataChecker (read dimension - 1,loc) [] 
                         else DataChecker (read dimension,loc) []
+                        
 
-typeCheckerExpression environment exp = case exp of
-    EAss e1 assign e2 -> typeCheckerAssignment environment e1 assign e2
-    Eplus e1 (PEplus (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
-    Emod e1 (PEmod (loc,_)) e2 -> typeCheckerExpression' environment SupMod loc e1 e2
-    Epow e1 (PEpow (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
-    Eminus e1 (PEminus (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
-    Ediv e1 (PEdiv (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
-    Etimes e1 (PEtimes (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
-    InnerExp _ e _ -> typeCheckerExpression environment e
-    Elthen e1 _pElthen e2 -> typeCheckerExpression' environment SupBoolArith (getStartExpPos e1) e1 e2
-    Elor e1 _pElor e2 -> typeCheckerExpression' environment SupBoolArith (getStartExpPos e1) e1 e2
-    Eland e1 _pEland e2 -> typeCheckerExpression' environment SupBoolArith (getStartExpPos e1) e1 e2
-    Eneq e1 _pEneq e2 -> typeCheckerExpression' environment SupBoolEq (getStartExpPos e1) e1 e2
-    Eeq e1 _pEeq e2 -> typeCheckerExpression' environment SupBoolEq (getStartExpPos e1) e1 e2
-    Egrthen e1 _pEgrthen e2 -> typeCheckerExpression' environment SupBoolArith (getStartExpPos e1) e1 e2
-    Ele e1 _pEle e2 -> typeCheckerExpression' environment SupBoolArith (getStartExpPos e1) e1 e2
-    Ege e1 _pEge e2 -> typeCheckerExpression' environment SupBoolArith (getStartExpPos e1) e1 e2
+typeCheckerRightExpression environment exp = case exp of
+    EAss {} -> DataChecker Error [ ErrorChecker (getStartExpPos exp) $ ErrorOnlyRightExpression exp]
+    Eplus e1 (PEplus (loc,_)) e2 -> typeCheckerRightExpression' environment SupArith loc e1 e2
+    Emod e1 (PEmod (loc,_)) e2 -> typeCheckerRightExpression' environment SupMod loc e1 e2
+    Epow e1 (PEpow (loc,_)) e2 -> typeCheckerRightExpression' environment SupArith loc e1 e2
+    Eminus e1 (PEminus (loc,_)) e2 -> typeCheckerRightExpression' environment SupArith loc e1 e2
+    Ediv e1 (PEdiv (loc,_)) e2 -> typeCheckerRightExpression' environment SupArith loc e1 e2
+    Etimes e1 (PEtimes (loc,_)) e2 -> typeCheckerRightExpression' environment SupArith loc e1 e2
+    InnerExp _ e _ -> typeCheckerRightExpression environment e
+    Elthen e1 _pElthen e2 -> typeCheckerRightExpression' environment SupBoolArith (getStartExpPos e1) e1 e2
+    Elor e1 _pElor e2 -> typeCheckerRightExpression' environment SupBoolArith (getStartExpPos e1) e1 e2
+    Eland e1 _pEland e2 -> typeCheckerRightExpression' environment SupBoolArith (getStartExpPos e1) e1 e2
+    Eneq e1 _pEneq e2 -> typeCheckerRightExpression' environment SupBoolEq (getStartExpPos e1) e1 e2
+    Eeq e1 _pEeq e2 -> typeCheckerRightExpression' environment SupBoolEq (getStartExpPos e1) e1 e2
+    Egrthen e1 _pEgrthen e2 -> typeCheckerRightExpression' environment SupBoolArith (getStartExpPos e1) e1 e2
+    Ele e1 _pEle e2 -> typeCheckerRightExpression' environment SupBoolArith (getStartExpPos e1) e1 e2
+    Ege e1 _pEge e2 -> typeCheckerRightExpression' environment SupBoolArith (getStartExpPos e1) e1 e2
     Epreop (Indirection _) e1 -> typeCheckerIndirection environment e1
     Epreop (Address _) e1 ->  typeCheckerAddress environment e1
     Epreop op@(Negation (PNeg _)) e1 ->  typeCheckerExpressionUnary' environment SupBoolEq (getEpreopPos op) e1 Bool
     Epreop op@(MinusUnary (PEminus _)) e1 -> typeCheckerExpressionUnary' environment SupArith (getEpreopPos op) e1 Int
     Earray expIdentifier arDeclaration -> typeCheckerDeclarationArray  environment expIdentifier arDeclaration
     EFun funidentifier _ passedparams _ -> eFunTypeChecker funidentifier passedparams environment
-    EifExp expguard _pquest e1 _pcolon e2 -> 
-      let DataChecker tyGuard temperrors = typeCheckerExpression environment expguard in
-      let guardErrors = if tyGuard == Bool then temperrors else ErrorChecker (getStartExpPos expguard) (ErrorGuardNotBoolean expguard tyGuard):temperrors
-          DataChecker tye1 errs1 = typeCheckerExpression environment e1
-          DataChecker tye2 errs2 = typeCheckerExpression environment e2
-          (tyf,compatibility) = sup Sup tye1 tye2
-          errorstyf = createNewError (errorIncompatibleBinaryType (getStartExpPos e1) e1 e2 tye1 tye2) compatibility in
-          DataChecker tyf (guardErrors ++ errs1 ++ errs2 ++ errorstyf)
-
+    EifExp expguard _pquest e1 _pcolon e2 -> typeCheckerExpressionIf environment expguard e1 e2
     Evar identifier -> typeCheckerVariableIdentifiers identifier environment
     Econst (Estring _) -> DataChecker String []
     Econst (Eint _) -> DataChecker Int []
@@ -432,6 +426,15 @@ typeCheckerVariableIdentifiers identifier environment@(ids,_t,_a) =
       DataChecker ty error 
     else DataChecker Error errors
 
+typeCheckerExpressionIf environment expguard e1 e2 = 
+  let DataChecker tyGuard temperrors = typeCheckerRightExpression environment expguard in
+        let guardErrors = if tyGuard == Bool then temperrors else ErrorChecker (getStartExpPos expguard) (ErrorGuardNotBoolean expguard tyGuard):temperrors
+            DataChecker tye1 errs1 = typeCheckerRightExpression environment e1
+            DataChecker tye2 errs2 = typeCheckerRightExpression environment e2
+            (tyf,compatibility) = sup Sup tye1 tye2
+            errorstyf = createNewError (errorIncompatibleBinaryType (getStartExpPos e1) e1 e2 tye1 tye2) compatibility in
+            DataChecker tyf (guardErrors ++ errs1 ++ errs2 ++ errorstyf)
+
 typeCheckerVariableIdentifier (PIdent (locExp,idExp)) (_, (idDecl,Variable locDecl _ _)) =
   [ErrorChecker locExp  $ ErrorCyclicDeclaration locDecl idDecl | idDecl == idExp]
 
@@ -439,7 +442,7 @@ typeCheckerVariableIdentifier (PIdent (locExp,idExp)) (_, (idDecl,Variable locDe
 typeCheckerAssignment environment e1 assign e2 =  
   let DataChecker tyLeft errLeft = typeCheckerLeftExpression assign environment e1
       assOp = getAssignPos assign
-      DataChecker tyRight errRight = typeCheckerExpression environment e2 in 
+      DataChecker tyRight errRight = typeCheckerRightExpression environment e2 in 
         case assign of
           AssgnEq (PAssignmEq (_,_)) -> 
             let (ty,compatibility) = sup SupDecl tyLeft tyRight
@@ -453,17 +456,17 @@ typeCheckerAssignment environment e1 assign e2 =
                   DataChecker ty (errLeft ++ errRight ++ plusError ++ equalError)
 
 typeCheckerLeftExpression assign enviroment exp = case exp of
-  InnerExp _ exp _ -> typeCheckerExpression enviroment exp
-  Evar {} -> typeCheckerExpression enviroment exp
-  Earray {} -> typeCheckerExpression enviroment exp
-  Epreop {} -> typeCheckerExpression enviroment exp
+  InnerExp _ exp _ -> typeCheckerRightExpression enviroment exp
+  Evar {} -> typeCheckerRightExpression enviroment exp
+  Earray {} -> typeCheckerRightExpression enviroment exp
+  Epreop {} -> typeCheckerRightExpression enviroment exp
   _ -> DataChecker Error [ErrorChecker (getStartExpPos exp) $ ErrorNotLeftExpression exp assign]
 
 typeCheckerAddress environment exp = case exp of
   Epreop _ e1 -> let DataChecker ty errors =  typeCheckerIndirection environment e1 in
      DataChecker (Pointer ty) errors
   InnerExp _ e _ -> typeCheckerAddress environment e
-  Evar {} -> let DataChecker ty errors = typeCheckerExpression environment exp in DataChecker (Pointer ty) errors
+  Evar {} -> let DataChecker ty errors = typeCheckerRightExpression environment exp in DataChecker (Pointer ty) errors
   _ -> DataChecker Error [ErrorChecker (getStartExpPos exp) $ ErrorCantAddressAnExpression exp]
 
 typeCheckerIndirection environment e1 = 
@@ -480,7 +483,7 @@ typeCheckerIndirection environment e1 =
     Epreop (Indirection (PEtimes (loc,_))) ePoint -> let DataChecker ty errors = typeCheckerIndirection environment ePoint in case ty of
       Pointer tyPoint -> DataChecker tyPoint errors
       ty ->  DataChecker ty $  ErrorChecker loc (ErrorNoPointerAddress ty e1):errors
-    Evar {} -> let DataChecker ty errorsVar = typeCheckerExpression environment e1 in case ty of
+    Evar {} -> let DataChecker ty errorsVar = typeCheckerRightExpression environment e1 in case ty of
       Pointer tyPointed -> DataChecker tyPointed []
       Error -> DataChecker ty errorsVar
       ty -> DataChecker ty $ ErrorChecker newLoc (ErrorNoPointerAddress ty e1):errorsVar
@@ -523,28 +526,29 @@ checkCorrectTypeOfParam actual (PIdent (_, identifier)) passedParam (Variable _ 
                     errorsVar ++ errorsExp
             _ -> [ErrorChecker (getStartExpPos exp) $ ErrorCantUseExprInARefPassedVar exp]
         Checker.SymbolTable.Normal ->
-          let DataChecker tyExp errorsExp = typeCheckerExpression environment exp
+          let DataChecker tyExp errorsExp = typeCheckerRightExpression environment exp
               (ty1, compatibility) = sup SupFun tyVar tyExp
               errorsVar = createNewError (errorIncompatibleTypesChangeToFun (getStartExpPos exp) actual identifier ty1 modeVar tyExp mode) compatibility in 
                 errorsVar ++ errorsExp
 
-typeCheckerExpression' environment supMode loc e1 e2 =
-  let DataChecker tye1 errors1 = typeCheckerExpression environment e1; 
-      DataChecker tye2 errors2 = typeCheckerExpression environment e2;
+typeCheckerRightExpression' environment supMode loc e1 e2 =
+  let DataChecker tye1 errors1 = typeCheckerRightExpression environment e1; 
+      DataChecker tye2 errors2 = typeCheckerRightExpression environment e2;
       (tye,compatibility) = sup supMode tye1 tye2 
       errors = createNewError (errorIncompatibleBinaryType loc e1 e2 tye1 tye2) compatibility in 
         DataChecker tye (errors1 ++ errors2 ++ errors)  
 
 typeCheckerExpressionUnary' environment supMode loc e1 ty =
-  let DataChecker tye1 errors1 = typeCheckerExpression environment e1
+  let DataChecker tye1 errors1 = typeCheckerRightExpression environment e1
       (tye,compatibility) = sup supMode tye1 ty 
       errors = createNewError (errorIncompatibleUnaryType loc e1 ty tye1) compatibility in 
         DataChecker tye (errors1 ++ errors)    
 
 typeCheckerDeclarationArray environment exp ardecl@(ArrayInit _ arrays _ ) = case exp of
   InnerExp _ e _ -> typeCheckerDeclarationArray environment e ardecl
-  Epreop preop@(Indirection _) _ -> typeCheckerDeclarationArray' "indirection" (getEpreopPos preop) (typeCheckerExpression environment exp) 
-  Evar (PIdent (loc, identifier)) -> typeCheckerDeclarationArray' identifier loc (typeCheckerExpression environment exp) 
+  EFun (PIdent (loc,id)) _ _ _ -> typeCheckerDeclarationArray' id loc (typeCheckerRightExpression environment exp)
+  Epreop preop@(Indirection _) _ -> typeCheckerDeclarationArray' "indirection" (getEpreopPos preop) (typeCheckerRightExpression environment exp) 
+  Evar (PIdent (loc, identifier)) -> typeCheckerDeclarationArray' identifier loc (typeCheckerRightExpression environment exp) 
   _ -> DataChecker Error [ErrorChecker (getStartExpPos exp) $ ErrorArrayCallExpression exp]
   where 
     typeCheckerDeclarationArray' identifier loc (DataChecker tyFound expErrors)  = case tyFound of
@@ -562,7 +566,7 @@ getDeclarationDimension _ [] = DataChecker 0 []
 getDeclarationDimension environment (array:arrays) = let DataChecker dimension errors = getDeclarationDimension environment arrays in 
   case array of
     ExprDec exp -> 
-      let DataChecker ty expErrors = typeCheckerExpression environment exp 
+      let DataChecker ty expErrors = typeCheckerRightExpression environment exp 
           (_,compatibility) = sup SupDecl Int ty 
           errorsFound = createNewError (errorIncompatibleTypeArrayIndex (getStartExpPos exp) ty exp )  compatibility in
             DataChecker (dimension + 1) (errors ++ errorsFound ++ expErrors)

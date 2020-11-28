@@ -204,7 +204,7 @@ tacGeneratorStatement statement = case statement of
 
     pushLabel labelExit
 
-    return ([tacInitVal,tacRelFor,tacEntryPos,tacArrayRef] ++ res ++ [tacActIncrease,tacGoto])
+    return (tacEntry ++ [tacInitVal,tacRelFor,tacEntryPos,tacArrayRef] ++ res ++ [tacActIncrease,tacGoto])
 
   DoWhile (Pdo (loc,_)) body _while (SGuard _ guard _) -> do
     labelJump <- newlabel loc VoidLb
@@ -321,8 +321,6 @@ tacGeneratorExpression expType exp = case exp of
     EifExp expguard _pquest e1 _pcolon e2 -> do
       (tac1, temp1) <- tacGeneratorExpression expType e1
       (tac2, temp2) <- tacGeneratorExpression expType e2
-      -- let temp1 = Temp Fixed "true" (-1,-1) Bool
-      -- let temp2 = Temp Fixed "false" (-1,-1) Bool
       (tacs,temp,label) <- tacGeneratorBooleanStatement' temp1 temp2 (getStartExpPos expguard) expguard
       let void = TACEntry label VoidOp noComment
       return (void:tacs ++ tac1 ++ tac2,temp)
@@ -353,7 +351,7 @@ tacGeneratorBooleanStatement loc rightExp = do
   let tempFalse = Temp Fixed "false" (-1,-1) Bool
   tacGeneratorBooleanStatement' tempTrue tempFalse loc rightExp
 
-tacGeneratorBooleanStatement' tempTrue tempFalse loc rightExp = do
+tacGeneratorBooleanStatement' tempTrue@(Temp _ _ _ tyReceive) tempFalse loc rightExp = do
   labelTrue <- newlabelFALL loc TrueBoolStmLb
   labelFalse <- newlabel loc FalseBoolStmLb
   labelExit <- newlabel loc ExitBoolStmLb
@@ -364,7 +362,7 @@ tacGeneratorBooleanStatement' tempTrue tempFalse loc rightExp = do
   case (mode,ty) of 
     (Temporary, Bool) -> do
       idTempRight <- newtemp
-      let tempRight = Temp Temporary idTempRight loc Bool
+      let tempRight = Temp Temporary idTempRight loc tyReceive
       let tacTrue = TACEntry labelTrue' (Nullary tempRight tempTrue) noComment
       let tacGoToExit = TACEntry Nothing (UnconJump labelExit) noComment
       let tacFalse = TACEntry (Just labelFalse) (Nullary tempRight tempFalse) noComment
@@ -698,22 +696,16 @@ tacGenerationTempParameter (Checker.SymbolTable.Variable locMode tyPar modeVar,(
 
 tacGeneratorArrayIndexing expType exp arrayDecl = case exp of
   InnerExp _ e _ -> tacGeneratorArrayIndexing expType e arrayDecl
-  Epreop (Indirection (PEtimes (loc,_))) e1 -> do
-    (tacsPoint, tempPoint) <- tacGeneratorPointer expType loc e1 
-    (tacsGen, tempGen) <- tacGeneratorArrayIndexingAux tempPoint
-    return (tacsGen ++ tacsPoint,tempGen)
-  Evar {} -> do
-    (tacs,tempId) <- tacGeneratorExpression expType exp
-    (tacsArray,temp) <- tacGeneratorArrayIndexingAux tempId
-    return (tacsArray ++ tacs, temp)
+  _ -> tacGeneratorArrayIndexingAux exp
   where
-    tacGeneratorArrayIndexingAux tempVar@(Temp _ _ loc ty) = do
+    tacGeneratorArrayIndexingAux exp = do
+      (tacs,tempVar@(Temp _ _ loc ty)) <- tacGeneratorExpression expType exp
       (tacsAdd, temp) <- tacGeneratorArrayIndexing' (loc,ty) arrayDecl
       let tySubArray = calculateSubArrayTy ty arrayDecl
       idArVal <- newtemp
       let tempArrayVal = Temp ThreeAddressCode.TAC.Temporary idArVal loc tySubArray 
       let tacEntry = TACEntry Nothing (IndexRight tempArrayVal tempVar temp) noComment
-      return (tacEntry:tacsAdd, tempArrayVal)
+      return (reverse tacs ++ reverse (tacEntry:tacsAdd), tempArrayVal)
     calculateSubArrayTy ty (ArrayInit _ expressions _ ) = 
       getSubarrayDimension ty (length expressions)
 

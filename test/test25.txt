@@ -1,19 +1,41 @@
 proc paperoga(x : int){
     var z = x;
 }
-proc main() : int
+proc main(ref x: [3]int) : int
 {
     var jjj = "pippo";
 
-    proc paperoga(x : char) : char {
+    var boolean = true;
+    while(boolean)
+    {
+        boolean = boolean;
+    }
+
+    proc paperoga(x : int) : [1,2,3] int
+    {
         var z = x;
-        return 'c';
+        var ar = [[[2,2,2],[2,2,2]]];
+        return ar;
     };
 
-    var hhhhh = [10,20];
-    for jjj in hhhhh do
+
+    var hhhhh = [paperoga('d' + 0)];
+    var bella = &hhhhh;
+    var semprepiubella = &bella;
+
+    var vediamocomeva = (5 < 4) ? (paperoga('c' + 9)[3+9]) : (hhhhh[2,3]);
+
+    for jjj in (5 < 4) ? (paperoga('c' + 9)[3+9]) : (hhhhh[2,3])  do
+   //for jjj in (**semprepiubella)[5+5] do
     {
-        jjj = 6;
-        return 8;
+        for jjj in jjj do
+        {
+            //jjj[2+3] = 2;
+            //jjj = 6; 
+            //return 5 + 5 -3 + jjj;
+        }
+
+        return 10;
+        
     }
 }

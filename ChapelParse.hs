@@ -7,6 +7,7 @@ import System.IO ( stdin, hGetContents )
 import System.Environment ( getArgs, getProgName )
 import System.Exit ( exitFailure, exitSuccess )
 import Control.Monad (when)
+import Data.List
 
 import LexChapel
 import ParChapel
@@ -91,7 +92,7 @@ parseTest filepath = do
                    --print (evalState (typeChecker tree) startState)
 
                    let bpTree = evalState (typeChecker tree) startState
-                       errors = getTreeErrors $ getTree bpTree in do
+                       errors = sort $ getTreeErrors $ getTree bpTree in do
 
                     -- putStrLn "\n\n ** SYMBOL TABLE **"
                     -- print $ getSymTable bpTree

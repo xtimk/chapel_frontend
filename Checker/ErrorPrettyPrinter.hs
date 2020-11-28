@@ -42,6 +42,7 @@ data DefinedError =
   ErrorNoPointerAddress Type Exp|
   ErrorAssignDecl String|
   ErrorOnlyRightExpression Exp |
+  ErrorOnlyLeftExpression Exp |
   ErrorNotLeftExpression Exp AssgnmOp |
   ErrorOverloadingIncompatibleReturnType Loc Loc String Type Type |
   NoDecucibleType String |
@@ -55,6 +56,16 @@ data DefinedError =
 
 data ErrorChecker =  ErrorChecker Loc DefinedError
  deriving (Show)
+
+instance Eq ErrorChecker where
+  (ErrorChecker (l1,c1) _)  == (ErrorChecker (l2,c2) _) = l1 == l2 && c1 == c2
+
+instance Ord ErrorChecker where
+  (ErrorChecker (l1,c1) _)  > (ErrorChecker (l2,c2) _) 
+    | l1 == l2 && c1 > c2 = True
+    | l1 > l2 = True
+    | otherwise = False
+  x1 <= x2 = not $ x1 > x2
 
 printErrors ::(Foldable t0) => [Token] -> t0 ErrorChecker -> IO ()
 printErrors tokens = mapM_ (printError tokens)
@@ -99,7 +110,8 @@ printDefinedError tokens error = case error of
   ErrorSignatureAlreadyDeclared  locs (l,c) id -> "Signature with name " ++ id ++" and parameters type " ++ printTokensRange tokens locs ++ " already declared in line " ++ show l ++ " and column " ++ show c ++ "."
   ErrorOverloadingIncompatibleReturnType locStart (l,c) id ty1 ty2 -> "Overloading signature for function " ++ id ++ " must be of type " ++ prettyPrinterType ty1 ++ " but was found type " ++ prettyPrinterType ty2 ++ " in " ++ printTokens (getTokens tokens locStart (l,c - 1)) ++ "."
   ErrorInterruptNotInsideAProcedure interuptTy -> interuptTy ++ " command must be inside a while or dowhile."
-  ErrorOnlyRightExpression exp -> "Statement must be an assignment or left expression but was found " ++  printExpression tokens exp ++ "."
+  ErrorOnlyLeftExpression exp -> "Statement must be an assignment or left expression but was found " ++  printExpression tokens exp ++ "."
+  ErrorOnlyRightExpression exp -> "Statement must be a right expression but was found " ++  printExpression tokens exp ++ "."
   NoDecucibleType id -> "Impossible infered type from expression for variable " ++ show id ++ "."
   ErrorFunctionWithNotEnoughReturns funname -> "In function " ++ show funname ++ ": there is a possible path in the code with no returns."
   ErrorCantUseExprInARefPassedVar exp -> "You can't pass an expr by ref, but only a variable. Instead was found " ++  printExpression tokens exp ++ "."
