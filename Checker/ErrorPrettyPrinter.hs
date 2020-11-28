@@ -35,7 +35,7 @@ data DefinedError =
   ErrorArrayExpressionRequest ExprDecl|
   ErrorCantAddressAnExpression Exp|
   ErrorReturnNotInsideAProcedure |
-  ErrorBreakNotInsideAProcedure String |
+  ErrorInterruptNotInsideAProcedure String |
   ErrorCalledProcWithWrongTypeParam Int Type Mode Type Mode String|
   ErrorCalledProcWrongArgs Int Int String |
   ErrorCalledProcWithVariable String |
@@ -87,8 +87,8 @@ printDefinedError tokens error = case error of
   ErrorArrayExpressionRequest expDecl-> "Must be call an array indexing like \" a[2,3] \" but was found an array declaration " ++ printDeclExpression tokens expDecl ++ "."
   ErrorCantAddressAnExpression exp -> "An expression cannot address in " ++ printExpression tokens exp ++ "."
   ErrorReturnNotInsideAProcedure -> "Return can be write only in a procedure"
-  ErrorCalledProcWithWrongTypeParam pos ty1 mode1 ty2 mode2 id-> "On call function \"" ++ id ++ "\" parameter in position " ++ show pos ++ " must be of type " ++ prettyPrinterType ty1 ++ "in " ++ show mode1 ++ " modality," ++ 
-    "but was found type " ++ prettyPrinterType ty2 ++ " in " ++ show mode2 ++ "modality."
+  ErrorCalledProcWithWrongTypeParam pos ty1 mode1 ty2 mode2 id-> "On call function \"" ++ id ++ "\" parameter in position " ++ show pos ++ " must be of type " ++ prettyPrinterType ty1  ++ prettyPrinterMode mode1 ++ ", " ++ 
+    "but was found type " ++ prettyPrinterType ty2 ++ prettyPrinterMode mode2 ++ "."
   ErrorCalledProcWrongArgs dim1 dim2 id-> "Function " ++ id ++ " expect " ++ show dim1 ++ " arguments but found " ++ show dim2 ++ " arguments."
   ErrorCalledProcWithVariable id -> "Variable " ++ id ++ " is not a procedure."
   ErrorNoPointerAddress ty exp -> "Can only addressed a pointer but was found expression " ++ printExpression tokens exp ++ " of type " ++ prettyPrinterType ty ++ "."
@@ -98,7 +98,7 @@ printDefinedError tokens error = case error of
   ErrorMissingReturn funname -> "In Function " ++ funname ++ ": Specify at least one return."
   ErrorSignatureAlreadyDeclared  locs (l,c) id -> "Signature with name " ++ id ++" and parameters type " ++ printTokensRange tokens locs ++ " already declared in line " ++ show l ++ " and column " ++ show c ++ "."
   ErrorOverloadingIncompatibleReturnType locStart (l,c) id ty1 ty2 -> "Overloading signature for function " ++ id ++ " must be of type " ++ prettyPrinterType ty1 ++ " but was found type " ++ prettyPrinterType ty2 ++ " in " ++ printTokens (getTokens tokens locStart (l,c - 1)) ++ "."
-  ErrorBreakNotInsideAProcedure interuptTy -> interuptTy ++ " command must be inside a while or dowhile."
+  ErrorInterruptNotInsideAProcedure interuptTy -> interuptTy ++ " command must be inside a while or dowhile."
   ErrorOnlyRightExpression exp -> "Statement must be an assignment or left expression but was found " ++  printExpression tokens exp ++ "."
   NoDecucibleType id -> "Impossible infered type from expression for variable " ++ show id ++ "."
   ErrorFunctionWithNotEnoughReturns funname -> "In function " ++ show funname ++ ": there is a possible path in the code with no returns."
@@ -107,6 +107,10 @@ printDefinedError tokens error = case error of
   ErrorMissingInitialization id -> "Missing initialization for variable " ++ id ++ "."
   ErrorForEachIteratorArray ty exp -> "Iterator must be of type array but was found type " ++ prettyPrinterType ty ++ " in expression " ++ printExpression tokens exp ++ "." 
   ErrorForEachItem exp -> "Item of iteration must be a variable but was found an expression " ++ printExpression tokens exp ++ "."
+
+prettyPrinterMode mode = case mode of
+  Ref -> "in reference modality"
+  _ -> ""
 
 prettyPrinterType ty  = case ty of
   tyAr@(Array ty _) -> if checkArraywithNotGoodDimension tyAr 

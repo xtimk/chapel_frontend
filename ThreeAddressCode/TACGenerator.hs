@@ -281,7 +281,7 @@ tacGeneratorStatement statement = case statement of
   RetVal _ret exp _semicolon -> do
     (tacs, temp) <- tacGeneratorExpression RightExp exp
     let tacEntry = TACEntry Nothing (ReturnValue temp) noComment
-    return $ tacs ++ [tacEntry]
+    return $ reverse tacs ++ [tacEntry]
   RetVoid _ret _semicolon -> return [TACEntry Nothing ReturnVoid noComment] 
 
 attachLabelToFirstElem (Just label) [] = [TACEntry (Just label) VoidOp noComment]

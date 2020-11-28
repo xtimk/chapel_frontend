@@ -217,7 +217,7 @@ typeCheckerSequenceStatement interuptTy pos = do
     WhileBlk -> get
     DoWhileBlk -> get
     _otherwhise -> do
-      modify $ addErrorsCurrentNode [ErrorChecker pos $ ErrorBreakNotInsideAProcedure interuptTy]
+      modify $ addErrorsCurrentNode [ErrorChecker pos $ ErrorInterruptNotInsideAProcedure interuptTy]
       get
 
 typeCheckerStatement statement = case statement of
