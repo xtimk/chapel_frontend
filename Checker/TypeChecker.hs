@@ -614,6 +614,10 @@ typeCheckerReturnPresence [] funname (locstart, _locend) = [ErrorChecker locstar
 
 typeCheckerReturnPresence ((Node (_,(act_locstart, act_locend)) (BP _ rets _ blocktype) _ children):xs) funname (locstart, _locend) =
   case blocktype of
+    ForEachBlk -> 
+      if null xs
+        then [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
+        else typeCheckerReturnPresence xs funname (act_locstart, act_locend)
     IfSimpleBlk -> 
       if null xs
         then [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
@@ -650,15 +654,24 @@ typeCheckerReturnPresence ((Node (_,(act_locstart, act_locend)) (BP _ rets _ blo
 
     ProcedureBlk tyret -> 
       case tyret of
-        Utils.Type.Void -> continueCheckerRetPresenceOnSubProcs children xs
+        Utils.Type.Void -> 
+          let othfuns = continueCheckerRetPresenceOnSubProcs children xs
+              cont = typeCheckerReturnPresence xs funname (act_locstart, act_locend) in
+          othfuns ++ cont
         _ -> 
           if null rets -- se non ci sono return al blocco base
             then
               let c = typeCheckerReturnPresence children funname (act_locstart, act_locend) in
                 case null c of
-                  True -> continueCheckerRetPresenceOnSubProcs children xs
+                  True -> 
+                    let othfuns = continueCheckerRetPresenceOnSubProcs children xs
+                        cont = typeCheckerReturnPresence xs funname (act_locstart, act_locend) in
+                    othfuns ++ cont
                   _oth -> [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
-            else continueCheckerRetPresenceOnSubProcs children xs
+            else 
+              let othfuns = continueCheckerRetPresenceOnSubProcs children xs
+                  cont = typeCheckerReturnPresence xs funname (act_locstart, act_locend) in
+              othfuns ++ cont
     WhileBlk -> 
       if null xs
         then [ErrorChecker act_locstart $ ErrorFunctionWithNotEnoughReturns funname]
