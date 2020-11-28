@@ -1,20 +1,21 @@
 proc paperoga(x : int){
     var z = x;
 }
-proc main()
+proc main() : int
 {
-   proc paperoga(x : char){
-       var z = x;
-   };
+    var jjj = "pippo";
+    // paperoga('a');
+    return 8;
+    proc paperoga(x : char) : char {
+        var z = x;
+        return 'c';
+    };
 
-var jjj = "pippo";
-   paperoga('a');
-
-var hhhhh = [10,20];
-  for jjj in hhhhh do
-{
-    jjj = 6;
-}
-
-   
+    var hhhhh = [10,20];
+    for jjj in hhhhh do
+    {
+        jjj = 6;
+        return 8;
+    }
+    return 8;
 }
