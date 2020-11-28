@@ -387,25 +387,25 @@ typeCheckerBuildArrayBound isNotBounded  lBound rBound =
 
 typeCheckerExpression environment exp = case exp of
     EAss e1 assign e2 -> typeCheckerAssignment environment e1 assign e2
-    Eplus e1 (PEplus (loc,_)) e2 -> typeCheckerExpression' environment SupPlus loc e1 e2
+    Eplus e1 (PEplus (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
     Emod e1 (PEmod (loc,_)) e2 -> typeCheckerExpression' environment SupMod loc e1 e2
     Epow e1 (PEpow (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
-    Eminus e1 (PEminus (loc,_)) e2 -> typeCheckerExpression' environment SupMinus loc e1 e2
+    Eminus e1 (PEminus (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
     Ediv e1 (PEdiv (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
     Etimes e1 (PEtimes (loc,_)) e2 -> typeCheckerExpression' environment SupArith loc e1 e2
     InnerExp _ e _ -> typeCheckerExpression environment e
-    Elthen e1 _pElthen e2 -> typeCheckerExpression' environment SupBool (getStartExpPos e1) e1 e2
-    Elor e1 _pElor e2 -> typeCheckerExpression' environment SupBool (getStartExpPos e1) e1 e2
-    Eland e1 _pEland e2 -> typeCheckerExpression' environment SupBool (getStartExpPos e1) e1 e2
-    Eneq e1 _pEneq e2 -> typeCheckerExpression' environment SupBool (getStartExpPos e1) e1 e2
-    Eeq e1 _pEeq e2 -> typeCheckerExpression' environment SupBool (getStartExpPos e1) e1 e2
-    Egrthen e1 _pEgrthen e2 -> typeCheckerExpression' environment SupBool (getStartExpPos e1) e1 e2
-    Ele e1 _pEle e2 -> typeCheckerExpression' environment SupBool (getStartExpPos e1) e1 e2
-    Ege e1 _pEge e2 -> typeCheckerExpression' environment SupBool (getStartExpPos e1) e1 e2
+    Elthen e1 _pElthen e2 -> typeCheckerExpression' environment SupBoolArith (getStartExpPos e1) e1 e2
+    Elor e1 _pElor e2 -> typeCheckerExpression' environment SupBoolArith (getStartExpPos e1) e1 e2
+    Eland e1 _pEland e2 -> typeCheckerExpression' environment SupBoolArith (getStartExpPos e1) e1 e2
+    Eneq e1 _pEneq e2 -> typeCheckerExpression' environment SupBoolEq (getStartExpPos e1) e1 e2
+    Eeq e1 _pEeq e2 -> typeCheckerExpression' environment SupBoolEq (getStartExpPos e1) e1 e2
+    Egrthen e1 _pEgrthen e2 -> typeCheckerExpression' environment SupBoolArith (getStartExpPos e1) e1 e2
+    Ele e1 _pEle e2 -> typeCheckerExpression' environment SupBoolArith (getStartExpPos e1) e1 e2
+    Ege e1 _pEge e2 -> typeCheckerExpression' environment SupBoolArith (getStartExpPos e1) e1 e2
     Epreop (Indirection _) e1 -> typeCheckerIndirection environment e1
     Epreop (Address _) e1 ->  typeCheckerAddress environment e1
-    Epreop op@(Negation (PNeg _)) e1 ->  typeCheckerExpressionUnary' environment SupBool (getEpreopPos op) e1 Bool
-    Epreop op@(MinusUnary (PEminus _)) e1 -> typeCheckerExpressionUnary' environment SupMinus (getEpreopPos op) e1 Int
+    Epreop op@(Negation (PNeg _)) e1 ->  typeCheckerExpressionUnary' environment SupBoolEq (getEpreopPos op) e1 Bool
+    Epreop op@(MinusUnary (PEminus _)) e1 -> typeCheckerExpressionUnary' environment SupArith (getEpreopPos op) e1 Int
     Earray expIdentifier arDeclaration -> typeCheckerDeclarationArray  environment expIdentifier arDeclaration
     EFun funidentifier _ passedparams _ -> eFunTypeChecker funidentifier passedparams environment
     EifExp expguard _pquest e1 _pcolon e2 -> 
@@ -446,7 +446,7 @@ typeCheckerAssignment environment e1 assign e2 =
                 equalError = createNewError (errorIncompatibleBinaryType assOp e1 e2 tyLeft tyRight) compatibility  in 
                   DataChecker ty (errLeft ++ errRight ++ equalError)
           AssgnPlEq (PAssignmPlus (_,_)) -> 
-            let (ty3,compatibilityPlus) = sup SupPlus tyLeft tyRight
+            let (ty3,compatibilityPlus) = sup SupArith tyLeft tyRight
                 plusError = createNewError (errorIncompatibleAssgnOpType assOp tyLeft e1) compatibilityPlus
                 (ty,compatibilityEqual) = sup SupDecl tyLeft ty3 
                 equalError = createNewError (errorIncompatibleBinaryType assOp e1 e2 tyLeft tyRight) compatibilityEqual in  

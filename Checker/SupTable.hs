@@ -2,7 +2,7 @@ module Checker.SupTable where
 
 import Utils.Type
 
-data SupMode = SupDecl | SupFun | SupBool | SupPlus | SupMinus | SupArith | SupMod | Sup | SupRet
+data SupMode = Sup | SupDecl | SupBoolEq | SupBoolArith | SupArith | SupMod | SupRet | SupFun
   deriving Show
 
 instance Eq SupMode where
@@ -25,23 +25,17 @@ sup mode point@(Pointer _p1) (Pointer _p2) =
   pointerAux mode ty compatibility
     where 
       pointerAux mode ty compatibility
-        | mode `elem`[SupPlus,SupMinus,SupRet,SupFun,Sup,SupDecl] = (Pointer ty,compatibility)
+        | mode `elem`[SupRet,SupFun,Sup,SupDecl] = (Pointer ty,compatibility)
         | otherwise = incompatible point
-sup mode point@(Pointer _p) Int
-  | mode `elem` [SupPlus, SupMinus, SupRet,SupDecl] = compatible (Pointer _p)
-  | otherwise = incompatible point
 sup _ point@(Pointer _p) _ = incompatible point 
-sup mode Int (Pointer _p) 
-  | mode `elem` [SupPlus,SupMinus] = compatible (Pointer _p)
-  | otherwise = incompatible Int
 sup _ ty (Pointer _p) = incompatible ty  
 --Int 
 sup mode Int Int
-  | mode == SupBool = compatible Bool
+  | mode `elem` [SupBoolEq,SupBoolArith] = compatible Bool
   | otherwise = compatible Int
 sup mode ty1@Int Real
  | mode `elem` [SupMod, SupDecl, SupRet, SupFun] = incompatible ty1
- | mode == SupBool = compatible Bool
+ | mode `elem` [SupBoolEq,SupBoolArith] = compatible Bool
  | otherwise = compatible Real
 sup mode ty1@Int Char
   | mode == SupFun = incompatible ty1
@@ -51,30 +45,30 @@ sup _ ty1@Int Bool = incompatible ty1
 --Real
 sup mode ty1@Real Int
   | mode `elem` [SupFun,SupMod] = incompatible ty1
-  | mode == SupBool = compatible Bool
+  | mode `elem` [SupBoolEq,SupBoolArith] = compatible Bool
   | otherwise = compatible Real
 sup mode ty1@Real Real
   | mode == SupMod = incompatible ty1
-  | mode == SupBool = compatible Bool
+  | mode `elem` [SupBoolEq,SupBoolArith] = compatible Bool
   | otherwise = compatible Real
 sup mode ty1@Real Char
   | mode `elem` [SupFun,SupMod] = incompatible ty1
-  | mode == SupBool = compatible Bool
+  | mode `elem` [SupBoolEq,SupBoolArith] = compatible Bool
   | otherwise = compatible Real
 sup _ ty1@Real String = incompatible ty1
 sup _ ty1@Real Bool = incompatible ty1
 --Char
 sup mode ty1@Char Int
   | mode `elem` [SupFun, SupDecl, SupRet] = incompatible ty1
-  | mode == SupBool = compatible Bool
+  | mode `elem` [SupBoolEq,SupBoolArith] = compatible Bool
   | otherwise = compatible Int
 sup mode ty1@Char Real
   | mode `elem` [SupFun, SupDecl, SupRet] = incompatible ty1
-  | mode == SupBool = compatible Bool
+  | mode `elem` [SupBoolEq,SupBoolArith] = compatible Bool
   | otherwise = compatible Real
 sup mode Char Char
-  | mode == SupBool = compatible Bool
-  | mode `elem` [SupMinus, SupArith, SupMod, SupPlus, Sup] = compatible Int 
+  | mode `elem` [SupArith, SupMod, Sup] = compatible Int 
+  | mode `elem` [SupBoolEq,SupBoolArith] = compatible Bool
   | otherwise = compatible Char
 sup _ ty1@Char String = incompatible ty1
 sup _ ty1@Char Bool = incompatible ty1
@@ -84,7 +78,7 @@ sup _ ty1@String Real = incompatible ty1
 sup _ ty1@String Char = incompatible ty1 
 sup mode ty1@String String 
  | mode `elem` [SupFun, SupRet, SupDecl, Sup] = compatible String
- | mode == SupBool = compatible Bool
+ | mode == SupBoolEq = compatible Bool
  | otherwise = incompatible ty1 
 sup _ ty1@String Bool = incompatible ty1 
 --Bool
@@ -93,7 +87,7 @@ sup _ ty1@Bool Real = incompatible ty1
 sup _ ty1@Bool Char =  incompatible ty1 
 sup _ ty1@Bool String = incompatible ty1 
 sup mode ty1@Bool Bool 
-  | mode `elem` [SupMod, SupPlus, SupArith] = incompatible ty1
+  | mode `elem` [SupMod, SupArith] = incompatible ty1
   | otherwise = compatible Bool
 --Error
 sup _ Error Error = compatible Error
