@@ -19,6 +19,7 @@ data DefinedError =
   ErrorIncompatibleReturnType String Type Type (Maybe Exp) |
   ErrorIncompatibleUnaryOpType Loc Type Type Exp |
   ErrorIncompatibleBinaryOpType Loc Type Type Exp Exp |
+  ErrorIncompatibleIfTernayOpType Type Type Exp Exp |
   ErrorMissingReturn String | 
   ErrorVarAlreadyDeclared Loc String |
   ErrorSignatureAlreadyDeclared  (Loc,Loc)  Loc String |
@@ -86,6 +87,7 @@ printDefinedError tokens error = case error of
     Nothing -> "Function \"" ++ idFun ++ "\" returns type " ++ prettyPrinterType tyFun ++  " but nothing is returned " 
   ErrorIncompatibleUnaryOpType locOp ty1 ty2 e -> "Operation " ++ printTokensRange tokens (locOp,locOp) ++ " requires type " ++ prettyPrinterType ty1 ++ " but was found type " ++ prettyPrinterType ty2 ++ " in expression " ++ printExpression tokens e ++ "."
   ErrorIncompatibleBinaryOpType locOp ty1 ty2 e1 e2 -> "Not compatible types " ++ prettyPrinterType ty1 ++  " and "  ++ prettyPrinterType ty2 ++ " for operation " ++ printTokensRange tokens (locOp,locOp) ++ " between expressions " ++ printExpression tokens e1 ++ " and " ++ printExpression tokens e2 ++ "." 
+  ErrorIncompatibleIfTernayOpType ty1 ty2 e1 e2 -> "Not compatible expression " ++ printExpression tokens e1 ++ " and " ++ printExpression tokens e2 ++  " of types " ++ prettyPrinterType ty1 ++  " and "  ++ prettyPrinterType ty2 ++  " in if ternary expression." 
   ErrorVarAlreadyDeclared (l,c) id -> "Variable " ++ id ++" already declared in line " ++ show l ++ " and column " ++ show c ++ "."
   ErrorGuardNotBoolean exp ty -> "Guard must be boolean but type " ++ prettyPrinterType ty ++ " was found in expression " ++ printExpression tokens exp
   ErrorDeclarationBoundNotCorrectType ty id -> "Variable " ++ id ++ " is of type " ++ prettyPrinterType ty ++ " instead of type array."
@@ -151,6 +153,8 @@ errorIncompatibleDeclarationType loc idVar ty tyexp exp = ErrorChecker loc $ Err
 errorIncompatibleReturnType loc idFun tyFun tyExp exp = ErrorChecker loc $ ErrorIncompatibleReturnType idFun tyFun tyExp exp
 errorIncompatibleUnaryType loc e ty1 ty2 = ErrorChecker loc $ ErrorIncompatibleUnaryOpType loc ty1 ty2 e
 errorIncompatibleBinaryType loc e1 e2 ty1 ty2  = ErrorChecker loc $ ErrorIncompatibleBinaryOpType loc ty1 ty2 e1 e2
+
+errorIncompatibleIfTernaryType loc e1 e2 ty1 ty2 = ErrorChecker loc $ ErrorIncompatibleIfTernayOpType  ty1 ty2 e1 e2
 errorIncompatibleTypesChangeToFun loc pos id ty1 mode1 ty2 mode2= ErrorChecker loc $ ErrorCalledProcWithWrongTypeParam pos ty1 mode1 ty2 mode2 id 
 
 

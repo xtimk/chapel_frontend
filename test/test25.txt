@@ -23,7 +23,7 @@ proc main(ref x: [3]int) : int
     var bella = &hhhhh;
     var semprepiubella = &bella;
 
-    var vediamocomeva = (5 < 4) ? (paperoga('c' + 9)[3+9]) : (hhhhh[2,3]);
+    var vediamocomeva = (5 < 4) ? (paperoga('c' + 9)[3+9]) : 2;
 
     for jjj in (5 < 4) ? (paperoga('c' + 9)[3+9]) : (hhhhh[2,3])  do
    //for jjj in (**semprepiubella)[5+5] do
