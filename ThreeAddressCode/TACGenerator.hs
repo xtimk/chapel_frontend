@@ -841,11 +841,17 @@ newcasttemp = do
 
 int2AddrCastTempName k = "cast" ++ show k
 
+getStringsTacs :: TacCastState [TACEntry]
+getStringsTacs = do
+  (_k, _w, t) <- get
+  return t
+
 newStringtemp :: TacCastState String
 newStringtemp = do
   (_k, w, _t) <- get
   put (_k, w + 1, _t)
   return $ int2AddrStringTempName w
+
   
 int2AddrStringTempName w = "ptr$str$" ++ show w
 
@@ -867,7 +873,6 @@ tacCastGeneratorModified tac = do
   else do
     let tacSpace = TACEntry Nothing VoidOp noComment
     let tacComment = TACEntry Nothing (CommentOp "static data") noComment
-    --OK!
     return $ tacs ++ tacSpace:tacComment:tacSpace:reverse tacsString
 
 
@@ -892,13 +897,37 @@ tacCastStringGenerator (TACEntry label optype _comment) = do
       ReturnValue temp1 -> do
         temp <- tacCastStringGenerator'' temp1
         return $ ReturnValue temp
+      RelCondJump temp1 rel temp2 lab -> do
+        templ <- tacCastStringGenerator'' temp1
+        tempr <- tacCastStringGenerator'' temp2
+        return $ RelCondJump templ rel tempr lab
       _ -> return optype
     tacCastStringGenerator'' temp@(Temp mode id loc ty) = case (mode,ty) of
       (Fixed,Utils.Type.String) -> do
-        idString <- newStringtemp
-        addTacStringEntry idString id loc
-        return $ Temp Temporary idString loc ty
+        tacs <- getStringsTacs 
+        let label = checkIfTacsStringIsAlreadyPresent id tacs
+        case label of
+          Nothing -> do
+            idString <- newStringtemp
+            addTacStringEntry idString id loc
+            return $ Temp Temporary idString loc ty
+          Just (id,loc,_) ->
+            return $ Temp Temporary id loc ty
       _ -> return temp
+
+checkIfTacsStringIsAlreadyPresent id tacs =
+    let labels = map checkIfTacsStringIsAlreadyPresentAux tacs in
+     foldl checklabelsString Nothing labels
+  where
+    checkIfTacsStringIsAlreadyPresentAux (TACEntry label (StringOp const) _) = 
+      if id == const 
+        then label
+        else Nothing
+    checkIfTacsStringIsAlreadyPresentAux _ = Nothing
+    checklabelsString Nothing Nothing = Nothing
+    checklabelsString label Nothing = label
+    checklabelsString Nothing label = label
+
 
 checkIfLabelIsAStartOfFun Nothing = False
 checkIfLabelIsAStartOfFun (Just (_,_,FunLb)) = True

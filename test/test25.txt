@@ -10,7 +10,7 @@ proc main(ref x: [3]int) : int
     var jsjd = ar11[1]; 
     var jsjddd = ar11[1,2];
     var camillobensocontedicavour = ar11[1,2,3]; 
-
+    var prova = ["pippo", "il", "gatto", "nel", "gatto","il", "sacco", "pippo", "ciao"];
     var jjj = "pippo";
 
     var boolean = true;
@@ -24,17 +24,22 @@ proc main(ref x: [3]int) : int
         var z = x;
         var ar = [[[2,2,2],[2,2,2]]];
         return &ar;
+
     };
 
     var hhhhh = [*(paperoga('d' + 0))];
     var bella = &hhhhh;
     var semprepiubella = &bella;
-
+   
     
     var testone = paperoga('c' + 9);
+
+
     var testone2 = *testone;
     var altraprova = ((testone2[0])[1])[1];
     var altraprova2 = testone2[0,1,1];
+
+    testone2[(5 < 5) ? (10 + 9 * 4) : 29, x[1],4] = 69 + 666;
     
     for jjj in (5 < 4 && !boolean == boolean || "ciao" == "miao") ? ((**&*&*&testone)[3+9]) : ((hhhhh)[2,3])  do
     {
