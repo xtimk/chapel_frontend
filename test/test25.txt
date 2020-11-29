@@ -11,28 +11,22 @@ proc main(ref x: [3]int) : int
         boolean = boolean;
     }
 
-    proc paperoga(x : int) : [1,2,3] int
+    proc paperoga(x : int) : *[1,2,3] int
     {
         var z = x;
         var ar = [[[2,2,2],[2,2,2]]];
-        return ar;
-    };
-
-     proc paperoga(x : int) : int
-    {
-        var z = x;
-        var ar = [[[2,2,2],[2,2,2]]];
-        return ar;
+        return &ar;
     };
 
 
-    var hhhhh = [paperoga('d' + 0)];
+
+    var hhhhh = [*(paperoga('d' + 0))];
     var bella = &hhhhh;
     var semprepiubella = &bella;
 
-    var vediamocomeva = (5 < 4) ? (paperoga('c' + 9)[3+9]) : 2;
+    var testone = paperoga('c' + 9);
 
-    for jjj in (5 < 4) ? (paperoga('c' + 9)[3+9]) : (hhhhh[2,3])  do
+    for jjj in (5 < 4) ? ((**&*&*&testone)[3+9]) : ((hhhhh)[2,3])  do
    //for jjj in (**semprepiubella)[5+5] do
     {
         for jjj in jjj do

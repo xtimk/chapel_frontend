@@ -469,25 +469,21 @@ typeCheckerAddress environment exp = case exp of
   Evar {} -> let DataChecker ty errors = typeCheckerRightExpression environment exp in DataChecker (Pointer ty) errors
   _ -> DataChecker Error [ErrorChecker (getStartExpPos exp) $ ErrorCantAddressAnExpression exp]
 
-typeCheckerIndirection environment e1 = 
-  let newLoc = getStartExpPos e1 in case e1 of
-    Earray expIdentifier arDeclaration -> 
-      let DataChecker ty errs = typeCheckerDeclarationArray  environment expIdentifier arDeclaration in
-        case ty of
-          (Pointer ty) -> DataChecker ty errs
-          _ -> DataChecker ty (ErrorChecker newLoc (ErrorNoPointerAddress ty e1):errs)
-    InnerExp _ e _ -> typeCheckerIndirection environment e
-    Epreop (Address _) eAddr -> let DataChecker ty errors = typeCheckerAddress environment eAddr in case ty of
-      Pointer tyPoint -> DataChecker tyPoint errors
-      ty ->  DataChecker ty $  ErrorChecker newLoc (ErrorNoPointerAddress ty e1):errors
-    Epreop (Indirection (PEtimes (loc,_))) ePoint -> let DataChecker ty errors = typeCheckerIndirection environment ePoint in case ty of
-      Pointer tyPoint -> DataChecker tyPoint errors
-      ty ->  DataChecker ty $  ErrorChecker loc (ErrorNoPointerAddress ty e1):errors
-    Evar {} -> let DataChecker ty errorsVar = typeCheckerRightExpression environment e1 in case ty of
-      Pointer tyPointed -> DataChecker tyPointed []
-      Error -> DataChecker ty errorsVar
-      ty -> DataChecker ty $ ErrorChecker newLoc (ErrorNoPointerAddress ty e1):errorsVar
-    _ -> DataChecker Error  [ErrorChecker newLoc $ ErrorCantAddressAnExpression e1 ]
+typeCheckerIndirection environment e1 = case e1 of
+  InnerExp _ e _ -> typeCheckerIndirection environment e
+  Earray {} -> typeCheckerIndirectionAux environment e1 
+  Epreop (Address _) _ ->  typeCheckerIndirectionAux environment e1
+  Epreop (Indirection _) _ ->  typeCheckerIndirectionAux environment e1 
+  EFun {} ->  typeCheckerIndirectionAux environment e1 
+  Evar {} -> typeCheckerIndirectionAux environment e1 
+  _ -> DataChecker Error  [ErrorChecker (getStartExpPos e1) $ ErrorCantAddressAnExpression e1 ]
+  where 
+    typeCheckerIndirectionAux environment e1 = 
+      let DataChecker ty errors = typeCheckerRightExpression environment e1 
+          newLoc = getStartExpPos e1 in 
+            case ty of
+              Pointer tyPoint -> DataChecker tyPoint errors
+              _ -> DataChecker ty $ ErrorChecker newLoc (ErrorNoPointerAddress ty e1):errors
 
 eFunTypeChecker funidentifier@(PIdent (loc,identifier)) passedparams environment = 
   case getEntry funidentifier environment of
