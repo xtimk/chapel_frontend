@@ -81,8 +81,11 @@ addLabelToEntry label (TACEntry _  operationType _comment) = TACEntry label oper
 
 noComment = Nothing
 
-getSubArrayLength arty@(Array ty _) = getArrayLenght arty * getSubArrayLength ty
-getSubArrayLength types = sizeof types
+getSubArrayLength 0 ty = getTotalArrayLength ty
+getSubArrayLength depth (Array ty _) =  getSubArrayLength (depth - 1 ) ty
+
+getTotalArrayLength arty@(Array ty _) = getArrayLenght arty * getTotalArrayLength ty
+getTotalArrayLength types = sizeof types
 
 sizeof ty = case ty of
     Array ty _ -> sizeof ty
