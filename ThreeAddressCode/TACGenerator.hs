@@ -69,7 +69,7 @@ tacGeneratorDeclExpression'' _ _ _ [] = return []
 tacGeneratorDeclExpression'' assgn lengths@(x:xs) ids (y:ys) = do
   res1 <- tacGeneratorDeclExpression'' assgn ((x+1):xs) ids ys
   res2 <- tacGeneratorDeclExpression' assgn lengths ids y
-  return (res1 ++ res2)
+  return (res2 ++ res1)
   
 tacGeneratorIdentifierTemp id@(PIdent (_, identifier)) = do
   tacEnv <- get
@@ -101,7 +101,8 @@ tacGeneratorArrayIdentifierArray labelExit temp@(Temp _ _ _ ar@Array {}) indexLe
   let totElements = calculateTotalDim ar
   let sizeElement = sizeof ar
   let actualDim = totElements * arrayPos + totElements * sizeElement - sizeElement 
-  generateDimArray indexLeft temp actualDim totElements sizeElement loc
+  tacs <- generateDimArray indexLeft temp actualDim totElements sizeElement loc
+  return $ reverse tacs
     where
       calculateTotalDim ar@(Array ty _) = getArrayLenght ar * calculateTotalDim ty
       calculateTotalDim _ = 1
@@ -114,7 +115,7 @@ tacGeneratorArrayIdentifierArray labelExit temp@(Temp _ _ _ ar@Array {}) indexLe
         let tacPos = TACEntry Nothing (IndexRight tempArray temp tempPosRight) noComment
         let tacValue =  TACEntry labelExit (indexLeft tempPosLeft tempArray) noComment 
         tacs <- generateDimArray indexLeft temp (act - sizeElement) (totalElement - 1) sizeElement loc
-        return (tacPos:tacValue:tacs)
+        return (tacValue:tacPos:tacs)
 
 arrayCalculatePosition ty lengths = sizeof ty * arrayCalculatePosition' (reverse (getArrayDimensions ty)) lengths
   where
