@@ -1,0 +1,8 @@
+proc main()
+{
+    var j = 'c' + 3;
+    while (j < ( 'j' + 4 + 'a'))
+    {
+        j = 'a';
+    }
+}
