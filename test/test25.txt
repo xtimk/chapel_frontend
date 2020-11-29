@@ -18,6 +18,13 @@ proc main(ref x: [3]int) : int
         return ar;
     };
 
+     proc paperoga(x : int) : int
+    {
+        var z = x;
+        var ar = [[[2,2,2],[2,2,2]]];
+        return ar;
+    };
+
 
     var hhhhh = [paperoga('d' + 0)];
     var bella = &hhhhh;

@@ -28,7 +28,6 @@ data DefinedError =
   ErrorDeclarationBoundOnlyConst String |
   ErrorDeclarationBoundNotCorrectType Type String |
   ErrorArrayCallExpression Exp|
-  ErrorArrayIdentifierType Type String |
   ErrorDeclarationBoundArray Type String |
   ErrorBoundsArray Int Int |
   ErrorDimensionArray Int Loc Int | 
