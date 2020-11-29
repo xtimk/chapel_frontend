@@ -471,14 +471,15 @@ typeCheckerAddress environment exp = case exp of
 
 typeCheckerIndirection environment e1 = case e1 of
   InnerExp _ e _ -> typeCheckerIndirection environment e
-  Earray {} -> typeCheckerIndirectionAux environment e1 
-  Epreop (Address _) _ ->  typeCheckerIndirectionAux environment e1
-  Epreop (Indirection _) _ ->  typeCheckerIndirectionAux environment e1 
-  EFun {} ->  typeCheckerIndirectionAux environment e1 
-  Evar {} -> typeCheckerIndirectionAux environment e1 
+  Earray {} -> typeCheckerIndirectionAux 
+  Epreop (Address _) _ ->  typeCheckerIndirectionAux
+  Epreop (Indirection _) _ ->  typeCheckerIndirectionAux 
+  EFun {} ->  typeCheckerIndirectionAux 
+  Evar {} -> typeCheckerIndirectionAux 
+  EifExp {} -> typeCheckerIndirectionAux 
   _ -> DataChecker Error  [ErrorChecker (getStartExpPos e1) $ ErrorCantAddressAnExpression e1 ]
   where 
-    typeCheckerIndirectionAux environment e1 = 
+    typeCheckerIndirectionAux = 
       let DataChecker ty errors = typeCheckerRightExpression environment e1 
           newLoc = getStartExpPos e1 in 
             case ty of
@@ -542,21 +543,25 @@ typeCheckerExpressionUnary' environment supMode loc e1 ty =
 
 typeCheckerDeclarationArray environment exp ardecl@(ArrayInit _ arrays _ ) = case exp of
   InnerExp _ e _ -> typeCheckerDeclarationArray environment e ardecl
-  EFun (PIdent (loc,id)) _ _ _ -> typeCheckerDeclarationArray' id loc (typeCheckerRightExpression environment exp)
-  Epreop preop@(Indirection _) _ -> typeCheckerDeclarationArray' "indirection" (getEpreopPos preop) (typeCheckerRightExpression environment exp) 
-  Evar (PIdent (loc, identifier)) -> typeCheckerDeclarationArray' identifier loc (typeCheckerRightExpression environment exp) 
+  EFun (PIdent _) _ _ _ -> typeCheckerDeclarationArray' 
+  Epreop (Indirection _) _ -> typeCheckerDeclarationArray'
+  Evar (PIdent _) -> typeCheckerDeclarationArray' 
+  EifExp {} -> typeCheckerDeclarationArray'
+  Earray {} -> typeCheckerDeclarationArray'  
   _ -> DataChecker Error [ErrorChecker (getStartExpPos exp) $ ErrorArrayCallExpression exp]
   where 
-    typeCheckerDeclarationArray' identifier loc (DataChecker tyFound expErrors)  = case tyFound of
-      types@(Array _ _) -> typeCheckerDeclarationArrayAux identifier loc expErrors types
-      types -> DataChecker Error $ ErrorChecker (getStartExpPos exp) (ErrorDeclarationBoundNotCorrectType types identifier):expErrors
-    typeCheckerDeclarationArrayAux identifier loc expErrors types=  let DataChecker dimension errors = getDeclarationDimension environment arrays in 
+    typeCheckerDeclarationArray'  = 
+      let DataChecker tyFound expErrors = typeCheckerRightExpression environment exp in  
+        case tyFound of
+          types@(Array _ _) -> typeCheckerDeclarationArrayAux expErrors types
+          types -> DataChecker Error $ ErrorChecker (getStartExpPos exp) (ErrorDeclarationBoundNotCorrectType types exp):expErrors
+    typeCheckerDeclarationArrayAux expErrors types=  let DataChecker dimension errors = getDeclarationDimension environment arrays in 
         case (getArrayDimension types, dimension) of
           (arrayDim, callDim) -> if arrayDim >= callDim 
             then let typeFound = getSubarrayDimension types callDim in if null errors
               then DataChecker typeFound expErrors
               else DataChecker typeFound (errors ++ expErrors)
-            else DataChecker Error ([ErrorChecker loc $ ErrorWrongDimensionArray arrayDim callDim identifier] ++ errors ++ expErrors)
+            else DataChecker Error ([ErrorChecker (getStartExpPos exp) $ ErrorWrongDimensionArray arrayDim callDim exp] ++ errors ++ expErrors)
 
 getDeclarationDimension _ [] = DataChecker 0 [] 
 getDeclarationDimension environment (array:arrays) = let DataChecker dimension errors = getDeclarationDimension environment arrays in 

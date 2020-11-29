@@ -3,6 +3,11 @@ proc paperoga(x : int){
 }
 proc main(ref x: [3]int) : int
 {
+
+    var ar11 = [[1,2,2],[2,2,2],[2,2,2]];
+
+    var ar22 = ar11[2];
+
     var jjj = "pippo";
 
     var boolean = true;
@@ -17,17 +22,22 @@ proc main(ref x: [3]int) : int
         var ar = [[[2,2,2],[2,2,2]]];
         return &ar;
     };
-
+    
+    
 
 
     var hhhhh = [*(paperoga('d' + 0))];
     var bella = &hhhhh;
     var semprepiubella = &bella;
 
+    
     var testone = paperoga('c' + 9);
+    var testone2 = *testone;
+    var altraprova = (testone2[2])[1];
+    var prova = ((5 < 4) ? ((**&*&*&testone)[3+9]) : ((hhhhh)[2,3]))[1];
+
 
     for jjj in (5 < 4) ? ((**&*&*&testone)[3+9]) : ((hhhhh)[2,3])  do
-   //for jjj in (**semprepiubella)[5+5] do
     {
         for jjj in jjj do
         {

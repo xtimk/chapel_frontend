@@ -26,12 +26,12 @@ data DefinedError =
   ErrorGuardNotBoolean Exp Type|
   ErrorDeclarationCallWithZero |
   ErrorDeclarationBoundOnlyConst String |
-  ErrorDeclarationBoundNotCorrectType Type String |
+  ErrorDeclarationBoundNotCorrectType Type Exp |
   ErrorArrayCallExpression Exp|
   ErrorDeclarationBoundArray Type String |
   ErrorBoundsArray Int Int |
   ErrorDimensionArray Int Loc Int | 
-  ErrorWrongDimensionArray Int Int String |
+  ErrorWrongDimensionArray Int Int Exp |
   ErrorArrayExpressionRequest ExprDecl|
   ErrorCantAddressAnExpression Exp|
   ErrorReturnNotInsideAProcedure |
@@ -89,13 +89,13 @@ printDefinedError tokens error = case error of
   ErrorIncompatibleIfTernayOpType ty1 ty2 e1 e2 -> "Not compatible expression " ++ printExpression tokens e1 ++ " and " ++ printExpression tokens e2 ++  " of types " ++ prettyPrinterType ty1 ++  " and "  ++ prettyPrinterType ty2 ++  " in if ternary expression." 
   ErrorVarAlreadyDeclared (l,c) id -> "Variable " ++ id ++" already declared in line " ++ show l ++ " and column " ++ show c ++ "."
   ErrorGuardNotBoolean exp ty -> "Guard must be boolean but type " ++ prettyPrinterType ty ++ " was found in expression " ++ printExpression tokens exp
-  ErrorDeclarationBoundNotCorrectType ty id -> "Variable " ++ id ++ " is of type " ++ prettyPrinterType ty ++ " instead of type array."
+  ErrorDeclarationBoundNotCorrectType ty exp -> "Expression " ++ printExpression tokens exp ++ " is of type " ++ prettyPrinterType ty ++ " instead of type array."
   ErrorDeclarationCallWithZero-> "Bound can be only a constant greater than 0"
   ErrorDeclarationBoundOnlyConst id -> "Bound can be only a constant but variable " ++ id ++ " was found."
   ErrorArrayCallExpression exp -> "Only a variable can index like an array but was found expression " ++ printExpression tokens exp ++ "."
   ErrorDeclarationBoundArray ty const -> "Bound of array must be an Int but was found " ++ show const ++ " of type " ++ prettyPrinterType ty ++ "."
   ErrorBoundsArray boundLeft boundRight -> "In arrays bound right must be greater than bound left but was found " ++ show boundLeft ++ " in bound left and " ++ show boundRight ++ " in bound right."
-  ErrorWrongDimensionArray arDim callDim id -> "Array variable " ++ id ++ " is declared of " ++ show arDim ++ " dimensions but is called to keep " ++ show callDim ++ " dimensions."
+  ErrorWrongDimensionArray arDim callDim exp -> "Array expresison " ++ printExpression tokens exp ++ " is declared of " ++ show arDim ++ " dimensions but is called to keep " ++ show callDim ++ " dimensions."
   ErrorArrayExpressionRequest expDecl-> "Must be call an array indexing like \" a[2,3] \" but was found an array declaration " ++ printDeclExpression tokens expDecl ++ "."
   ErrorCantAddressAnExpression exp -> "An expression cannot address in " ++ printExpression tokens exp ++ "."
   ErrorReturnNotInsideAProcedure -> "Return can be write only in a procedure"
