@@ -410,7 +410,7 @@ typeCheckerRightExpression environment exp = case exp of
     Epreop op@(MinusUnary (PEminus _)) e1 -> typeCheckerExpressionUnary' environment SupArith (getEpreopPos op) e1 Int
     Earray expIdentifier arDeclaration -> typeCheckerDeclarationArray  environment expIdentifier arDeclaration
     EFun funidentifier _ passedparams _ -> eFunTypeChecker funidentifier passedparams environment
-    EifExp expguard _pquest e1 _pcolon e2 -> typeCheckerExpressionIf environment expguard e1 e2
+    EifExp expguard _pquest e1 (PColon (locCol,_)) e2 -> typeCheckerExpressionIf environment expguard e1 locCol e2
     Evar identifier -> typeCheckerVariableIdentifiers identifier environment
     Econst (Estring _) -> DataChecker String []
     Econst (Eint _) -> DataChecker Int []
@@ -426,13 +426,13 @@ typeCheckerVariableIdentifiers identifier environment@(ids,_t,_a) =
       DataChecker ty error 
     else DataChecker Error errors
 
-typeCheckerExpressionIf environment expguard e1 e2 = 
+typeCheckerExpressionIf environment expguard e1 locCol e2 = 
   let DataChecker tyGuard temperrors = typeCheckerRightExpression environment expguard in
         let guardErrors = if tyGuard == Bool then temperrors else ErrorChecker (getStartExpPos expguard) (ErrorGuardNotBoolean expguard tyGuard):temperrors
             DataChecker tye1 errs1 = typeCheckerRightExpression environment e1
             DataChecker tye2 errs2 = typeCheckerRightExpression environment e2
             (tyf,compatibility) = sup Sup tye1 tye2
-            errorstyf = createNewError (errorIncompatibleBinaryType (getStartExpPos e1) e1 e2 tye1 tye2) compatibility in
+            errorstyf = createNewError (errorIncompatibleIfTernaryType locCol e1 e2 tye1 tye2) compatibility in
             DataChecker tyf (guardErrors ++ errs1 ++ errs2 ++ errorstyf)
 
 typeCheckerVariableIdentifier (PIdent (locExp,idExp)) (_, (idDecl,Variable locDecl _ _)) =
