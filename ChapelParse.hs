@@ -55,7 +55,7 @@ showTree :: (Show a, Print a) => Int -> a -> IO ()
 showTree v tree
  = do
       -- putStrV v $ "\n[Abstract Syntax]\n\n" ++ show tree
-      putStrV v $ "\n\n" ++ printTree tree
+      putStrV v $ "" ++ printTree tree
 
 usage :: IO ()
 usage = do
@@ -83,9 +83,11 @@ parseTest filepath = do
   let p = pProgram (myLLexer s) in case p of
     Bad s    -> do putStrLn s
                    exitFailure
-    Ok  tree -> do putStrLn "\n\nParse Successful!"
+    Ok  tree -> do putStrLn "\nParse Successful!\n"
                   --  print tree
-                   putStrLn "\n\nPretty Print of Code"
+                   putStrLn " - - - - - - - - - - - -"
+                   putStrLn "| Pretty Print of Code  |"
+                   putStrLn " - - - - - - - - - - - -"
                    showTree 2 tree
 
                    --putStrLn "\n\n ** After Type Checker **\n\n"
@@ -97,8 +99,8 @@ parseTest filepath = do
                     -- putStrLn "\n\n ** SYMBOL TABLE **"
                     -- print $ getSymTable bpTree
 
-                    putStrLn "\n\n ** TREE **"
-                    print $ getTree bpTree
+                    -- putStrLn "\n\n ** TREE **"
+                    -- print $ getTree bpTree
 
                     let bp2 = typeCheckerReturns (getTree bpTree)
 
@@ -113,13 +115,18 @@ parseTest filepath = do
                       -- printTacEntriesRaw (getTac tac)
                       -- putStrLn "\n\n ** Pretty TAC **"
                       -- printTacEntries maxlenlabeltac (getTac tac)
-                        putStrLn "\n\n ** ENRICHED TAC **"
-                        printTacEntriesRaw enrichedcasttac
-                        putStrLn "\n\n ** Pretty Print of TAC **"
+                        -- putStrLn "\n\n ** ENRICHED TAC **"
+                        -- printTacEntriesRaw enrichedcasttac
+                        putStrLn " - - - - - - - - - - - -"
+                        putStrLn "|  Pretty Print of TAC  |"
+                        putStrLn " - - - - - - - - - - - -"
                         printTacEntries maxlenenrichedlabeltac enrichedcasttac
                         exitSuccess
                     else do
-                      putStrLn "\n\n ** Can't generate TAC: There are some typechecking errors **\n"
+                      putStrLn ""
+                      putStrLn " - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+                      putStrLn "| Can't generate TAC: There are some typechecking errors  |"
+                      putStrLn " - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
                       printErrors (tokens s) (errors ++ bp2)
                       exitSuccess
 
