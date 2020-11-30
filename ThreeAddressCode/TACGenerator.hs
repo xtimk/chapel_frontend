@@ -929,14 +929,9 @@ checkIfTacsStringIsAlreadyPresent id tacs =
     checklabelsString Nothing label = label
 
 
-checkIfLabelIsAStartOfFun Nothing = False
-checkIfLabelIsAStartOfFun (Just (_,_,FunLb)) = True
-checkIfLabelIsAStartOfFun (Just _) = False
-
---tacCastGeneratorAux :: TACEntry -> [TACEntry]
 tacCastGeneratorAux ent@(TACEntry label optype _comment) = -- tac
   case optype of
-    Binary temp0 temp1 op temp2 -> 
+    Binary temp0 temp1 _ temp2 -> 
       let ty0 = getTacTempTye temp0
           ty1 = getTacTempTye temp1
           ty2 = getTacTempTye temp2 in
@@ -949,9 +944,7 @@ tacCastGeneratorAux ent@(TACEntry label optype _comment) = -- tac
               suptype = supTac Sup suptype01 suptype02 in do
                 (tac1,newtemp1) <- genCast temp1 suptype 
                 (tac2,newtemp2) <- genCast temp2 suptype
-                if checkIfLabelIsAStartOfFun label
-                  then return $ attachLabelToFirstElem label tac1 ++ tac2 ++ resetLabelToNothing (substituteVarNames ent newtemp1 newtemp2 suptype)
-                  else return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2 suptype
+                return $ attachLabelToFirstElem label (tac1 ++ tac2) ++ resetLabelToNothing (substituteVarNames ent newtemp1 newtemp2 suptype)
     Nullary temp1 temp2 -> 
       let ty1 = getTacTempTye temp1
           ty2 = getTacTempTye temp2 in
@@ -961,9 +954,7 @@ tacCastGeneratorAux ent@(TACEntry label optype _comment) = -- tac
           let suptype = supTac Sup ty1 ty2 in do
             (tac1,newtemp1) <- genCast temp1 suptype 
             (tac2,newtemp2) <- genCast temp2 suptype
-            if checkIfLabelIsAStartOfFun label
-              then return $ attachLabelToFirstElem label tac1 ++ tac2 ++ resetLabelToNothing (substituteVarNames ent newtemp1 newtemp2 suptype)
-              else return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2 suptype
+            return $ attachLabelToFirstElem label (tac1 ++ tac2) ++ resetLabelToNothing (substituteVarNames ent newtemp1 newtemp2 suptype)
     Unary temp1 op temp2 -> 
       case op of
         MinusUnaryOp -> 
@@ -974,13 +965,8 @@ tacCastGeneratorAux ent@(TACEntry label optype _comment) = -- tac
             else 
               let suptype = supTac Sup ty1 ty2 in do
                 (tac2,newtemp2) <- genCast temp2 suptype
-                if checkIfLabelIsAStartOfFun label
-                  then return $ attachLabelToFirstElem label tac2 ++ resetLabelToNothing (substituteVarNames ent temp1 newtemp2 suptype)
-                  else return $ tac2 ++ substituteVarNames ent temp1 newtemp2 suptype
-
-                -- return $ tac2 ++ substituteVarNames ent temp1 newtemp2 suptype
-
-    RelCondJump temp1 relop temp2 _label -> 
+                return $ attachLabelToFirstElem label tac2 ++ resetLabelToNothing (substituteVarNames ent temp1 newtemp2 suptype)
+    RelCondJump temp1 _ temp2 _label -> 
       let ty1 = getTacTempTye temp1
           ty2 = getTacTempTye temp2 in
       if ty1 == ty2
@@ -989,9 +975,7 @@ tacCastGeneratorAux ent@(TACEntry label optype _comment) = -- tac
           let suptype = supTac Sup ty1 ty2 in do
             (tac1,newtemp1) <- genCast temp1 suptype 
             (tac2,newtemp2) <- genCast temp2 suptype
-            if checkIfLabelIsAStartOfFun label
-              then return $ attachLabelToFirstElem label tac1 ++ tac2 ++ resetLabelToNothing (substituteVarNames ent newtemp1 newtemp2 suptype)
-              else return $ tac1 ++ tac2 ++ substituteVarNames ent newtemp1 newtemp2 suptype
+            return $ attachLabelToFirstElem label (tac1 ++ tac2) ++ resetLabelToNothing (substituteVarNames ent newtemp1 newtemp2 suptype)
     IndexLeft (Temp _ _ _ (Array ty1 _)) _ temp3 -> 
       let ty3 = getTacTempTye temp3 in
         if ty1 == ty3
@@ -999,10 +983,7 @@ tacCastGeneratorAux ent@(TACEntry label optype _comment) = -- tac
           else
             let suptype = supTac Sup ty1 ty3 in do
               (tac3,newtemp3) <- genCast temp3 suptype
-              if checkIfLabelIsAStartOfFun label
-                then return $ attachLabelToFirstElem label tac3 ++ resetLabelToNothing (substituteVarNames ent newtemp3 newtemp3 suptype)
-                else return $ tac3 ++ substituteVarNames ent newtemp3 newtemp3 suptype
-
+              return $ attachLabelToFirstElem label tac3 ++ resetLabelToNothing (substituteVarNames ent newtemp3 newtemp3 suptype)
               -- return $ tac3 ++ substituteVarNames ent newtemp3 newtemp3 suptype
     _ -> return [ent]
 
@@ -1027,13 +1008,13 @@ genCast t@(Temp _ _ loc origtye) destCastType =
         return ([TACEntry Nothing (Cast newtemp1 CastIntToChar t) noComment], newtemp1)
       (String, String) ->
         return ([], t)
-      (Pointer p, Int) ->
+      (Pointer _, Int) ->
         return ([], t)
-      (Pointer p, Real) ->
+      (Pointer _, Real) ->
         return ([], t)
-      (Array t1 b1, Array t2 b2) ->
+      (Array _ _, Array _ _) ->
         return ([], t)
-      (Array t1 b1, Int) ->
+      (Array _ _, Int) ->
         return ([], t)
       (_,_) -> 
         return ([], t)
@@ -1042,12 +1023,12 @@ genCast t@(Temp _ _ loc origtye) destCastType =
 
 substituteVarNames ent@(TACEntry label optype _comment) newtemp1 newtemp2 newtye = 
   case optype of
-    Binary temp0 temp1 op temp2 -> [TACEntry label (Binary (changeTypeOfTemp temp0 newtye) newtemp1 op newtemp2) _comment]
-    RelCondJump temp1 relop temp2 labelg -> [TACEntry label (RelCondJump newtemp1 relop newtemp2 labelg) _comment]
-    Nullary temp1 temp2 -> [TACEntry label (Nullary newtemp1 newtemp2) _comment]
-    IndexLeft temp1 temp2 temp3 -> [TACEntry label (IndexLeft (changeTypeOfTemp temp1 newtye) temp2 newtemp2) _comment]
-    Unary temp1 op temp2 -> [TACEntry label (Unary (changeTypeOfTemp temp1 newtye) op newtemp2) _comment]
+    Binary temp0 _ op _ -> [TACEntry label (Binary (changeTypeOfTemp temp0 newtye) newtemp1 op newtemp2) _comment]
+    RelCondJump _ relop _ labelg -> [TACEntry label (RelCondJump newtemp1 relop newtemp2 labelg) _comment]
+    Nullary _ _ -> [TACEntry label (Nullary newtemp1 newtemp2) _comment]
+    IndexLeft temp1 temp2 _ -> [TACEntry label (IndexLeft (changeTypeOfTemp temp1 newtye) temp2 newtemp2) _comment]
+    Unary temp1 op _ -> [TACEntry label (Unary (changeTypeOfTemp temp1 newtye) op newtemp2) _comment]
 
 resetLabelToNothing [ent@(TACEntry label optype _comment)] = [TACEntry Nothing optype _comment]
 
-changeTypeOfTemp t@(Temp a b c _origtye) destCastType = Temp a b c destCastType
+changeTypeOfTemp (Temp a b c _origtye) = Temp a b c
