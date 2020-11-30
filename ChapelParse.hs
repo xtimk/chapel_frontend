@@ -82,6 +82,7 @@ parseTest filepath = do
   s <- readFile filepath
   let p = pProgram (myLLexer s) in case p of
     Bad s    -> do putStrLn s
+                   putStrLn ""
                    exitFailure
     Ok  tree -> do putStrLn "\nParse Successful!\n"
                   --  print tree
@@ -121,6 +122,7 @@ parseTest filepath = do
                         putStrLn "|  Pretty Print of TAC  |"
                         putStrLn " - - - - - - - - - - - -"
                         printTacEntries maxlenenrichedlabeltac enrichedcasttac
+                        putStrLn ""
                         exitSuccess
                     else do
                       putStrLn ""
@@ -128,7 +130,9 @@ parseTest filepath = do
                       putStrLn "| Can't generate TAC: There are some typechecking errors  |"
                       putStrLn " - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
                       printErrors (tokens s) (errors ++ bp2)
+                      putStrLn ""
                       exitSuccess
+                    
 
 printTacEntriesRaw [] =  putStrLn "\n"
 printTacEntriesRaw (tac:tacs) = do
