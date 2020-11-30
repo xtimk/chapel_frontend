@@ -59,7 +59,7 @@ tacGeneratorDeclExpression' assgn lengths temps decExp =
           return $ tacEntry ++ resFirst ++ concat res
         where
           tacGeneratorRightExpression' _ ty = case ty of 
-            Bool -> tacGeneratorBooleanStatement (getAssignOpPos assgn) exp
+            Bool -> tacGeneratorBooleanStatement (getStartExpPos exp) exp
             _ -> do
               (tacsRight, tempRight) <- tacGeneratorExpression RightExp exp
               return (tacsRight, tempRight, Nothing)
