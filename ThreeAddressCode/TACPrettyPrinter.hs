@@ -6,6 +6,9 @@ import Data.Char
 --printTacEntries ::(Foldable t0) => t0 TACEntry -> IO ()
 printTacEntries m = mapM_ (printTacEntry m)
 
+printTacEntriesString m = map (printTacEntryString m)
+
+
 findMaxLenOfLabels xs = maximum (map getLabelLenFromTACEntry xs)
 
 getLabelLenFromTACEntry (TACEntry label _ _) = case label of
@@ -15,6 +18,10 @@ getLabelLenFromTACEntry (TACEntry label _ _) = case label of
 printTacEntry m (TACEntry label operation comment) = case operation of
     CommentOp _-> putStrLn $ printTacEntry' operation ++ printTacComment comment
     _ -> putStrLn $ printLabel m label ++ printTacEntry' operation ++ printTacComment comment
+
+printTacEntryString m (TACEntry label operation comment) = case operation of
+    CommentOp _-> printTacEntry' operation ++ printTacComment comment
+    _ -> printLabel m label ++ printTacEntry' operation ++ printTacComment comment
 
 printTacComment Nothing = ""
 printTacComment (Just c) = ' ':'#':' ':c

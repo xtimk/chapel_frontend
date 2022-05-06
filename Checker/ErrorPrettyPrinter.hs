@@ -73,6 +73,13 @@ printErrors tokens = mapM_ (printError tokens)
 printError tokens (ErrorChecker (l,c) error) = 
     putStrLn $ "Error in line " ++ show l ++ " and column " ++ show c ++ ": " ++ printDefinedError tokens error
 
+
+-- printStringErrors ::(Foldable t0) => [Token] -> t0 ErrorChecker -> [Char]
+printStringErrors tokens = map (printStringError tokens)
+
+printStringError tokens (ErrorChecker (l,c) error) = 
+    "Error in line " ++ show l ++ " and column " ++ show c ++ ": " ++ printDefinedError tokens error
+
 printDefinedError tokens error = case error of
   ErrorVarNotDeclared id -> "Variable " ++ id ++ " not declared."
   ErrorIncompatibleTypeArrayIndex tyFound exp -> "Only type Int is accepted for indexing an array but was found type " ++ prettyPrinterType tyFound ++ " in expression " ++ printExpression tokens exp

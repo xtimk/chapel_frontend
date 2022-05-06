@@ -27,3 +27,4 @@ cabal.project.local~
 ChapelParse
 TestChapel
 TestChapel
+ChapelParseJson

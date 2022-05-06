@@ -8,7 +8,7 @@ DEMO_DIR=./test
 .SILENT : runtests
 # Default goal.
 
-all : TestChapel ChapelParse
+all : TestChapel ChapelParse ChapelParseJson
 
 # Rules for building the parser.
 
@@ -25,6 +25,10 @@ TestChapel : TestChapel.hs ErrM.hs LexChapel.hs ParChapel.hs PrintChapel.hs
 	ghc --make $< -o $@
 
 ChapelParse : ChapelParse.hs Checker/TypeChecker.hs ErrM.hs LexChapel.hs ParChapel.hs PrintChapel.hs Checker/* ThreeAddressCode/* Utils/*.hs
+	ghc --make $< -o $@
+# Rules for cleaning generated files.
+
+ChapelParseJson : ChapelParseJson.hs Checker/TypeChecker.hs ErrM.hs LexChapel.hs ParChapel.hs PrintChapel.hs Checker/* ThreeAddressCode/* Utils/*.hs
 	ghc --make $< -o $@
 # Rules for cleaning generated files.
 
