@@ -5,8 +5,19 @@ Front-end compiler for a language with the syntax of  [chapel language](https://
 The compiler does the following steps:
 
  1. Checks for syntax errors
- 2. If there are no syntax errors then performs a complete `typechecking`. This includes typechecking for `variables`, `constants`, `arrays`, `function`
- 3. If there are no typechecking errors it proceeds generating the `three address code`
+ 2. If there are no syntax errors then performs a complete `typechecking`. This includes typechecking for `variables`, `constants`, `arrays`, `function`.
+	- The `typechecking` step reports every detail about (eventually) errors on your program (ike any other compiler such `gcc`, etc..), so that you can easily identify the issues and correct them.
+	- Various useful features are implemented: for example function overloading, automatic type inference by using `var` keyword, complex arrays definitions, etc... The complete specifications are available [here](https://github.com/xtimk/chapel_frontend/blob/main/doc_it.pdf)
+ 3. If there are no typechecking errors it proceeds generating the `three address code`, which is an `assembly like` program that can be then easily converted in `machine code`
+	 - The `three address code` is generated in a smart way: for example, boolean expression, are evaluated in the lazy way.
+
+## Online demo
+An online working version of this compiler is available here: http://vps-38c91410.vps.ovh.net/haskell/chapel_parser.html
+
+If you find any bugs feel free to contact me by opening an Issue here on github.
+
+## Complete documentation & specifications
+The complete documentation about this project is available [here](https://github.com/xtimk/chapel_frontend/blob/main/doc_it.pdf) (in Italian)
 
 ## How to deploy & compile
 The following instruction are valid CentOS systems. In particular the procedure has been tested on Centos 7 distro, using the user root.
