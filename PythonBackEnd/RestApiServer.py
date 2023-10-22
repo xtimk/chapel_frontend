@@ -10,7 +10,7 @@ app.config["DEBUG"] = True
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-chapel_frontend_executable = "/root/chapel_frontend/ChapelParseJson"
+chapel_frontend_executable = "/home/ubuntu/chapel_frontend/ChapelParseJson"
 chapel_frontend_param = "/tmp/program_to_be_parsed.txt"
 
 @app.route('/', methods=['GET'])
