@@ -1,0 +1,402 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js" integrity="sha512-2359y3bpxFfJ9xZw1r2IHM0WlZjZLI8gjLuhTGOVtRPzro3dOFy4AyEEl9ECwVbQ/riLXMeCNy0h6HMt2WUtYw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css" integrity="sha512-uf06llspW44/LZpHzHT6qBOIVODjWtv4MxCricRxkzvopAlSWnTf6hpZTFxuuZcuNE9CBQhqE0Seu1CoRk84nQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/abbott.min.css" integrity="sha512-wmVrx1zhiPOwFCxX7n1aR9vLlXCI3RI0RwizrDSf3/4vEliwboeXwF7HLPZW6k9R6WZt7KCh5fTArAYPyTZ5ag==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+<head>
+    <title>
+        Chapel Compiler
+    </title>
+</head>
+
+<body>
+    <center><h1>Chapel parser</h1></center>
+    <div>
+        Online instance of the <a href="https://github.com/xtimk/chapel_frontend">compiler</a> of a language with <a href="https://chapel-lang.org/">chapel</a> syntax. Compiler written in haskell, hosted with python (flask) as back-end. The parser performs a syntax checking, then a typechecking, and finally generates the three address code.
+        <br />
+        <br />
+        For all the details checkout git repository: https://github.com/xtimk/chapel_frontend.
+        <br />
+        <br />
+        <h4>Use the button to load the code examples, or write your own code. Then click Parse and check results.</h4>
+    </div>
+    
+    <div class="inline-div">
+        <div class="loadButtons">
+            <button id="loadExample1" class="button-23">Load simple example</button>
+            <button id="loadExample2" class="button-23">Load boolean lazy evaluation example</button>
+            <button id="loadExample3" class="button-23">Load complex arrays example</button>
+            <button id="loadExample4" class="button-23">Load pointers example</button>
+            <button id="loadExample5" class="button-23">Load function overload complex</button>
+        </div>
+        <p align="center"><center><h2>Source Code</h2></center></p>
+        <textarea class="inline-txtarea" id="source"></textarea>
+    </div>
+    <button id="parseBtn" class="compileBtn button-23">
+        <h3>>> COMPILE >></h3>
+    </button>    
+    <div class="inline-div">
+        <p align="center"><center><h2>Compiler Output</h2></center></p>
+        <textarea class="inline-txtarea" id="output"></textarea>
+    </div>
+</body>
+
+
+
+<script>
+    const processingMessage = "Compile in progress..."
+    const errorSeparator = "\n------\n";
+    const syntaxOkMessage = "Syntax is OK";
+    const typecheckerOkMessage = "Typechecking is OK";
+    const threeAddressCodeTitle = "\n* * * * * * * * * * * * * * * *\nPretty print of Three Address Code (TAC)\n* * * * * * * * * * * * * * * *\n\n"
+
+    const first_example = `proc main() : int {
+    if (2 < 1) then {
+        return 4;
+    }
+    else {
+
+    }
+    return 5;
+    proc pluto(ref x : int) : int {
+        if (2 < 1) then {
+            return 4;
+        }
+        else {
+            return 6;
+        }
+    };
+
+    proc myvoid(){
+
+    };
+    var b = 5;
+    var a = &b;
+
+    pluto(ref b);
+    var asd = pluto(ref b);
+}`
+
+    const lazy_bool_eval_example = `var a = 1;
+var b = 2;
+
+proc main(l: int,ref z:int)
+{
+    a = 4;
+    if ( (a < 1 || b < 3) && !(b < 5) ) then
+    {
+        a = b;
+        b = 1;
+        if ( b < 55 ) then
+        {
+            b = 2;
+            b = 8; 
+        }
+        a = 22;
+        b = 88;
+    }
+    a = 4;
+    a = 4;
+    a = 4;
+}`
+
+    const complex_array_example = `var a = 1;
+var b = 2;
+var c : bool = true ;
+var u: bool = false;
+
+var f = [[[5 > 6 && 5 < 9, 7 < 8],[6 < 8,4 <849]],[[66 + 7 < 40,6 < 9 && c],[c == c,c]]];
+
+proc main(l: int,ref z:int)
+{
+    var i : *bool = &c;
+    var gg = [true, false];
+    *i = 4 > 5 && 5 <8;
+    u = (5< 8 == 4 > 5) && (5< 8 == 5 <9);
+
+    u = (5< 8 == 4 > 5) || (5< 8 == 5 <9);
+
+    u = true || true || u == (c && u) && c;
+
+    do 
+    {
+        a = 4;
+        return;
+        
+    } while ((((6 < 8 || 6 < 8) && 6 < 8) || 6 < 8) && 6 < 8)
+
+    gg[1] =  4 > 5;
+}`
+
+    const pointer_and_deference_example = `var a :int= 20 ;
+var b = 2;
+
+proc main(kk:int) : string
+{
+
+   var rkrfrko:real = 'c' + 3;
+   var z = &*&a;
+   var afk = *&a;
+   var m = **&z;
+   var h = &*&z;
+   var kkkkk = ***&h;
+   // var dksfk = &a + &a;
+
+   return "aPointlessString";
+}`
+
+    const overloading_function_and_complex = `proc paperoga(x : int){
+    var i = [1,2];
+    var z = x;
+}
+proc main(ref x: [3]int) : int
+{
+
+    var ar11, cariola = [[[1,2,3],[4,5,6],[7,8,9],[10,11,12]],[[13,14,15],[16,17,18],[19,20,21],[22,23,24]]];
+
+    var jsjd = ar11[1]; 
+    var jsjddd = ar11[1,2];
+    var camillobensocontedicavour = ar11[1,2,3]; 
+    var prova = ["pippo", "il", "gatto", "nel", "gatto","il", "sacco", "pippo", "ciao"];
+    var jjj = "pippo";
+
+    var boolean = true;
+    while("ciao" == "miao")
+    {
+        boolean = boolean;
+    }
+
+    proc paperoga(x : int) : *[1,2,3] int
+    {
+        var z = x;
+        var ar = [[[2,2,2],[2,2,2]]];
+        return &ar;
+
+    };
+
+    var hhhhh = [*(paperoga('d' + 0))];
+    var bella = &hhhhh;
+    var semprepiubella = &bella;
+   
+    
+    var testone = paperoga('c' + 9);
+
+
+    var testone2 = *testone;
+    var altraprova = ((testone2[0])[1])[1];
+    var altraprova2 = testone2[0,1,1];
+
+    testone2[(5 < 5) ? (10 + 9 * 4) : 29, x[1],4] = 69 + 666;
+    
+    for jjj in (5 < 4 && !boolean == boolean || "ciao" == "miao") ? ((**&*&*&testone)[3+9]) : ((hhhhh)[2,3])  do
+    {
+        for jjj in jjj do
+        {
+            jjj = 6; 
+            return 5 + 5 -3 + jjj;
+        }
+
+        return 10;
+        
+    }
+}`
+
+    $(document).ready(function() {
+        configureCodeMirrorTextArea('source');
+        configureCodeMirrorTextArea('output');
+        setUpEventListeners();
+        setupFirstExample();
+        // console.log( "ready!" );
+    });
+
+    function setupFirstExample(){
+        var sourceCodeDiv = $('#source');
+        var sourceCodeCodeMirrorBox = sourceCodeDiv.next('.CodeMirror')[0].CodeMirror;
+        sourceCodeCodeMirrorBox.setValue(first_example);
+    }
+
+    function configureCodeMirrorTextArea(areaId){
+        var editor = CodeMirror.fromTextArea(document.getElementById(areaId), {
+            lineNumbers: true,
+            mode: 'text/x-perl',
+            theme: 'abbott',
+        });
+        editor.setSize(800,500);
+    }
+
+    function setUpEventListeners(){
+        $("#parseBtn").click(function(){
+
+            document.getElementById("parseBtn").disabled = true;
+            document.getElementById("parseBtn").innerHTML = "<h3>Processing<h3/>";
+
+            var sourceCodeDiv = $('#source');
+            var sourceCodeCodeMirrorBox = sourceCodeDiv.next('.CodeMirror')[0].CodeMirror;
+            var sourceCode = sourceCodeCodeMirrorBox.getValue();
+
+            var outputCodeDiv = $('#output');
+            var outputCodeCodeMirrorBox = outputCodeDiv.next('.CodeMirror')[0].CodeMirror;
+            outputCodeCodeMirrorBox.setValue(processingMessage);
+            $.ajax({
+                type: "POST",
+                url:"http://vps-6bd8fcdd.vps.ovh.net:8080/api/v1/resources/haskell/chapel_parser/",
+                data: JSON.stringify({ program: sourceCode}),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                success: function(data){
+                    processSuccessResult(data);
+                    document.getElementById("parseBtn").disabled = false;
+                    document.getElementById("parseBtn").innerHTML = "<h3>>> COMPILE >><h3/>";
+                },
+                error: function(errMessage){
+                    console.log(errMessage);
+                    var outputCodeDiv = $('#output');
+                    var outputCodeCodeMirrorBox = outputCodeDiv.next('.CodeMirror')[0].CodeMirror;
+                    var messageToShow = processingMessage + errorSeparator + "An unexpected error occurred, probably backend engine is down."
+                    outputCodeCodeMirrorBox.setValue(messageToShow);
+                    document.getElementById("parseBtn").disabled = false;
+                    document.getElementById("parseBtn").innerHTML = "<h3>>> COMPILE >><h3/>";
+                }
+            });
+        });
+
+        $("#loadExample1").click(function(){
+            var sourceCodeDiv = $('#source');
+            var sourceCodeCodeMirrorBox = sourceCodeDiv.next('.CodeMirror')[0].CodeMirror;
+            sourceCodeCodeMirrorBox.setValue(first_example);
+        });
+        $("#loadExample2").click(function(){
+            var sourceCodeDiv = $('#source');
+            var sourceCodeCodeMirrorBox = sourceCodeDiv.next('.CodeMirror')[0].CodeMirror;
+            sourceCodeCodeMirrorBox.setValue(lazy_bool_eval_example);
+        });
+        $("#loadExample3").click(function(){
+            var sourceCodeDiv = $('#source');
+            var sourceCodeCodeMirrorBox = sourceCodeDiv.next('.CodeMirror')[0].CodeMirror;
+            sourceCodeCodeMirrorBox.setValue(complex_array_example);
+        });
+        $("#loadExample4").click(function(){
+            var sourceCodeDiv = $('#source');
+            var sourceCodeCodeMirrorBox = sourceCodeDiv.next('.CodeMirror')[0].CodeMirror;
+            sourceCodeCodeMirrorBox.setValue(pointer_and_deference_example);
+        });
+        $("#loadExample5").click(function(){
+            var sourceCodeDiv = $('#source');
+            var sourceCodeCodeMirrorBox = sourceCodeDiv.next('.CodeMirror')[0].CodeMirror;
+            sourceCodeCodeMirrorBox.setValue(overloading_function_and_complex);
+        });
+        $("#loadExample6").click(function(){
+            var sourceCodeDiv = $('#source');
+            var sourceCodeCodeMirrorBox = sourceCodeDiv.next('.CodeMirror')[0].CodeMirror;
+            sourceCodeCodeMirrorBox.setValue(pointer_and_deference_example);
+        });
+        $("#loadExample7").click(function(){
+            var sourceCodeDiv = $('#source');
+            var sourceCodeCodeMirrorBox = sourceCodeDiv.next('.CodeMirror')[0].CodeMirror;
+            sourceCodeCodeMirrorBox.setValue(pointer_and_deference_example);
+        });
+
+
+    }
+
+    function processSuccessResult(data){
+        var outputCodeDiv = $('#output');
+        var outputCodeCodeMirrorBox = outputCodeDiv.next('.CodeMirror')[0].CodeMirror;
+        if(data.Syntax.AreThereErrors){
+            var messageToShow = processingMessage + errorSeparator + data.Syntax.ErrorDetails + errorSeparator + data.Typechecker.ErrorDetails + errorSeparator + data.TAC.ErrorDetails
+            outputCodeCodeMirrorBox.setValue(messageToShow);
+        } else if(data.Typechecker.AreThereErrors){
+            var messageToShow = processingMessage + errorSeparator + syntaxOkMessage + errorSeparator + data.Typechecker.ErrorDetails + errorSeparator + data.TAC.ErrorDetails
+            outputCodeCodeMirrorBox.setValue(messageToShow);
+        } else {
+            var messageToShow = processingMessage + errorSeparator + syntaxOkMessage + errorSeparator + typecheckerOkMessage + errorSeparator + threeAddressCodeTitle + data.TAC.PrettyPrint
+            outputCodeCodeMirrorBox.setValue(messageToShow);
+        }
+    }
+</script>
+
+<style>
+    body {
+        font-family: Consolas, monaco, monospace;
+    }
+    .compileBtn{
+        position: relative;
+        bottom: 466px;
+        width: 150px;
+        /* border: 3px solid #73AD21; */
+    }
+    .loadButtons {
+        /* display: flex; */
+        justify-content: space-between;
+        /* max-width: 400px; */
+        margin: 0 auto;
+        /* background: #A0C5E8; */
+        padding: 10px 0;
+    }
+    .inline-div {
+        display:inline-block;
+        width:800px;
+    }
+    .inline-txtarea {
+        resize: none;
+        /* border : 2px solid red; */
+        /* height:125px; */
+    }
+
+    .button-23 {
+    appearance: none;
+    background-color: #FAFBFC;
+    border: 1px solid rgba(27, 31, 35, 0.15);
+    border-radius: 6px;
+    box-shadow: rgba(27, 31, 35, 0.04) 0 1px 0, rgba(255, 255, 255, 0.25) 0 1px 0 inset;
+    box-sizing: border-box;
+    color: #24292E;
+    cursor: pointer;
+    display: inline-block;
+    font-family: -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    list-style: none;
+    padding: 6px 16px;
+    position: relative;
+    transition: background-color 0.2s cubic-bezier(0.3, 0, 0.5, 1);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    vertical-align: middle;
+    white-space: nowrap;
+    word-wrap: break-word;
+    }
+
+    .button-23:hover {
+    background-color: #F3F4F6;
+    text-decoration: none;
+    transition-duration: 0.1s;
+    }
+
+    .button-23:disabled {
+    background-color: #FAFBFC;
+    border-color: rgba(27, 31, 35, 0.15);
+    color: #959DA5;
+    cursor: default;
+    }
+
+    .button-23:active {
+    background-color: #EDEFF2;
+    box-shadow: rgba(225, 228, 232, 0.2) 0 1px 0 inset;
+    transition: none 0s;
+    }
+
+    .button-23:focus {
+    outline: 1px transparent;
+    }
+
+    .button-23:before {
+    display: none;
+    }
+
+    .button-4:-webkit-details-marker {
+    display: none;
+    }
+</style>
