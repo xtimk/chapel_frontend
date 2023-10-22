@@ -11,8 +11,8 @@ The compiler does the following steps:
  3. If there are no typechecking errors it proceeds generating the `three address code`, which is an `assembly like` program that can be then easily converted in `machine code`
 	 - The `three address code` is generated in a smart way: for example, boolean expression, are evaluated in the lazy way.
 
-## ~Online demo~
-~An online working version of this compiler is available here~
+## Online demo
+An online working version of this compiler is available [here](http://vps-6bd8fcdd.vps.ovh.net/chapel_parser/)
 
 If you find any bugs feel free to contact me by opening an Issue here on github.
 
