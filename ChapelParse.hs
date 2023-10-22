@@ -27,7 +27,7 @@ import ThreeAddressCode.TACStateUtils
 
 import ErrM
 
-type ParseFun a = [Token] -> Err a
+type ParseFun a = [Token] -> ErrM.Err a
 
 myLLexer = myLexer
 
